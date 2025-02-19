@@ -1,4 +1,6 @@
 using AuthService.Features;
+using AuthService.Features.Auth;
+using AuthService.Features.Credentials;
 using AuthService.Persistence;
 using AuthService.Services;
 using MeteorCloud.Caching.Abstraction;
@@ -27,6 +29,14 @@ public static class ServiceExtensions
         services.AddSingleton<GetCredentialsByEmailValidator>();
         services.AddScoped<GetCredentialsByEmailHandler>();
         
+        services.AddSingleton<CreateCredentialsValidator>();
+        services.AddScoped<CreateCredentialsHandler>();
+        
+        services.AddSingleton<LoginValidator>();
+        services.AddScoped<LoginHandler>();
+
+        services.AddSingleton<TokenService>();
+        
         // Get Redis connection details from environment variables
         var redisHost = Environment.GetEnvironmentVariable("REDIS_HOST") ?? "localhost";
         var redisPort = Environment.GetEnvironmentVariable("REDIS_PORT") ?? "6379";
@@ -40,7 +50,7 @@ public static class ServiceExtensions
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new OpenApiInfo { Title = "User Service API", Version = "v1" });
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Auth Service API", Version = "v1" });
         });
         
         return services;

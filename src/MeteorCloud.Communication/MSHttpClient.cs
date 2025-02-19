@@ -37,10 +37,16 @@ public class MSHttpClient
         try
         {
             var response = await _httpClient.PostAsJsonAsync(url, request);
-            response.EnsureSuccessStatusCode();
 
+            // Try reading the API response even if it's a failure (e.g., 400 Bad Request)
             var apiResult = await response.Content.ReadFromJsonAsync<ApiResult<TResponse>>();
-            return apiResult ?? new ApiResult<TResponse>(default, false, "Invalid API response format.");
+            if (apiResult is not null)
+            {
+                return apiResult;
+            }
+
+            // If API didn't return expected format, create a meaningful error response
+            return new ApiResult<TResponse>(default, false, $"Unexpected API response. Status Code: {response.StatusCode}");
         }
         catch (Exception ex)
         {

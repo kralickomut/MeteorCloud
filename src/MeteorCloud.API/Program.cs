@@ -1,4 +1,8 @@
+using FluentValidation;
 using FluentValidation.AspNetCore;
+using MeteorCloud.API.DTOs.Auth;
+using MeteorCloud.API.Extensions;
+using MeteorCloud.API.Validation;
 using MeteorCloud.API.Validation.Auth;
 using MeteorCloud.Communication;
 using Microsoft.OpenApi.Models;
@@ -12,21 +16,11 @@ builder.WebHost.ConfigureKestrel(options =>
     options.ListenAnyIP(5222);
 });
 
-builder.Services.AddControllers()
-    .AddFluentValidation(fv => fv.RegisterValidatorsFromAssemblyContaining<RegistrationValidator>());
+builder.Services.RegisterServices(configuration);
 
-builder.Services.AddHttpClient<MSHttpClient>(client =>
-{
-    client.BaseAddress = new Uri(MicroserviceEndpoints.UserService);
-});
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "MeteorCloud API", Version = "v1" });
-});
 
 var app = builder.Build();
+
 
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 {
@@ -38,8 +32,8 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 }
 
 app.UseRouting();
+app.UseAuthentication();
 app.UseAuthorization(); 
-
 app.MapControllers();
 
 app.Run();

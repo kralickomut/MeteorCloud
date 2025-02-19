@@ -3,7 +3,7 @@ using AuthService.Services;
 using FluentValidation;
 using MeteorCloud.Shared.ApiResults;
 
-namespace AuthService.Features;
+namespace AuthService.Features.Credentials;
 
 public record GetCredentialsByEmailRequest(string Email);
 

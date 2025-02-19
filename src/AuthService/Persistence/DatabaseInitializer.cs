@@ -12,7 +12,7 @@ public class DatabaseInitializer
 
     public DatabaseInitializer(IConfiguration configuration, ILogger<DatabaseInitializer> logger)
     {
-        _connectionString = configuration.GetConnectionString("Default")!;
+        _connectionString = configuration.GetConnectionString("DefaultConnection")!;
         _logger = logger;
 
         // Extract database name from connection string
@@ -55,9 +55,9 @@ public class DatabaseInitializer
             const string createTableQuery = @"
                 CREATE TABLE IF NOT EXISTS Credentials (
                     Id SERIAL PRIMARY KEY,
+                    UserId INT UNIQUE NOT NULL,
                     Email VARCHAR(255) UNIQUE NOT NULL,
-                    PasswordHash TEXT NOT NULL,
-                    CreatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    PasswordHash TEXT NOT NULL
                 );";
 
             await connection.ExecuteAsync(createTableQuery);

@@ -21,7 +21,7 @@ public class TokenService
             
         var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.NameId, userId.ToString()),
+            new Claim("id", userId.ToString()),
             new Claim(JwtRegisteredClaimNames.Email, email),
         };
 

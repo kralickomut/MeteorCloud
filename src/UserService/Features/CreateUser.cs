@@ -44,7 +44,9 @@ namespace UserService.Features
 
             var id = await _userManager.CreateUserAsync(user);
 
-            return id.HasValue
+            Console.WriteLine("ID:" + id);
+
+            return id is not null 
                 ? new ApiResult<int>(id.Value)
                 : new ApiResult<int>(-1, success: false, "There is already a user with this email");
         }

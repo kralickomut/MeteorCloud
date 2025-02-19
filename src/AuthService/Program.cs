@@ -1,6 +1,7 @@
 using AuthService.Extensions;
 using AuthService.Features;
 using AuthService.Features.Auth;
+using AuthService.Features.Credentials;
 
 var builder = WebApplication.CreateBuilder(args);
 
