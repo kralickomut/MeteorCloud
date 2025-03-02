@@ -71,8 +71,8 @@ public class AuthController : ControllerBase
             return BadRequest(new ApiResult<object>(errorMessages, false, "Validation Failed"));
         }
         
-        //var authUrl = MicroserviceEndpoints.AuthService + "/api/auth/login";
-        var authUrl = "http://localhost:5296/api/auth/login";
+        var authUrl = MicroserviceEndpoints.AuthService + "/api/auth/login";
+        //var authUrl = "http://localhost:5296/api/auth/login";
         var authResponse = await _httpClient.PostAsync<UserLoginRequest, object>(authUrl, request);
         
         if (authResponse.Success is false)
@@ -80,6 +80,6 @@ public class AuthController : ControllerBase
             return BadRequest(new ApiResult<object>(null, false, authResponse.Message ?? "Login failed"));
         }
         
-        return Ok(new ApiResult<object>(default, true, "Login successful"));
+        return Ok(new ApiResult<object>(authResponse.Data, true, "Login successful"));
     }
 }

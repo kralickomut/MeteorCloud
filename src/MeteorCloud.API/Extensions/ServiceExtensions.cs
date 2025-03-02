@@ -2,7 +2,11 @@ using System.Text;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using MeteorCloud.API.DTOs.Auth;
+using MeteorCloud.API.DTOs.User;
+using MeteorCloud.API.DTOs.Workspace;
 using MeteorCloud.API.Validation.Auth;
+using MeteorCloud.API.Validation.User;
+using MeteorCloud.API.Validation.Workspace;
 using MeteorCloud.Communication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -25,6 +29,8 @@ public static class ServiceExtensions
         
         services.AddSingleton<IValidator<UserRegistrationRequest>, RegistrationValidator>();
         services.AddSingleton<IValidator<UserLoginRequest>, LoginValidator>();
+        services.AddSingleton<IValidator<UpdateUserRequest>, UpdateValidator>();
+        services.AddSingleton<IValidator<WorkspaceCreateRequest>, CreateValidator>();
         
         services.AddHttpClient<MSHttpClient>(client =>
         {

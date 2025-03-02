@@ -34,6 +34,13 @@ public class CredentialManager
         
         return credential;
     }
+
+    public async Task<Credential?> GetCredentialsByUserId(int userId)
+    {
+        var credentials = await _credentialRepository.GetCredentialsByUserId(userId);
+        
+        return credentials;
+    }
     
     public async Task<int?> CreateCredentialsAsync(Credential credential)
     {
@@ -45,5 +52,30 @@ public class CredentialManager
         }
         
         return id;
+    }
+    
+    public async Task<bool> UpdateCredentialsAsync(Credential credential)
+    {
+        var success = await _credentialRepository.UpdateCredential(credential);
+        
+        if (success)
+        {
+            await _cacheService.RemoveAsync(_serviceCacheKey, "credential", credential.Email);
+        }
+        
+        return success;
+    }
+    
+    public async Task<bool> DeleteCredentialsByUserIdAsync(int userId)
+    {
+        var deletedEmail = await _credentialRepository.DeleteCredential(userId);
+
+        if (!string.IsNullOrEmpty(deletedEmail))
+        {
+            await _cacheService.RemoveAsync(_serviceCacheKey, "credential", deletedEmail);
+            return true;
+        }
+        
+        return false;
     }
 }

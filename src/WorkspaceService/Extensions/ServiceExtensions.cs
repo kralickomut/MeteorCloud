@@ -1,15 +1,14 @@
-using AuthService.Consumers;
-using AuthService.Features.Auth;
-using AuthService.Features.Credentials;
-using AuthService.Persistence;
-using AuthService.Services;
 using MassTransit;
 using MeteorCloud.Caching.Abstraction;
 using MeteorCloud.Caching.Services;
+using MeteorCloud.Messaging.Events.Workspace;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
+using WorkspaceService.Features;
+using WorkspaceService.Persistence;
+using WorkspaceService.Services;
 
-namespace AuthService.Extensions;
+namespace WorkspaceService.Extensions;
 
 public static class ServiceExtensions
 {
@@ -23,20 +22,20 @@ public static class ServiceExtensions
 
         // Ensure DapperContext receives IConfiguration
         services.AddSingleton<DapperContext>();
-
-        services.AddScoped<CredentialRepository>();
-        services.AddScoped<CredentialManager>();
-
-        services.AddSingleton<GetCredentialsByEmailValidator>();
-        services.AddScoped<GetCredentialsByEmailHandler>();
         
-        services.AddSingleton<CreateCredentialsValidator>();
-        services.AddScoped<CreateCredentialsHandler>();
+        // Register WorkspaceRepository
+        services.AddScoped<WorkspaceRepository>();
         
-        services.AddSingleton<LoginValidator>();
-        services.AddScoped<LoginHandler>();
-
-        services.AddSingleton<TokenService>();
+        // Register WorkspaceManager
+        services.AddScoped<WorkspaceManager>();
+        
+        // Register CreateWorkspaceHandler
+        services.AddScoped<CreateWorkspaceHandler>();
+        services.AddSingleton<CreateWorkspaceRequestValidator>();
+        
+        // Register DeleteWorkspaceHandler
+        services.AddScoped<DeleteWorkspaceHandler>();
+        services.AddSingleton<DeleteWorkspaceRequestValidator>();
         
         // Get Redis connection details from environment variables
         var redisHost = Environment.GetEnvironmentVariable("REDIS_HOST") ?? "localhost";
@@ -51,14 +50,11 @@ public static class ServiceExtensions
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Auth Service API", Version = "v1" });
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Workspace Service API", Version = "v1" });
         });
 
         services.AddMassTransit(busConfigurator =>
         {
-            busConfigurator.AddConsumer<UserUpdatedConsumer>();
-            busConfigurator.AddConsumer<UserDeletedConsumer>();
-            
             busConfigurator.UsingRabbitMq((context, rabbitCfg) =>
             {
                 rabbitCfg.Host("rabbitmq", h =>
@@ -67,17 +63,10 @@ public static class ServiceExtensions
                     h.Password("guest");
                 });
                 
-                rabbitCfg.ReceiveEndpoint("user-updated-queue", e =>
-                {
-                    e.Bind("users");
-                    e.ConfigureConsumer<UserUpdatedConsumer>(context);
-                });
+                rabbitCfg.Message<WorkspaceCreatedEvent>(x => x.SetEntityName("workspaces"));
+                rabbitCfg.Message<WorkspaceDeletedEvent>(x => x.SetEntityName("workspaces"));
                 
-                rabbitCfg.ReceiveEndpoint("user-deleted-queue", e =>
-                {
-                    e.Bind("users");
-                    e.ConfigureConsumer<UserDeletedConsumer>(context);
-                });
+                rabbitCfg.ConfigureEndpoints(context);
                 
             });
         });

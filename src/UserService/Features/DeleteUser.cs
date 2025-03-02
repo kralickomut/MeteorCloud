@@ -23,9 +23,11 @@ namespace UserService.Features
             _userManager = userManager;
         }
 
-        public async Task<ApiResult<object>> Handle(DeleteUserRequest request)
+        public async Task<ApiResult<object>> Handle(DeleteUserRequest request, CancellationToken cancellationToken)
         {
-            var success = await _userManager.DeleteUserAsync(request.Id);
+            cancellationToken.ThrowIfCancellationRequested();
+            
+            var success = await _userManager.DeleteUserAsync(request.Id, cancellationToken);
 
             return success
                 ? new ApiResult<object>(null)
@@ -38,10 +40,10 @@ namespace UserService.Features
         public static void Register(IEndpointRouteBuilder app)
         {
             app.MapDelete("/api/users/{id}",
-                async (int id, DeleteUserValidator validator, DeleteUserHandler handler) =>
+                async (int id, DeleteUserValidator validator, DeleteUserHandler handler, CancellationToken cancellationToken) =>
                 {
                     var request = new DeleteUserRequest(id);
-                    var validationResult = await validator.ValidateAsync(request);
+                    var validationResult = await validator.ValidateAsync(request, cancellationToken);
 
                     if (!validationResult.IsValid)
                     {
@@ -49,7 +51,7 @@ namespace UserService.Features
                         return Results.BadRequest(new ApiResult<IEnumerable<string>>(errorMessages, false));
                     }
 
-                    var response = await handler.Handle(request);
+                    var response = await handler.Handle(request, cancellationToken);
 
                     return response.Success == true
                         ? Results.Ok(response)

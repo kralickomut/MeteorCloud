@@ -1,11 +1,11 @@
-using System.Data;
-using Dapper;
 using MeteorCloud.Caching.Abstraction;
 using MeteorCloud.Caching.Services;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
-using Npgsql;
+using MassTransit;
+using MeteorCloud.Messaging.Events;
+using MeteorCloud.Messaging.Events.Workspace;
 using StackExchange.Redis;
+using UserService.Consumers;
 using UserService.Features;
 using UserService.Persistence;
 using UserService.Services;
@@ -57,6 +57,39 @@ public static class ServiceExtensions
         services.AddSwaggerGen(c =>
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "User Service API", Version = "v1" });
+        });
+
+        services.AddMassTransit(busConfigurator =>
+        {
+            busConfigurator.AddConsumer<WorkspaceCreatedConsumer>();
+            busConfigurator.AddConsumer<WorkspaceDeletedConsumer>();
+            
+            busConfigurator.UsingRabbitMq((context, rabbitCfg) =>
+            {
+                rabbitCfg.Host("rabbitmq", h =>
+                {
+                    h.Username("guest");
+                    h.Password("guest");
+                });
+                
+                // Publish messages to the "users" exchange
+                rabbitCfg.Message<UserUpdatedEvent>(x => x.SetEntityName("users"));
+                rabbitCfg.Message<UserDeletedEvent>(x => x.SetEntityName("users"));
+                
+                rabbitCfg.ReceiveEndpoint("workspace-created-queue", e =>
+                {
+                    e.Bind("workspaces");
+                    e.ConfigureConsumer<WorkspaceCreatedConsumer>(context);
+                });
+                
+                rabbitCfg.ReceiveEndpoint("workspace-deleted-queue", e =>
+                {
+                    e.Bind("workspaces");
+                    e.ConfigureConsumer<WorkspaceDeletedConsumer>(context);
+                });
+                
+                rabbitCfg.ConfigureEndpoints(context);
+            });
         });
         
         return services;

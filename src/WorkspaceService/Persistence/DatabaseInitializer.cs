@@ -1,12 +1,7 @@
-using System;
-using System.Data;
-using System.Threading.Tasks;
 using Dapper;
 using Npgsql;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
-namespace UserService.Persistence;
+namespace WorkspaceService.Persistence;
 
 public class DatabaseInitializer
 {
@@ -17,7 +12,7 @@ public class DatabaseInitializer
 
     public DatabaseInitializer(IConfiguration configuration, ILogger<DatabaseInitializer> logger)
     {
-        _connectionString = configuration.GetConnectionString("Default")!;
+        _connectionString = configuration.GetConnectionString("DefaultConnection")!;
         _logger = logger;
 
         // Extract database name from connection string
@@ -40,7 +35,8 @@ public class DatabaseInitializer
             await adminConnection.OpenAsync();
 
             var existsQuery = "SELECT 1 FROM pg_database WHERE datname = @DatabaseName;";
-            var databaseExists = await adminConnection.ExecuteScalarAsync<int?>(existsQuery, new { DatabaseName = _databaseName });
+            var databaseExists =
+                await adminConnection.ExecuteScalarAsync<int?>(existsQuery, new { DatabaseName = _databaseName });
 
             if (databaseExists != 1)
             {
@@ -52,30 +48,45 @@ public class DatabaseInitializer
             {
                 _logger.LogInformation("✅ Database '{Database}' already exists.", _databaseName);
             }
-            
+
             // Now connect to the actual microservice database and ensure tables exist
             await using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
-            const string createTableQuery = @"
-                CREATE TABLE IF NOT EXISTS Users (
+            const string createWorkspacesTable = @"
+                CREATE TABLE IF NOT EXISTS Workspaces (
                     Id SERIAL PRIMARY KEY,
-                    FirstName VARCHAR(100) NOT NULL,
-                    LastName VARCHAR(100) NOT NULL,
-                    Email VARCHAR(255) UNIQUE NOT NULL,
-                    InTotalWorkspaces INT DEFAULT 0,
-                    RegistrationDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    UpdatedOn TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                );";
+                    OwnerId INT NOT NULL,  -- Acts as a reference to Users (external service)
+                    Name VARCHAR(255) NOT NULL,
+                    Description TEXT NULL,
+                    CreatedOn TIMESTAMP NOT NULL DEFAULT NOW(),
+                    LastUploadOn TIMESTAMP NOT NULL DEFAULT NOW()
+                );
 
-            await connection.ExecuteAsync(createTableQuery);
+                CREATE INDEX IF NOT EXISTS idx_workspaces_owner_id ON Workspaces (OwnerId);
+            ";
 
-            _logger.LogInformation("Users table checked/created successfully.");
+                        const string createWorkspaceUsersTable = @"
+                CREATE TABLE IF NOT EXISTS WorkspaceUsers (
+                    Id SERIAL PRIMARY KEY,
+                    WorkspaceId INT NOT NULL,  -- References Workspaces table
+                    UserId INT NOT NULL,  -- Acts as a reference to Users (external service)
+                    Role VARCHAR(50) NOT NULL DEFAULT 'member',
+                    CONSTRAINT unique_workspace_user UNIQUE (WorkspaceId, UserId)
+                );
+
+                -- Indexes for fast lookups
+                CREATE INDEX IF NOT EXISTS idx_workspace_users_user_id ON WorkspaceUsers (UserId);
+                CREATE INDEX IF NOT EXISTS idx_workspace_users_workspace_id ON WorkspaceUsers (WorkspaceId);
+            ";
+
+            await connection.ExecuteAsync(createWorkspacesTable);
+            await connection.ExecuteAsync(createWorkspaceUsersTable);
+            _logger.LogInformation("✅ Tables initialized successfully.");
         }
         catch (Exception ex)
         {
-            _logger.LogError("Error initializing database: {Message}", ex.Message);
-            throw;
+            _logger.LogError("❌ Error initializing database: {Message}", ex.Message);
         }
     }
 }

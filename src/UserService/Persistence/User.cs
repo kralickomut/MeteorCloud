@@ -8,6 +8,9 @@ public class User
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
+
+    public int InTotalWorkspaces { get; set; } = 0;
+    
     public DateTime RegistrationDate { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedOn { get; set; } = DateTime.UtcNow;
 }

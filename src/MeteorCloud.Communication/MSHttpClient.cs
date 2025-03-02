@@ -15,14 +15,14 @@ public class MSHttpClient
         _logger = logger;
     }
 
-    public async Task<ApiResult<T>> GetAsync<T>(string url)
+    public async Task<ApiResult<T>> GetAsync<T>(string url, CancellationToken cancellationToken = default)
     {
         try
         {
-            var response = await _httpClient.GetAsync(url);
+            var response = await _httpClient.GetAsync(url, cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            var apiResult = await response.Content.ReadFromJsonAsync<ApiResult<T>>();
+            var apiResult = await response.Content.ReadFromJsonAsync<ApiResult<T>>(cancellationToken);
             return apiResult ?? new ApiResult<T>(default, false, "Invalid API response format.");
         }
         catch (Exception ex)
@@ -32,14 +32,14 @@ public class MSHttpClient
         }
     }
 
-    public async Task<ApiResult<TResponse>> PostAsync<TRequest, TResponse>(string url, TRequest request)
+    public async Task<ApiResult<TResponse>> PostAsync<TRequest, TResponse>(string url, TRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
-            var response = await _httpClient.PostAsJsonAsync(url, request);
+            var response = await _httpClient.PostAsJsonAsync(url, request, cancellationToken);
 
             // Try reading the API response even if it's a failure (e.g., 400 Bad Request)
-            var apiResult = await response.Content.ReadFromJsonAsync<ApiResult<TResponse>>();
+            var apiResult = await response.Content.ReadFromJsonAsync<ApiResult<TResponse>>(cancellationToken);
             if (apiResult is not null)
             {
                 return apiResult;
@@ -49,6 +49,46 @@ public class MSHttpClient
             return new ApiResult<TResponse>(default, false, $"Unexpected API response. Status Code: {response.StatusCode}");
         }
         catch (Exception ex)
+        {
+            _logger.LogError("Error calling POST {Url}: {Error}", url, ex.Message);
+            return new ApiResult<TResponse>(default, false, ex.Message);
+        }
+    }
+
+    public async Task<ApiResult<TResponse>> PutAsync<TRequest, TResponse>(string url, TRequest request, CancellationToken cancellationToken = default) 
+    {
+        try
+        {
+            var response = await _httpClient.PutAsJsonAsync(url, request, cancellationToken);
+            
+            var apiResult = await response.Content.ReadFromJsonAsync<ApiResult<TResponse>>(cancellationToken);
+            if (apiResult is not null)
+            {
+                return apiResult;
+            }
+
+            return new ApiResult<TResponse>(default, false, $"Unexpected API response. Status Code: {response.StatusCode}");
+        } catch (Exception ex)
+        {
+            _logger.LogError("Error calling POST {Url}: {Error}", url, ex.Message);
+            return new ApiResult<TResponse>(default, false, ex.Message);
+        }
+    }
+    
+    public async Task<ApiResult<TResponse>> DeleteAsync<TResponse>(string url, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.DeleteAsync(url, cancellationToken);
+            
+            var apiResult = await response.Content.ReadFromJsonAsync<ApiResult<TResponse>>(cancellationToken);
+            if (apiResult is not null)
+            {
+                return apiResult;
+            }
+
+            return new ApiResult<TResponse>(default, false, $"Unexpected API response. Status Code: {response.StatusCode}");
+        } catch (Exception ex)
         {
             _logger.LogError("Error calling POST {Url}: {Error}", url, ex.Message);
             return new ApiResult<TResponse>(default, false, ex.Message);

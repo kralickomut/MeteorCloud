@@ -15,6 +15,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeteorCloud.API", "src\Mete
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeteorCloud.Communication", "src\MeteorCloud.Communication\MeteorCloud.Communication.csproj", "{820F9676-C705-4B30-9E96-C7D41279053C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeteorCloud.Messaging", "src\MeteorCloud.Messaging\MeteorCloud.Messaging.csproj", "{301ADE3C-C801-428A-9A06-C690996BBFAE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkspaceService", "src\WorkspaceService\WorkspaceService.csproj", "{1028C317-1710-4CED-884F-CD1ED52AC31F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,8 @@ Global
 		{DD5DB23A-A2D2-4E50-98CD-98A04CE02663} = {3B3ACE64-2470-4F87-8607-78D6B2CD9B26}
 		{82FFB4DF-3D90-4B8B-AE50-B84C05729468} = {3B3ACE64-2470-4F87-8607-78D6B2CD9B26}
 		{820F9676-C705-4B30-9E96-C7D41279053C} = {3B3ACE64-2470-4F87-8607-78D6B2CD9B26}
+		{301ADE3C-C801-428A-9A06-C690996BBFAE} = {3B3ACE64-2470-4F87-8607-78D6B2CD9B26}
+		{1028C317-1710-4CED-884F-CD1ED52AC31F} = {3B3ACE64-2470-4F87-8607-78D6B2CD9B26}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{550AE086-9600-46AD-909E-52D7DF29905E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -53,5 +59,13 @@ Global
 		{820F9676-C705-4B30-9E96-C7D41279053C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{820F9676-C705-4B30-9E96-C7D41279053C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{820F9676-C705-4B30-9E96-C7D41279053C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{301ADE3C-C801-428A-9A06-C690996BBFAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{301ADE3C-C801-428A-9A06-C690996BBFAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{301ADE3C-C801-428A-9A06-C690996BBFAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{301ADE3C-C801-428A-9A06-C690996BBFAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1028C317-1710-4CED-884F-CD1ED52AC31F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1028C317-1710-4CED-884F-CD1ED52AC31F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1028C317-1710-4CED-884F-CD1ED52AC31F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1028C317-1710-4CED-884F-CD1ED52AC31F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
