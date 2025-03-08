@@ -54,6 +54,27 @@ public class MSHttpClient
             return new ApiResult<TResponse>(default, false, ex.Message);
         }
     }
+    
+    public async Task<ApiResult<TResponse>> PostAsync<TResponse>(string url, MultipartFormDataContent content, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsync(url, content, cancellationToken);
+
+            var apiResult = await response.Content.ReadFromJsonAsync<ApiResult<TResponse>>(cancellationToken);
+            if (apiResult is not null)
+            {
+                return apiResult;
+            }
+
+            return new ApiResult<TResponse>(default, false, $"Unexpected API response. Status Code: {response.StatusCode}");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("Error calling POST {Url}: {Error}", url, ex.Message);
+            return new ApiResult<TResponse>(default, false, ex.Message);
+        }
+    }
 
     public async Task<ApiResult<TResponse>> PutAsync<TRequest, TResponse>(string url, TRequest request, CancellationToken cancellationToken = default) 
     {
@@ -93,5 +114,12 @@ public class MSHttpClient
             _logger.LogError("Error calling POST {Url}: {Error}", url, ex.Message);
             return new ApiResult<TResponse>(default, false, ex.Message);
         }
+    }
+    
+    public async Task<bool> CheckUserExistsAsync(int userId, CancellationToken cancellationToken)
+    {
+        var url = MicroserviceEndpoints.UserService + $"/api/users/{userId}";
+        var response = await GetAsync<object>(url, cancellationToken);
+        return response.Success;
     }
 }

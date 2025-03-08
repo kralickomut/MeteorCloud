@@ -75,6 +75,7 @@ public static class ServiceExtensions
                 // Publish messages to the "users" exchange
                 rabbitCfg.Message<UserUpdatedEvent>(x => x.SetEntityName("users"));
                 rabbitCfg.Message<UserDeletedEvent>(x => x.SetEntityName("users"));
+                rabbitCfg.Message<UserRegisteredEvent>(x => x.SetEntityName("users"));
                 
                 rabbitCfg.ReceiveEndpoint("workspace-created-queue", e =>
                 {

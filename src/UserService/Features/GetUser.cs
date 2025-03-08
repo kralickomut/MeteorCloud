@@ -26,9 +26,11 @@ namespace UserService.Features
             _userManager = userManager;
         }
 
-        public async Task<ApiResult<GetUserResponse>> Handle(GetUserRequest request)
+        public async Task<ApiResult<GetUserResponse>> Handle(GetUserRequest request, CancellationToken cancellationToken)
         {
-            var user = await _userManager.GetUserByIdAsync(request.Id);
+            cancellationToken.ThrowIfCancellationRequested();
+            
+            var user = await _userManager.GetUserByIdAsync(request.Id, cancellationToken);
             return user != null
                 ? new ApiResult<GetUserResponse>(new GetUserResponse(user))
                 : new ApiResult<GetUserResponse>(null, false, "User not found");
@@ -40,17 +42,17 @@ namespace UserService.Features
         public static void Register(IEndpointRouteBuilder app)
         {
             app.MapGet("/api/users/{id}",
-                async (int id, GetUserValidator validator, GetUserHandler handler) =>
+                async (int id, GetUserValidator validator, GetUserHandler handler, CancellationToken cancellationToken) =>
                 {
                     var request = new GetUserRequest(id);
-                    var validationResult = await validator.ValidateAsync(request);
+                    var validationResult = await validator.ValidateAsync(request, cancellationToken);
                     if (!validationResult.IsValid)
                     {
                         var errorMessages = validationResult.Errors.Select(x => x.ErrorMessage);
                         return Results.BadRequest(new ApiResult<IEnumerable<string>>(errorMessages));
                     }
 
-                    var response = await handler.Handle(request);
+                    var response = await handler.Handle(request, cancellationToken);
 
                     return response.Success == true
                         ? Results.Ok(response)

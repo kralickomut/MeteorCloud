@@ -33,11 +33,11 @@ public class WorkspaceController : ControllerBase
         return Ok(new ApiResult<object>(response.Data, true, "Workspace created successfully"));
     }
     
-    [HttpDelete]
+    [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         var url = MicroserviceEndpoints.WorkspaceService + $"/api/workspace/{id}";
-
+        
         var response = await _httpClient.DeleteAsync<object>(url, cancellationToken);
         
         if (response.Success is false)
@@ -47,4 +47,20 @@ public class WorkspaceController : ControllerBase
         
         return Ok(new ApiResult<object>(null, true, "Workspace deleted successfully"));
     }
+    
+    [HttpPut]
+    public async Task<IActionResult> Update(WorkspaceUpdateRequest request, CancellationToken cancellationToken)
+    {
+        var url = MicroserviceEndpoints.WorkspaceService + $"/api/workspace";
+        
+        var response = await _httpClient.PutAsync<WorkspaceUpdateRequest, object>(url, request, cancellationToken);
+        
+        if (response.Success is false)
+        {
+            return BadRequest(new ApiResult<object>(null, false, response.Message ?? "Workspace update failed"));
+        }
+        
+        return Ok(new ApiResult<object>(response.Data, true, "Workspace updated successfully"));
+    }
+    
 }

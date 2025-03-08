@@ -24,7 +24,7 @@ public class WorkspaceManager
 
     public async Task<int?> CreateWorkspaceAsync(Workspace workspace, CancellationToken cancellationToken)
     {
-        var url = MicroserviceEndpoints.UserService + $"/api/user/{workspace.OwnerId}";
+        var url = MicroserviceEndpoints.UserService + $"/api/users/{workspace.OwnerId}";
         var response = await _httpClient.GetAsync<object>(url, cancellationToken);
 
         if (!response.Success)
@@ -53,6 +53,19 @@ public class WorkspaceManager
             
             var usersInWorkspace = await GetUserIdsInWorkspaceAsync(id);
             await _publishEndpoint.Publish(new WorkspaceDeletedEvent(id, usersInWorkspace));
+        }
+
+        return success;
+    }
+    
+    public async Task<bool> UpdateWorkspaceAsync(Workspace workspace, CancellationToken cancellationToken)
+    {
+        var success = await _workspaceRepository.UpdateWorkspaceAsync(workspace, cancellationToken);
+
+        if (success)
+        {
+            await _cacheService.RemoveAsync(_serviceCacheKey, "workspace", workspace.Id.ToString());
+            // await _publishEndpoint.Publish(new WorkspaceUpdatedEvent(workspace.Id, workspace.OwnerId));
         }
 
         return success;

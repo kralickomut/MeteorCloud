@@ -29,9 +29,9 @@ namespace UserService.Features
                 _userManager = userManager;
             }
 
-            public async Task<ApiResult<GetUsersResponse>> Handle(GetUsersRequest request)
+            public async Task<ApiResult<GetUsersResponse>> Handle(GetUsersRequest request, CancellationToken cancellationToken)
             {
-                var users = await _userManager.GetUsersAsync(request.Search, request.Page, request.PageSize);
+                var users = await _userManager.GetUsersAsync(request.Search, cancellationToken, request.Page, request.PageSize);
                 return new ApiResult<GetUsersResponse>(new GetUsersResponse(users));
             }
         }
@@ -41,9 +41,9 @@ namespace UserService.Features
             public static void Register(IEndpointRouteBuilder app)
             {
                 app.MapPost("/api/users/list",
-                    async (GetUsersRequest request, GetUsersValidator validator, GetUsersHandler handler) =>
+                    async (GetUsersRequest request, GetUsersValidator validator, GetUsersHandler handler, CancellationToken cancellationToken) =>
                     {
-                        var validationResult = await validator.ValidateAsync(request);
+                        var validationResult = await validator.ValidateAsync(request, cancellationToken);
 
                         if (!validationResult.IsValid)
                         {
@@ -51,7 +51,7 @@ namespace UserService.Features
                             return Results.BadRequest(new ApiResult<IEnumerable<string>>(errorMessages, false));
                         }
 
-                        var response = await handler.Handle(request);
+                        var response = await handler.Handle(request, cancellationToken);
                         return Results.Ok(response);
                     }).WithName("GetUsers");
             }

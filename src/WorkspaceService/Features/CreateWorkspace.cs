@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 using FluentValidation;
+using MeteorCloud.Communication;
 using MeteorCloud.Shared.ApiResults;
 using WorkspaceService.Persistence;
 using WorkspaceService.Services;
@@ -23,15 +24,24 @@ public class CreateWorkspaceRequestValidator : AbstractValidator<CreateWorkspace
 public class CreateWorkspaceHandler
 {
     private readonly WorkspaceManager _workspaceManager;
+    private readonly MSHttpClient _httpClient;
 
-    public CreateWorkspaceHandler(WorkspaceManager workspaceManager)
+    public CreateWorkspaceHandler(WorkspaceManager workspaceManager, MSHttpClient httpClient)
     {
         _workspaceManager = workspaceManager;
+        _httpClient = httpClient;
     }
 
     public async Task<ApiResult<CreateWorkspaceResponse>> Handle(CreateWorkspaceRequest request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
+        var userExists = await _httpClient.CheckUserExistsAsync(request.OwnerId, cancellationToken);
+        
+        if (userExists is false)
+        {
+            return new ApiResult<CreateWorkspaceResponse>(null, false, "User not found");
+        }
         
         var workspace = new Workspace
         {

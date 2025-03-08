@@ -1,6 +1,7 @@
 using MassTransit;
 using MeteorCloud.Caching.Abstraction;
 using MeteorCloud.Caching.Services;
+using MeteorCloud.Communication;
 using MeteorCloud.Messaging.Events.Workspace;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
@@ -37,6 +38,10 @@ public static class ServiceExtensions
         services.AddScoped<DeleteWorkspaceHandler>();
         services.AddSingleton<DeleteWorkspaceRequestValidator>();
         
+        // Register UpdateWorkspaceHandler
+        services.AddScoped<UpdateWorkspaceHandler>();
+        services.AddSingleton<UpdateWorkspaceRequestValidator>();
+        
         // Get Redis connection details from environment variables
         var redisHost = Environment.GetEnvironmentVariable("REDIS_HOST") ?? "localhost";
         var redisPort = Environment.GetEnvironmentVariable("REDIS_PORT") ?? "6379";
@@ -46,6 +51,8 @@ public static class ServiceExtensions
 
         // Register Redis Cache Service from shared library
         services.AddScoped<ICacheService, RedisCacheService>();
+
+        services.AddHttpClient<MSHttpClient>();
         
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>

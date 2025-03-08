@@ -125,13 +125,13 @@ public class WorkspaceRepository
 
             const string updateWorkspaceQuery = @"
             UPDATE Workspaces
-            SET Name = @Name, Description = @Description
+            SET Name = @Name, Description = @Description, OwnerId = @OwnerId
             WHERE Id = @Id;
         ";
 
             var rowsAffected = await connection.ExecuteAsync(
                 updateWorkspaceQuery,
-                new { workspace.Name, workspace.Description, workspace.Id }
+                new { workspace.Name, workspace.Description, workspace.OwnerId, workspace.Id }
             );
 
             return rowsAffected > 0;

@@ -17,8 +17,10 @@ public class UserRepository
         _context = context;
     }
 
-    public async Task<User?> GetUserByIdAsync(int id)
+    public async Task<User?> GetUserByIdAsync(int id, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        
         // Fetch from database if not found in Redis
         using var connection = await _context.CreateConnectionAsync();
         const string query = "SELECT * FROM Users WHERE Id = @Id;";
@@ -29,8 +31,11 @@ public class UserRepository
     
     
     // Get users with filter and pagination
-    public async Task<IEnumerable<User>> GetUsersAsync(string? search, int page = 1, int pageSize = 10)
+    public async Task<IEnumerable<User>> GetUsersAsync(string? search, CancellationToken cancellationToken, int page = 1, int pageSize = 10)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        
+        
         using var connection = await _context.CreateConnectionAsync();
 
         var query = new StringBuilder(@"
@@ -56,8 +61,11 @@ public class UserRepository
     }
     
     
-    public async Task<int?> CreateUserAsync(User user)
+    public async Task<int?> CreateUserAsync(User user, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+        
+        
         using var connection = await _context.CreateConnectionAsync();
         const string query = @"
                 INSERT INTO Users (FirstName, LastName, Email)

@@ -22,7 +22,7 @@ public class UserManager
         _logger = logger;
     }
     
-    public async Task<User?> GetUserByIdAsync(int id)
+    public async Task<User?> GetUserByIdAsync(int id, CancellationToken cancellationToken)
     {
         var cachedUser = await _cache.GetAsync(_serviceCacheKey, "user", id.ToString());
         if (cachedUser != null)
@@ -30,7 +30,7 @@ public class UserManager
             return JsonConvert.DeserializeObject<User>(cachedUser);
         }
         
-        var user = await _userRepository.GetUserByIdAsync(id);
+        var user = await _userRepository.GetUserByIdAsync(id, cancellationToken);
         
         // Store in Redis
         if (user != null)
@@ -41,7 +41,7 @@ public class UserManager
         return user;
     }
     
-    public async Task<IEnumerable<User>> GetUsersAsync(string? search, int page = 1, int pageSize = 10)
+    public async Task<IEnumerable<User>> GetUsersAsync(string? search, CancellationToken cancellationToken, int page = 1, int pageSize = 10)
     {
         var cachedUsers = await _cache.GetAsync(_serviceCacheKey, "users", $"{search ?? "none"}:{page}:{pageSize}");
         if (cachedUsers != null)
@@ -49,20 +49,21 @@ public class UserManager
             return JsonConvert.DeserializeObject<List<User>>(cachedUsers) ?? new List<User>();
         }
         
-        var users = await _userRepository.GetUsersAsync(search, page, pageSize);
+        var users = await _userRepository.GetUsersAsync(search, cancellationToken, page, pageSize);
         
         await _cache.SetAsync(_serviceCacheKey, "users", $"{search ?? "none"}:{page}:{pageSize}", JsonConvert.SerializeObject(users), TimeSpan.FromMinutes(5));
         
         return users;
     }
     
-    public async Task<int?> CreateUserAsync(User user)
+    public async Task<int?> CreateUserAsync(User user, CancellationToken cancellationToken)
     {
-        var id = await _userRepository.CreateUserAsync(user);
+        var id = await _userRepository.CreateUserAsync(user, cancellationToken);
         
         if (id.HasValue)
         {
             await _cache.RemoveAsync(_serviceCacheKey, "users");
+            await _publishEndpoint.Publish(new UserRegisteredEvent(id.Value, user.Email, user.FirstName, user.LastName));
         }
         
         return id;

@@ -33,8 +33,10 @@ namespace UserService.Features
             _userManager = userManager;
         }
 
-        public async Task<ApiResult<int>> Handle(CreateUserRequest request)
+        public async Task<ApiResult<int>> Handle(CreateUserRequest request, CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+            
             var user = new User
             {
                 FirstName = request.FirstName,
@@ -42,10 +44,8 @@ namespace UserService.Features
                 Email = request.Email,
             };
 
-            var id = await _userManager.CreateUserAsync(user);
-
-            Console.WriteLine("ID:" + id);
-
+            var id = await _userManager.CreateUserAsync(user, cancellationToken);
+            
             return id is not null 
                 ? new ApiResult<int>(id.Value)
                 : new ApiResult<int>(-1, success: false, "There is already a user with this email");
@@ -57,16 +57,16 @@ namespace UserService.Features
         public static void Register(IEndpointRouteBuilder app)
         {
             app.MapPost("/api/users",
-                async (CreateUserRequest request, CreateUserValidator validator, CreateUserHandler handler) =>
+                async (CreateUserRequest request, CreateUserValidator validator, CreateUserHandler handler, CancellationToken cancellationToken) =>
                 {
-                    var validationResult = await validator.ValidateAsync(request);
+                    var validationResult = await validator.ValidateAsync(request, cancellationToken);
                     if (!validationResult.IsValid)
                     {
                         var errorMessages = validationResult.Errors.Select(x => x.ErrorMessage);
                         return Results.BadRequest(new ApiResult<IEnumerable<string>>(errorMessages, success: false));
                     }
 
-                    var response = await handler.Handle(request);
+                    var response = await handler.Handle(request, cancellationToken);
                     
                     return response.Success == true
                         ? Results.Ok(response)
