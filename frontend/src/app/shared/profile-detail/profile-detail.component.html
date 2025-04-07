@@ -1,0 +1,43 @@
+<div class="profile-page p-4">
+
+  <div class="profile-container">
+    <!-- Profile Overview Card -->
+    <div class="profile-card card text-center p-4">
+      <img class="avatar mb-3" src="https://i.pravatar.cc/150?img=12" alt="User Avatar" />
+      <h5 class="mb-0">{{ user.name }}</h5>
+      <small class="text-muted">{{ user.role }}</small>
+    </div>
+
+    <!-- Personal Info Form Card -->
+    <div class="info-card">
+      <div class="info-header d-flex justify-content-between align-items-center mb-3">
+        <h5>Personal Information</h5>
+        <button class="edit-btn" (click)="editMode = !editMode">
+          <i class="pi pi-pencil me-1"></i> {{ editMode ? 'Cancel' : 'Edit' }}
+        </button>
+      </div>
+
+      <form class="info-form">
+        <div class="form-group">
+          <label for="name">Full Name</label>
+          <input id="name" type="text" [(ngModel)]="user.name" name="name" [disabled]="!editMode" />
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input id="email" type="email" [(ngModel)]="user.email" name="email" [disabled]="!editMode" />
+        </div>
+
+        <div class="form-group">
+          <label for="bio">Bio</label>
+          <textarea id="bio" rows="3" [(ngModel)]="user.bio" name="bio" [disabled]="!editMode"></textarea>
+        </div>
+
+        <div *ngIf="editMode" class="button-row">
+          <button type="button" class="save-btn" (click)="saveChanges()">Save</button>
+          <button type="button" class="cancel-btn" (click)="cancelChanges()">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,147 @@
+<p-confirmDialog></p-confirmDialog>
+<div class="workspace-detail d-flex gap-4 p-4">
+  <!-- Collaborators -->
+  <!--
+  <div class="collab-card bg-white shadow-sm p-3">
+    <h5 class="mb-3">Collaborators</h5>
+
+    <div *ngFor="let user of workspace.collaborators" class="collab-card-item d-flex align-items-center gap-3 mb-2">
+      <div class="collab-avatar">{{ user.name[0] }}</div>
+      <div>
+        <div class="collab-name">{{ user.name }}</div>
+        <div class="collab-role">{{ user.role }}</div>
+      </div>
+    </div>
+  </div>
+  -->
+  <!-- File Browser -->
+  <div class="file-browser flex-grow-1 bg-white shadow-sm p-3">
+    <!-- Breadcrumbs + Upload Button Row -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <!-- Breadcrumbs (left) -->
+      <div class="breadcrumbs breadcrumb-nav">
+        <ng-container *ngFor="let folder of breadcrumbPath; let i = index">
+          <a
+            href="#"
+            class="breadcrumb-item"
+            (click)="navigateToBreadcrumb(i - 1); $event.preventDefault()"
+            [class.active]="i === breadcrumbPath.length - 1"
+          >
+            {{ folder }}
+          </a>
+          <span *ngIf="i < breadcrumbPath.length - 1">></span>
+        </ng-container>
+      </div>
+
+      <!-- Upload Button (right) -->
+      <div class="upload-section">
+        <!-- New Folder Button -->
+        <button
+          pButton
+          icon="pi pi-folder-plus"
+          label="New Folder"
+          class="custom-upload-button"
+          (click)="showNewFolderDialog = true"
+        ></button>
+
+        <!-- Upload File Button -->
+        <button
+          pButton
+          icon="pi pi-upload"
+          label="Upload File"
+          class="custom-upload-button"
+          (click)="fileInput.click()"
+        ></button>
+
+        <input type="file" #fileInput (change)="onFileSelected($event)" hidden />
+      </div>
+    </div>
+
+    <p-dialog header="Create New Folder" [(visible)]="showNewFolderDialog" [modal]="true" [closable]="false" [style]="{ width: '350px' }">
+      <div class="p-fluid">
+        <div class="mb-3">
+          <label for="folderName" class="form-label">Folder Name</label>
+          <input id="folderName" type="text" pInputText [(ngModel)]="newFolderName" placeholder="Enter folder name" />
+        </div>
+
+        <div class="d-flex justify-content-end gap-2">
+          <button pButton label="Cancel" class="p-button-text" (click)="cancelFolderCreation()"></button>
+          <button pButton label="Create" class="p-button-primary" [disabled]="!newFolderName.trim()" (click)="createFolder()"></button>
+        </div>
+      </div>
+    </p-dialog>
+
+    <!-- Table of Contents -->
+    <div class="table-container">
+
+    <table class="workspace-table">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Type</th>
+        <th>Date Added</th>
+        <th>Added By</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngIf="currentFolder.folders.length === 0 && currentFolder.files.length === 0">
+        <td colspan="6" class="empty-folder-text text-center py-4">
+          <div class="text-muted">This folder is empty. Start by uploading a file or creating a new folder.</div>
+        </td>
+      </tr>
+      <!-- Folders -->
+      <tr *ngFor="let folder of currentFolder.folders">
+        <td (click)="navigateToFolder(folder.name)" class="clickable">
+          <i class="pi pi-folder text-primary me-2"></i> {{ folder.name }}
+        </td>
+        <td>Folder</td>
+        <td><span class="badge badge-folder">–</span></td>
+        <td><span class="badge badge-folder">–</span></td>
+        <td><span class="badge badge-folder">–</span></td>
+        <td>
+          <div class="file-actions">
+            <i
+              class="pi pi-trash"
+              pTooltip="Delete Folder"
+              tooltipPosition="top"
+              (click)="deleteFolder(folder)"
+            ></i>
+          </div>
+        </td>
+      </tr>
+
+      <!-- Files -->
+      <!-- File Rows with Actions -->
+      <tr *ngFor="let file of currentFolder.files">
+        <td><i class="pi pi-file me-2"></i> {{ file.name }}</td>
+        <td>File</td>
+        <td>{{ file.date }}</td>
+        <td>{{ file.addedBy }}</td>
+        <td>
+    <span
+      class="badge"
+      [ngClass]="{
+        'badge-success': file.status === 'Active',
+        'badge-danger': file.status === 'Archived',
+        'badge-info': file.status === 'Draft'
+      }"
+    >
+      {{ file.status }}
+    </span>
+        </td>
+        <td>
+          <div class="file-actions">
+            <i class="pi pi-eye" pTooltip="View" tooltipPosition="top" (click)="viewFile(file)"></i>
+            <i class="pi pi-trash" pTooltip="Delete" tooltipPosition="top" (click)="deleteFile(file)"></i>
+          </div>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+    </div>
+
+
+  </div>
+</div>

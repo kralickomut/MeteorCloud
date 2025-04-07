@@ -1,0 +1,25 @@
+<!-- Notification Bell -->
+<i class="pi pi-bell notification-icon" (click)="toggleNotifications()"></i>
+
+<!-- Notification Sidebar -->
+<p-sidebar
+  [(visible)]="showNotifications"
+  position="right"
+  [modal]="true"
+  [style]="{ width: '300px' }"
+  [showCloseIcon]="true"
+>
+  <h2 class="notification-title">Notifications</h2>
+
+  <div class="notification-list">
+    <div class="notification-item" *ngFor="let notification of notifications">
+      <div class="notification-icon">
+        <i [ngClass]="notification.icon" class="pi"></i>
+      </div>
+      <div class="notification-content">
+        <div class="notification-message">{{ notification.message }}</div>
+        <div class="notification-time">{{ notification.time }}</div>
+      </div>
+    </div>
+  </div>
+</p-sidebar>

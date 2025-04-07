@@ -1,0 +1,48 @@
+<div class="login-page d-flex justify-content-center align-items-center min-vh-100">
+  <div class="login-container shadow rounded-4 overflow-hidden">
+    <!-- Left Panel -->
+    <div class="login-left d-flex flex-column justify-content-center align-items-center p-4">
+      <img src="assets/img/hero.png" alt="Hero" class="login-illustration mb-4" />
+      <h4 class="text-white mb-2">Welcome back!</h4>
+      <p class="text-white-50 text-center small">
+        {{welcomeText}}
+      </p>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="login-right p-4">
+      <h2 class="mb-4 text-center"><b>Log in</b></h2>
+
+      <p-floatLabel>
+        <input id="name" type="text" pInputText [(ngModel)]="model.name" />
+        <label for="name">Name</label>
+      </p-floatLabel>
+
+
+      <p-floatLabel>
+        <p-password
+          inputId="password"
+          [(ngModel)]="model.password"
+          [feedback]="false"
+          [toggleMask]="true"
+          styleClass="w-100"
+        ></p-password>
+        <label>Password</label>
+      </p-floatLabel>
+
+      <button
+        pButton
+        label="login"
+        class="p-button-primary p-button-rounded mt-2"
+        [disabled]="!model.name || !model.password"
+        (click)="onLogin()"
+      ></button>
+
+      <p class="text-center mt-3 small">
+        Don't have an account yet?
+        <a routerLink="/register" class="text-primary text-decoration-none fw-semibold">Sign in</a>
+      </p>
+
+    </div>
+  </div>
+</div>

@@ -1,0 +1,74 @@
+<div class="links-page p-4">
+  <!-- Toolbar Section -->
+  <div class="toolbar d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <span class="search-wrapper">
+        <i class="pi pi-search search-icon"></i>
+        <input
+          type="text"
+          pInputText
+          [(ngModel)]="searchText"
+          placeholder="Search"
+          class="search-input"
+        />
+      </span>
+
+      <app-fast-link buttonText="create new"></app-fast-link>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <button pButton icon="pi pi-refresh" class="p-button-outlined p-button-sm"></button>
+      <div class="pagination-status">
+        {{ currentPage }} of {{ totalPages }}
+      </div>
+
+      <button pButton icon="pi pi-angle-left" class="p-button-text p-button-sm" (click)="prevPage()" [disabled]="currentPage === 1"></button>
+      <button pButton icon="pi pi-angle-right" class="p-button-text p-button-sm" (click)="nextPage()" [disabled]="currentPage === totalPages"></button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container">
+    <table class="workspace-table">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Link</th>
+        <th>Expires At</th>
+        <th>Time Left</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let link of paginatedLinks">
+        <td>
+          <a href="{{ link.url }}" target="_blank" class="link-name fw-semibold text-decoration-none">{{ link.name }}</a>
+        </td>
+        <td>
+          <div class="d-flex align-items-center gap-2">
+            <span class="truncate">{{ link.url }}</span>
+            <i class="pi pi-copy" pTooltip="Copy" tooltipPosition="top" (click)="copyToClipboard(link.url)"></i>
+          </div>
+        </td>
+        <td>{{ link.expiresAt | date: 'medium' }}</td>
+        <td>{{ calculateHoursLeft(link.expiresAt) }} hrs</td>
+        <td>
+            <span
+              class="badge"
+              [ngClass]="{
+                'badge-danger': isExpired(link.expiresAt),
+                'badge-success': !isExpired(link.expiresAt)
+              }"
+            >
+              {{ isExpired(link.expiresAt) ? 'Expired' : 'Active' }}
+            </span>
+        </td>
+        <td>
+          <i class="pi pi-trash text-danger" (click)="deleteLink(link)"></i>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

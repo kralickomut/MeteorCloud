@@ -1,0 +1,147 @@
+@import "variables";
+
+.profile-page {
+  max-width: 1100px;
+  margin: 0 auto;
+
+  .title {
+    font-weight: 700;
+    font-size: 1.5rem;
+  }
+
+  .subtitle {
+    font-size: 0.95rem;
+    color: #6b7280;
+  }
+
+  .profile-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+
+    @media (min-width: 768px) {
+      flex-direction: row;
+      align-items: stretch; // ensures both cards align in height
+    }
+  }
+
+  .profile-card {
+    background-color: white;
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); // same as info-card
+    padding: 2rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+
+    border: none;       // ✨ Remove any border
+    outline: none;      // ✨ Remove any outline
+
+    .avatar {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+  }
+
+  .info-card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+    flex: 2;
+
+    .info-header {
+      h5 {
+        font-size: 1.1rem;
+        font-weight: 600;
+      }
+
+      .edit-btn {
+        background: transparent;
+        border: none;
+        color: $primaryColor;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+
+    .info-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+
+      .form-group {
+        display: flex;
+        flex-direction: column;
+
+        label {
+          font-size: 0.8rem;
+          color: #6b7280;
+          margin-bottom: 0.3rem;
+        }
+
+        input,
+        textarea {
+          padding: 0.6rem 0.9rem;
+          border: 1px solid #e5e7eb;
+          border-radius: 0.5rem;
+          font-size: 0.9rem;
+          background-color: #f9fafb;
+          transition: all 0.2s ease;
+
+          &:disabled {
+            background-color: #f3f4f6;
+            color: #6b7280;
+          }
+
+          &:focus {
+            outline: none;
+            border-color: $primaryColor;
+            background-color: white;
+          }
+        }
+
+        textarea {
+          resize: none;
+        }
+      }
+
+      .button-row {
+        display: flex;
+        gap: 0.75rem;
+        justify-content: flex-end;
+
+        .save-btn {
+          background-color: $primaryColor;
+          color: white;
+          padding: 0.5rem 1rem;
+          border-radius: 0.5rem;
+          border: none;
+          font-size: 0.85rem;
+          cursor: pointer;
+        }
+
+        .cancel-btn {
+          background-color: #f3f4f6;
+          color: #374151;
+          padding: 0.5rem 1rem;
+          border-radius: 0.5rem;
+          border: none;
+          font-size: 0.85rem;
+          cursor: pointer;
+        }
+      }
+    }
+  }
+}

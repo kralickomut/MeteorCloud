@@ -1,0 +1,29 @@
+:host {
+  display: block;
+}
+
+// Button Style - same as dashboard-action
+.workspace-button {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #4b5563;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+
+  i {
+    font-size: 1rem;
+    margin-right: 0.5rem;
+  }
+
+  &:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+  }
+
+}

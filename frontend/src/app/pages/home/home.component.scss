@@ -1,0 +1,169 @@
+@import "variables";
+
+.dashboard-container {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+.dashboard-hero {
+  width: 120px;
+  animation: float 3s ease-in-out infinite;
+  user-select: none;
+}
+
+.dashboard-title {
+  font-weight: bold;
+  font-size: 2rem;
+
+  span {
+    background: linear-gradient(to right, #e11d48, #f9a8d4);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+.dashboard-search {
+  max-width: 500px;
+  margin: 0 auto;
+
+  .dashboard-input {
+    border: none;
+    border-radius: 0.75rem 0 0 0.75rem;
+    padding: 0.75rem 1rem;
+    width: 100%;
+    background-color: #f1f5f9;
+  }
+
+  .dashboard-search-icon {
+    background-color: #f1f5f9;
+    border: none;
+    border-radius: 0 0.75rem 0.75rem 0;
+    padding: 0.75rem 1rem;
+    color: #6b7280;
+
+    &:hover {
+      background-color: #e5e7eb;
+    }
+  }
+}
+
+.dashboard-actions {
+  button.dashboard-action {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #4b5563;
+    transition: all 0.2s;
+
+    &:hover {
+      background-color: #f3f4f6;
+      color: #111827;
+    }
+
+    i {
+      font-size: 1rem;
+    }
+  }
+}
+
+.dashboard-scroll {
+  font-size: 0.85rem;
+  i {
+    font-size: 1.25rem;
+    color: #9ca3af;
+  }
+}
+
+.see-recents {
+  margin-top: 3rem; // spacing above the text
+
+  .scroll-arrow {
+    margin: 1.5rem auto 0 auto; // ← auto for left & right centers the div!
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #f1f5f9;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background 0.2s ease;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+
+    i {
+      font-size: 1.2rem;
+      color: #6b7280;
+    }
+
+    &:hover {
+      background-color: $primaryColorLight;
+    }
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.dashboard-input::placeholder {
+  font-family: monospace;
+  color: #6b7280;
+  opacity: 1;
+  animation: blink-cursor 1s steps(2, start) infinite;
+}
+
+@keyframes blink-cursor {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}
+
+
+:host ::ng-deep .p-dialog .form-group {
+  text-align: left; // ⬅️ aligns all child labels and inputs left
+}
+
+:host ::ng-deep .form-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #374151;
+  margin-bottom: 0.35rem;
+  display: block;
+  text-align: left; // ⬅️ ensures label text is left-aligned
+}
+
+:host ::ng-deep .form-input {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 0.95rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  color: #374151;
+  background-color: #ffffff;
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    border-color: #8b5cf6;
+    outline: none;
+  }
+}
+
+
+::ng-deep .p-dialog-content {
+  max-height: 70vh;
+  overflow-y: auto;
+}

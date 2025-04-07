@@ -1,0 +1,78 @@
+<div class="workspace-overview p-4">
+  <!-- Toolbar Section -->
+  <div class="toolbar d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <!-- Search input -->
+      <span class="search-wrapper">
+      <i class="pi pi-search search-icon"></i>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="searchText"
+        placeholder="Search"
+        class="search-input"
+      />
+    </span>
+
+      <!-- Your new button -->
+      <app-workspace-create buttonLabel="create new" class="small-btn"></app-workspace-create>
+    </div>
+
+    <!-- Pagination + buttons -->
+    <div class="d-flex align-items-center gap-2">
+      <button pButton icon="pi pi-filter" class="filter-button p-button-outlined">Filter</button>
+      <button pButton icon="pi pi-refresh" class="p-button-outlined p-button-sm"></button>
+
+      <div class="pagination-status">
+        {{ currentPage }} of {{ totalPages }}
+      </div>
+
+      <button pButton icon="pi pi-angle-left" class="p-button-text p-button-sm" (click)="prevPage()" [disabled]="currentPage === 1"></button>
+      <button pButton icon="pi pi-angle-right" class="p-button-text p-button-sm" (click)="nextPage()" [disabled]="currentPage === totalPages"></button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container">
+    <table class="workspace-table">
+      <thead>
+      <tr>
+        <th>Name</th>
+        <th>Owner</th>
+        <th>Company</th>
+        <th>Email</th>
+        <th>Source</th>
+        <th>Status</th>
+      </tr>
+      </thead>
+      <tbody>
+      <tr *ngFor="let w of paginatedWorkspaces">
+        <td>
+          <div class="d-flex align-items-center gap-2">
+            <div class="avatar">{{ w.initials }}</div>
+            <a [routerLink]="['/workspaces', w.id]" class="fw-semibold text-decoration-none">
+              {{ w.name }}
+            </a>
+          </div>
+        </td>
+        <td>{{ w.owner }}</td>
+        <td>{{ w.company }}</td>
+        <td>{{ w.email }}</td>
+        <td>{{ w.source }}</td>
+        <td>
+            <span
+              class="badge"
+              [ngClass]="{
+                'badge-success': w.status === 'Active',
+                'badge-danger': w.status === 'Inactive',
+                'badge-info': w.status === 'Prospect'
+              }"
+            >
+              {{ w.status }}
+            </span>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

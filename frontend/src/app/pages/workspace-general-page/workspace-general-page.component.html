@@ -1,0 +1,71 @@
+<div class="workspace-general-page p-4">
+  <!-- Top Header Info -->
+  <div class="workspace-header mb-4">
+    <h2 class="workspace-title mb-1">{{ workspace.name }} Overview</h2>
+    <p class="text-muted">General workspace details and insights.</p>
+  </div>
+
+  <div class="general-layout d-flex gap-4">
+    <!-- LEFT COLUMN -->
+    <div class="left-column flex-grow-1">
+      <!-- General Info Table -->
+      <div class="general-info-card mb-4 p-4">
+        <div><strong>Created On:</strong> {{ workspace.createdOn }}</div>
+        <div><strong>Last Updated:</strong> {{ workspace.lastUpdated }}</div>
+        <div><strong>Owner:</strong> {{ workspace.owner }}</div>
+        <div><strong>Collaborators:</strong> {{ workspace.collaborators.length }}</div>
+        <div><strong>Description:</strong> {{ workspace.description }}</div>
+      </div>
+
+      <!-- Insights Grid -->
+      <div class="workspace-insights grid">
+        <div class="insight-card">
+          <div class="insight-header">
+            <i class="pi pi-clock me-2 text-muted"></i> Recent Activity
+          </div>
+          <ul class="insight-list">
+            <li *ngFor="let activity of recentActivity">{{ activity }}</li>
+          </ul>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-header">
+            <i class="pi pi-file-edit me-2 text-muted"></i> Active Files
+          </div>
+          <ul class="insight-list">
+            <li *ngFor="let file of activeFiles">{{ file }}</li>
+          </ul>
+        </div>
+
+        <div class="insight-card">
+          <div class="insight-header">
+            <i class="pi pi-user-plus me-2 text-muted"></i> Invited Users
+          </div>
+          <ul class="insight-list">
+            <li *ngFor="let invite of invitedUsers">
+              <strong>{{ invite.name }}</strong> invited by {{ invite.invitedBy }} –
+              <span [ngClass]="{
+                'text-success': invite.status === 'Accepted',
+                'text-muted': invite.status === 'Pending'
+              }">{{ invite.status }}</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN - COLLABORATORS -->
+    <div class="collaborators-sidebar">
+      <div class="sidebar-card p-3">
+        <h6 class="mb-3">Collaborators</h6>
+        <div *ngFor="let user of workspace.collaborators" class="collab-user d-flex align-items-center gap-3 mb-2">
+          <div class="collab-avatar">{{ user.name[0] }}</div>
+          <div>
+            <div class="fw-semibold">{{ user.name }}</div>
+            <small class="text-muted">invited by {{ user.invitedBy }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

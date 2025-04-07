@@ -1,0 +1,35 @@
+<!-- Mobile Navbar (visible only on small screens) -->
+<div class="mobile-navbar d-flex justify-content-between align-items-center px-3 py-2">
+  <img src="assets/img/hero.png" alt="MeteorCloud" class="mobile-logo" />
+
+  <!-- Hamburger menu toggle -->
+  <i class="pi pi-bars mobile-menu-toggle" (click)="toggleMobileMenu()"></i>
+</div>
+
+<!-- Collapsible mobile menu -->
+<div class="mobile-menu" *ngIf="isMobileMenuOpen">
+  <a class="mobile-menu-item" href="#">Home</a>
+  <a class="mobile-menu-item" href="#">Workspaces</a>
+  <a class="mobile-menu-item" href="#">Users</a>
+  <a class="mobile-menu-item" href="#">Links</a>
+  <a class="mobile-menu-item" href="#">Settings</a>
+</div>
+
+<div class="layout-container d-flex">
+  <!-- Floating sidebar wrapper -->
+  <div class="sidebar-wrapper">
+    <app-sidebar></app-sidebar>
+  </div>
+
+  <!-- Main area -->
+  <div class="main-wrapper flex-grow-1">
+    <div class="topbar d-flex justify-content-between align-items-center px-4">
+      <h6 class="mb-0 fw-bold ps-4">František Hromek</h6>
+      <app-notification-bar></app-notification-bar>
+    </div>
+
+    <div class="main-content p-4">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

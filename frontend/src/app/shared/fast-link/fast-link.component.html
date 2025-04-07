@@ -1,0 +1,58 @@
+<button class="workspace-button" (click)="openCreateWorkspace()">
+  <i class="pi pi-link"></i> {{ buttonText }}
+</button>
+
+<!-- 👇 Create Workspace Dialog -->
+<p-dialog
+  [(visible)]="showCreateDialog"
+  modal="true"
+  [style]="{ width: '400px' }"
+  header="Create New FastLink"
+  [closable]="true"
+  [dismissableMask]="true"
+>
+  <div class="form-group">
+    <!-- Label and Input -->
+    <label for="workspaceName" class="form-label">FastLink Name</label>
+    <input
+      id="workspaceName"
+      pInputText
+      [(ngModel)]="newWorkspaceName"
+      placeholder="e.g. Marketing Brief"
+      class="form-input mb-3"
+    />
+
+    <!-- Label and Textarea -->
+    <label for="expiration" class="form-label">Expiration (max 24h)</label>
+    <input
+      id="expiration"
+      pInputText
+      [(ngModel)]="expirationInHours"
+      placeholder="12"
+      class="form-input mb-3"
+    />
+
+    <div class="form-upload mb-3">
+      <label class="form-label">Upload File</label>
+      <p-fileUpload
+        #fileUpload
+        name="file"
+        mode="basic"
+        chooseLabel="Select File"
+        [auto]="false"
+        (onSelect)="onFileSelected($event, fileUpload)"
+        class="mb-2 custom-upload-button"
+      />
+
+      <!-- Display selected file name if available -->
+      <div *ngIf="selectedFileName" class="selected-file-name">
+        {{ selectedFileName }}
+      </div>
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Create" icon="pi pi-check" class="p-button-primary" (click)="createWorkspace()"></button>
+  </ng-template>
+</p-dialog>

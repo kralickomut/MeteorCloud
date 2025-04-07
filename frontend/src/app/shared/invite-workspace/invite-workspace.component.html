@@ -1,0 +1,33 @@
+<button class="workspace-button" (click)="openCreateWorkspace()">
+  <i class="pi pi-sitemap
+"></i> {{ buttonText }}
+</button>
+
+<!-- 👇 Create Workspace Dialog -->
+<p-dialog
+  [(visible)]="showCreateDialog"
+  modal="true"
+  [style]="{ width: '400px' }"
+  header="Invite Colleague"
+  [closable]="true"
+  [dismissableMask]="true"
+>
+  <div class="form-group">
+    <!-- Label and Input -->
+    <label for="workspaceName" class="form-label">Email</label>
+    <input
+      id="workspaceName"
+      pInputText
+      [(ngModel)]="newWorkspaceName"
+      placeholder="e.g. michaelz@gmail.com"
+      class="form-input mb-3"
+    />
+
+
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Invite" icon="pi pi-check" class="p-button-primary" (click)="createWorkspace()"></button>
+  </ng-template>
+</p-dialog>

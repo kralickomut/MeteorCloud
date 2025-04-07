@@ -1,0 +1,212 @@
+@import "variables";
+
+.workspace-detail {
+  .collab-card {
+    width: 240px;
+    border-radius: 1rem;
+
+    .collab-card-item {
+      padding: 0.75rem;
+      background-color: #f9fafb;
+      border-radius: 0.75rem;
+      transition: background 0.2s ease;
+
+      &:hover {
+        background-color: #f3f4f6;
+      }
+    }
+
+    .collab-avatar {
+      background-color: $primaryColorLight;
+      color: $primaryColor;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .collab-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .collab-role {
+      font-size: 0.75rem;
+      color: #6b7280;
+    }
+  }
+
+  .file-browser {
+    border-radius: 1rem;
+
+    .breadcrumbs {
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+
+      .breadcrumb-item {
+        color: #6b7280;
+        text-decoration: none;
+        cursor: pointer;
+
+        &.active {
+          font-weight: bold;
+          color: #1f2937;
+        }
+
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
+
+    .upload-section {
+      display: flex;
+      gap: 0.75rem;
+
+      .custom-upload-button {
+        height: 2.25rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        padding: 0 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+        background-color: transparent;
+        color: #e11d48;
+        white-space: nowrap;
+
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+
+        .pi {
+          font-size: 0.95rem;
+        }
+
+        &:hover {
+          background-color: #fce7ef;
+          border-color: #fbcfe8;
+        }
+
+        &:focus {
+          box-shadow: 0 0 0 2px rgba(233, 56, 108, 0.25);
+        }
+      }
+    }
+
+    .table-container {
+      overflow-x: auto;
+      background: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+      max-height: 500px;
+    }
+
+
+    .workspace-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+
+
+      th {
+        text-align: left;
+        padding: 1rem;
+        font-weight: 600;
+        color: #6b7280;
+        border-bottom: 1px solid #e5e7eb;
+        position: sticky;
+        top: 0;
+        background-color: white;
+        z-index: 1;
+      }
+
+      td {
+        padding: 1rem;
+        color: #374151;
+        border-bottom: 1px solid #f3f4f6;
+
+        i {
+          margin-right: 0.5rem;
+        }
+
+        .file-actions {
+          display: flex;
+          gap: 0.5rem;
+
+          i {
+            cursor: pointer;
+            transition: color 0.2s ease;
+            color: #6b7280;
+
+            &:hover {
+              color: $primaryColor;
+            }
+          }
+        }
+      }
+
+      .badge {
+        font-size: 0.75rem;
+        padding: 0.35rem 0.6rem;
+        border-radius: 0.5rem;
+        font-weight: 500;
+      }
+
+      .badge-success {
+        background-color: #d1fae5;
+        color: #065f46;
+      }
+
+      .badge-danger {
+        background-color: #fee2e2;
+        color: #991b1b;
+      }
+
+      .badge-info {
+        background-color: #dbeafe;
+        color: #1e40af;
+      }
+
+      .badge-folder {
+        background-color: #f3f4f6;
+        color: #6b7280;
+      }
+    }
+
+    .clickable {
+      cursor: pointer;
+
+      &:hover {
+        background-color: #f9fafb;
+      }
+    }
+  }
+}
+
+.upload-wrapper {
+  display: inline-flex;
+  align-items: center;
+
+  button {
+    height: 2.25rem;
+  }
+}
+
+
+.empty-folder-text {
+  font-size: 0.95rem;
+  color: #9ca3af;
+  text-align: center;
+}
+
+.table-container::-webkit-scrollbar {
+  width: 6px;
+}
+.table-container::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}

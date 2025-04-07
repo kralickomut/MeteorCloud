@@ -1,0 +1,122 @@
+<div class="workspace-history-page p-4">
+  <!-- Header -->
+  <div class="page-header mb-4">
+    <h2 class="workspace-title mb-1">History of {{ workspaceName }}</h2>
+    <p class="text-muted">A detailed overview of workspace activity.</p>
+  </div>
+
+  <!-- History Topic Cards -->
+  <div class="history-tabs d-flex gap-3 mb-4">
+    <div
+      class="tab-card"
+      [class.active]="activeTab === 'files'"
+      (click)="switchTab('files')"
+    >
+      File History
+    </div>
+    <div
+      class="tab-card"
+      [class.active]="activeTab === 'invitations'"
+      (click)="switchTab('invitations')"
+    >
+      User Invitations
+    </div>
+  </div>
+
+  <!-- Search + Paging Toolbar -->
+  <div class="toolbar d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <span class="search-wrapper">
+      <i class="pi pi-search search-icon"></i>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="searchText"
+        placeholder="Search"
+        class="search-input"
+      />
+    </span>
+
+    <div class="d-flex align-items-center gap-2">
+      <div class="pagination-status">
+        {{ currentPage }} of {{ totalPages }}
+      </div>
+      <button
+        pButton
+        icon="pi pi-angle-left"
+        class="p-button-text p-button-sm"
+        (click)="prevPage()"
+        [disabled]="currentPage === 1"
+      ></button>
+      <button
+        pButton
+        icon="pi pi-angle-right"
+        class="p-button-text p-button-sm"
+        (click)="nextPage()"
+        [disabled]="currentPage === totalPages"
+      ></button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-container">
+    <table class="workspace-table">
+      <thead>
+      <tr *ngIf="activeTab === 'files'">
+        <th>File</th>
+        <th>Action</th>
+        <th>User</th>
+        <th>Date</th>
+      </tr>
+      <tr *ngIf="activeTab === 'invitations'">
+        <th>User</th>
+        <th>Invited By</th>
+        <th>Status</th>
+        <th>Date</th>
+      </tr>
+      </thead>
+      <tbody>
+      <!-- FILE HISTORY TAB -->
+      <ng-container *ngIf="activeTab === 'files'">
+        <tr *ngFor="let file of paginatedFileItems">
+          <td>{{ file.file }}</td>
+          <td>
+            <span
+              class="badge"
+              [ngClass]="{
+                'badge-success': file.action === 'Created',
+                'badge-danger': file.action === 'Deleted',
+                'badge-info': file.action === 'Updated'
+              }"
+            >
+              {{ file.action }}
+            </span>
+          </td>
+          <td>{{ file.user }}</td>
+          <td>{{ file.date }}</td>
+        </tr>
+      </ng-container>
+
+      <!-- INVITATIONS TAB -->
+      <ng-container *ngIf="activeTab === 'invitations'">
+        <tr *ngFor="let invite of paginatedInvitationItems">
+          <td>{{ invite.user }}</td>
+          <td>{{ invite.invitedBy }}</td>
+          <td>
+        <span
+          class="badge"
+          [ngClass]="{
+            'badge-success': invite.status === 'Accepted',
+            'badge-info': invite.status === 'Pending',
+            'badge-danger': invite.status === 'Rejected'
+          }"
+        >
+          {{ invite.status }}
+        </span>
+          </td>
+          <td>{{ invite.date }}</td>
+        </tr>
+      </ng-container>
+      </tbody>
+    </table>
+  </div>
+</div>

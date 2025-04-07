@@ -1,0 +1,67 @@
+:host {
+  display: block;
+}
+
+// Button Style - same as dashboard-action
+.workspace-button {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #4b5563;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+
+  i {
+    font-size: 1rem;
+    margin-right: 0.5rem;
+  }
+
+  &:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+  }
+}
+
+// Dialog form layout
+::ng-deep .p-dialog .form-group {
+  text-align: left;
+}
+
+::ng-deep .form-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #374151;
+  margin-bottom: 0.35rem;
+  display: block;
+  text-align: left;
+}
+
+::ng-deep .form-input {
+  width: 100%;
+  padding: 0.75rem;
+  font-size: 0.95rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  color: #374151;
+  background-color: #ffffff;
+  transition: border-color 0.2s ease;
+
+  &:focus {
+    border-color: #8b5cf6;
+    outline: none;
+  }
+}
+
+::ng-deep .p-dialog-content {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+::ng-deep .p-dialog {
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+}

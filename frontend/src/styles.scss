@@ -1,0 +1,88 @@
+// Bootstrap first
+@import "bootstrap/scss/bootstrap";
+
+// -----------------------------
+// 🌐 Global PrimeNG UI Tuning
+// -----------------------------
+
+$primaryColor: #e9386c;
+$primaryTextColor: #ffffff;
+
+::ng-deep .p-button.p-button-primary {
+  background-color: #e9386c !important;
+  border: none !important;
+  color: white !important;
+
+  &:hover {
+    background-color: darken(#e9386c, 5%) !important;
+  }
+}
+
+// Inputs, dropdowns, textareas
+.p-inputtext,
+.p-password input,
+.p-dropdown,
+.p-multiselect,
+textarea.p-inputtextarea {
+  font-size: 0.9rem;
+  padding: 0.45rem 0.75rem;
+  border-radius: 0.4rem;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+// Password wrapper
+.p-password {
+  width: 100%;
+}
+
+// FloatLabel container
+p-floatLabel {
+  display: block;
+  width: 100%;
+  margin-bottom: 1rem;
+
+  label {
+    font-size: 0.8rem;
+  }
+}
+
+// Buttons
+button.p-button {
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.45rem 1rem;
+  border-radius: 0.5rem;
+  width: 100%; // Make all form buttons full width
+}
+
+// Card-like form wrappers
+.form-wrapper {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+  max-width: 400px;
+  width: 100%;
+}
+
+// Global background (optional)
+.register-page {
+  background-color: #f8fafc;
+}
+
+.p-tooltip {
+  font-size: 0.75rem; // smaller text
+  padding: 0.4rem 0.6rem;
+  border-radius: 0.5rem;
+}
+
+.p-tooltip .p-tooltip-text {
+  font-size: 0.75rem;
+}
+
+
+::ng-deep .p-toast .p-toast-message-success {
+  background-color: #e0f7ef;
+  color: $primaryColor;
+}

@@ -1,0 +1,40 @@
+<button class="workspace-button" (click)="openCreateWorkspace()">
+  <i class="pi pi-th-large"></i> {{ buttonLabel }}
+</button>
+
+<!-- 👇 Create Workspace Dialog -->
+<p-dialog
+  [(visible)]="showCreateDialog"
+  modal="true"
+  [style]="{ width: '400px' }"
+  header="Create New Workspace"
+  [closable]="true"
+  [dismissableMask]="true"
+>
+  <div class="form-group">
+    <!-- Label and Input -->
+    <label for="workspaceName" class="form-label">Workspace Name</label>
+    <input
+      id="workspaceName"
+      pInputText
+      [(ngModel)]="newWorkspaceName"
+      placeholder="e.g. Marketing Brief"
+      class="form-input mb-3"
+    />
+
+    <!-- Label and Textarea -->
+    <label for="description" class="form-label">Description</label>
+    <textarea
+      pInputTextarea
+      id="description"
+      [(ngModel)]="newWorkspaceDescription"
+      rows="3"
+      class="form-input"
+      placeholder="Optional description..."
+    ></textarea>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Create" icon="pi pi-check" class="p-button-primary" (click)="createWorkspace()"></button>
+  </ng-template>
+</p-dialog>

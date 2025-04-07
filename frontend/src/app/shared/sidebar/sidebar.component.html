@@ -1,0 +1,45 @@
+<div class="sidebar d-flex flex-column justify-content-between align-items-center py-4">
+  <!-- Hero Logo at the top -->
+  <div class="sidebar-logo mb-4">
+    <img src="assets/img/hero.png" alt="MeteorCloud logo" class="sidebar-hero" />
+  </div>
+
+  <!-- Navigation icons -->
+  <div class="nav-icons d-flex flex-column gap-4">
+    <a routerLink="/home" routerLinkActive="active" class="nav-icon" pTooltip="Overview" tooltipPosition="right">
+      <i class="pi pi-home"></i>
+    </a>
+
+    <a routerLink="/workspaces" routerLinkActive="active" class="nav-icon" pTooltip="Workspaces" tooltipPosition="right">
+      <i class="pi pi-th-large"></i>
+    </a>
+
+    <div class="nav-icon" pTooltip="Users" tooltipPosition="right">
+      <i class="pi pi-users"></i>
+    </div>
+
+    <a routerLink="/links" routerLinkActive="active" class="nav-icon" pTooltip="Links" tooltipPosition="right">
+      <i class="pi pi-link"></i>
+    </a>
+
+    <div class="nav-icon" pTooltip="Settings" tooltipPosition="right">
+      <i class="pi pi-cog"></i>
+    </div>
+  </div>
+
+  <!-- Avatar at the bottom -->
+  <!-- Bottom Section: Logout + Avatar -->
+  <div class="sidebar-bottom d-flex flex-column align-items-center gap-3">
+    <!-- Logout Icon -->
+    <div class="nav-icon" (click)="logout()" pTooltip="Logout" tooltipPosition="right">
+      <i class="pi pi-sign-out"></i>
+    </div>
+
+    <!-- Avatar -->
+    <div class="user-avatar">
+      <a routerLink="/profile" routerLinkActive="active" class="nav-icon" pTooltip="Profile" tooltipPosition="right">
+        <img src="https://i.pravatar.cc/150?img=12" class="rounded-circle user-img" alt="User avatar" />
+      </a>
+    </div>
+  </div>
+</div>
