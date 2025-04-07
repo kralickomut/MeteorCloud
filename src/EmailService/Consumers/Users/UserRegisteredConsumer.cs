@@ -21,7 +21,7 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
         _logger.LogInformation($"Received UserRegisteredEvent for {message.Email}");
 
         var emailBody = $"Hello {message.FirstName},\n\nWelcome to our platform!";
-        
+
         await _emailSender.SendEmailAsync(message.Email, "Welcome!", emailBody);
     }
 }

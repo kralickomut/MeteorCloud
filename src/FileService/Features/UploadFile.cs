@@ -47,8 +47,8 @@ public static class UploadFileEndpoint
 {
     public static void Register(IEndpointRouteBuilder app)
     {
-        app.MapPost("/api/file/upload/{workspaceId}",
-            async (string workspaceId, HttpRequest request, UploadFileHandler handler, CancellationToken cancellationToken) =>
+        app.MapPost("/api/file/upload",
+            async (HttpRequest request, UploadFileHandler handler, CancellationToken cancellationToken) =>
             {
                 if (!request.HasFormContentType || !request.Form.Files.Any())
                 {
@@ -56,9 +56,14 @@ public static class UploadFileEndpoint
                 }
 
                 var file = request.Form.Files.First();
+                var path = request.Form["path"].ToString(); 
+            
+                if (string.IsNullOrWhiteSpace(path))
+                {
+                    return Results.BadRequest(new ApiResult<object>(null, false, "Path is required."));
+                }
 
-                var filePath = $"{workspaceId}";
-                var fileRequest = new UploadFileRequest(file, filePath);
+                var fileRequest = new UploadFileRequest(file, path);
                 var validationResult = await new UploadFileRequestValidator().ValidateAsync(fileRequest, cancellationToken);
 
                 if (!validationResult.IsValid)
@@ -68,14 +73,10 @@ public static class UploadFileEndpoint
                 }
 
                 var result = await handler.Handle(fileRequest, cancellationToken);
-
-                if (!result.Success)
-                {
-                    return Results.BadRequest(new ApiResult<object>(null, false, "File upload failed"));
-                }
-
-                return Results.Ok(new ApiResult<string>(result.Data, true, "File uploaded successfully"));
-            })
-        .Accepts<UploadFileRequest>("multipart/form-data");
+                
+                return result.Success
+                    ? Results.Ok(new ApiResult<string>(result.Data, true, "File uploaded successfully"))
+                    : Results.BadRequest(new ApiResult<object>(null, false, "File upload failed"));
+            });
     }
 }
