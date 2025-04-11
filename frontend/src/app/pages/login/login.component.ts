@@ -52,7 +52,6 @@ export class LoginComponent implements OnInit {
       next: (res) => {
         if (res.success) {
           console.log('Login success:', res);
-          // Store the token in local storage
           localStorage.setItem('auth_token', res.data?.token || '');
           this.router.navigate(['/home']);
         } else {

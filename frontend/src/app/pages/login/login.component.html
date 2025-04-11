@@ -40,7 +40,16 @@
           </small>
         </p-floatLabel>
 
-        <div *ngIf="errorMessage" class="alert alert-danger text-sm mt-2 text-center">
+        <div *ngIf="errorMessage === 'Account not verified.'" class="alert alert-danger text-sm mt-2 text-center">
+          {{ errorMessage }}
+          <br />
+          <a [routerLink]="['/verify']" [queryParams]="{ email: form.get('email')?.value }" class="text-decoration-underline text-dark fw-semibold" style="color: #1e40af">
+            Verify your account here
+          </a>
+        </div>
+
+        <!-- Show other errors -->
+        <div *ngIf="errorMessage && errorMessage !== 'Account not verified.'" class="alert alert-danger text-sm mt-2 text-center">
           {{ errorMessage }}
         </div>
 

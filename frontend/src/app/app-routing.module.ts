@@ -33,8 +33,8 @@ const routes: Routes = [
   },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
-  // Verify route with query parameter for email
   { path: 'verify', component: VerifyComponent },
+  { path: '**', redirectTo: '/home' }
 ];
 
 @NgModule({
