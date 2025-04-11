@@ -1,11 +1,11 @@
-using AuthService.Consumers;
 using AuthService.Features.Auth;
-using AuthService.Features.Credentials;
 using AuthService.Persistence;
 using AuthService.Services;
 using MassTransit;
 using MeteorCloud.Caching.Abstraction;
 using MeteorCloud.Caching.Services;
+using MeteorCloud.Messaging.Events;
+using MeteorCloud.Messaging.Events.Auth;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
 
@@ -25,16 +25,19 @@ public static class ServiceExtensions
         services.AddSingleton<DapperContext>();
 
         services.AddScoped<CredentialRepository>();
-        services.AddScoped<CredentialManager>();
+        services.AddScoped<CredentialService>();
 
-        services.AddSingleton<GetCredentialsByEmailValidator>();
-        services.AddScoped<GetCredentialsByEmailHandler>();
-        
-        services.AddSingleton<CreateCredentialsValidator>();
-        services.AddScoped<CreateCredentialsHandler>();
-        
         services.AddSingleton<LoginValidator>();
         services.AddScoped<LoginHandler>();
+
+        services.AddSingleton<RegisterValidator>();
+        services.AddScoped<RegisterHandler>();
+        
+        services.AddSingleton<VerifyValidator>();
+        services.AddScoped<VerifyHandler>();
+        
+        services.AddSingleton<ResendCodeValidator>();
+        services.AddScoped<ResendCodeHandler>();
 
         services.AddSingleton<TokenService>();
         
@@ -56,9 +59,7 @@ public static class ServiceExtensions
 
         services.AddMassTransit(busConfigurator =>
         {
-            busConfigurator.AddConsumer<UserUpdatedConsumer>();
-            busConfigurator.AddConsumer<UserDeletedConsumer>();
-            
+
             busConfigurator.UsingRabbitMq((context, rabbitCfg) =>
             {
                 rabbitCfg.Host("rabbitmq", h =>
@@ -67,19 +68,13 @@ public static class ServiceExtensions
                     h.Password("guest");
                 });
                 
-                rabbitCfg.ReceiveEndpoint("user-updated-queue", e =>
-                {
-                    e.Bind("users");
-                    e.ConfigureConsumer<UserUpdatedConsumer>(context);
-                });
+                rabbitCfg.Message<UserRegisteredEvent>(x => x.SetEntityName("user-registered"));
+                rabbitCfg.Message<VerificationCodeResentEvent>(x => x.SetEntityName("verification-code-resent"));
                 
-                rabbitCfg.ReceiveEndpoint("user-deleted-queue", e =>
-                {
-                    e.Bind("users");
-                    e.ConfigureConsumer<UserDeletedConsumer>(context);
-                });
-                
+                rabbitCfg.ConfigureEndpoints(context);
             });
+            
+            
         });
         
         return services;

@@ -1,8 +1,9 @@
-@import "variables";
-
 .dashboard-container {
-  padding-top: 3rem;
-  padding-bottom: 3rem;
+  padding: 3rem 1rem;
+  min-height: 700px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
 }
 
 .dashboard-hero {
@@ -62,26 +63,87 @@
       background-color: #f3f4f6;
       color: #111827;
     }
+  }
+}
 
-    i {
+.recent-work-wrapper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); // Centers it perfectly
+  width: 100%;
+  text-align: center;
+  animation: fadeIn 0.4s ease-in-out;
+
+  .recent-title {
+    font-weight: 700;
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    color: #111827;
+  }
+
+  .recent-card-row {
+    gap: 2rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .workspace-card {
+    background: #f8fafc;
+    border-radius: 1rem;
+    width: 320px;
+    padding: 1.5rem;
+    text-align: left;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s;
+    cursor: pointer;
+
+    &:hover {
+      transform: translateY(-4px);
+    }
+
+    .workspace-card-header {
+      margin-bottom: 0.75rem;
+
+      .workspace-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        background-color: #e11d48;
+      }
+
+      .workspace-size {
+        font-size: 0.8rem;
+        color: #6b7280;
+      }
+    }
+
+    .workspace-name {
+      font-weight: 600;
       font-size: 1rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .workspace-files {
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      color: #e11d48;
+    }
+
+    .workspace-owner,
+    .workspace-time {
+      font-size: 0.8rem;
+      color: #6b7280;
     }
   }
 }
 
-.dashboard-scroll {
-  font-size: 0.85rem;
-  i {
-    font-size: 1.25rem;
-    color: #9ca3af;
-  }
-}
-
 .see-recents {
-  margin-top: 3rem; // spacing above the text
+  margin-top: 3rem;
 
   .scroll-arrow {
-    margin: 1.5rem auto 0 auto; // ← auto for left & right centers the div!
+    margin: 1rem auto 0 auto;
     width: 40px;
     height: 40px;
     border-radius: 50%;
@@ -89,7 +151,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    transition: background 0.2s ease;
     cursor: pointer;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 
@@ -99,7 +160,7 @@
     }
 
     &:hover {
-      background-color: $primaryColorLight;
+      background-color: #e0e7ff;
     }
   }
 }
@@ -114,56 +175,4 @@
   100% {
     transform: translateY(0);
   }
-}
-
-.dashboard-input::placeholder {
-  font-family: monospace;
-  color: #6b7280;
-  opacity: 1;
-  animation: blink-cursor 1s steps(2, start) infinite;
-}
-
-@keyframes blink-cursor {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-}
-
-
-:host ::ng-deep .p-dialog .form-group {
-  text-align: left; // ⬅️ aligns all child labels and inputs left
-}
-
-:host ::ng-deep .form-label {
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: #374151;
-  margin-bottom: 0.35rem;
-  display: block;
-  text-align: left; // ⬅️ ensures label text is left-aligned
-}
-
-:host ::ng-deep .form-input {
-  width: 100%;
-  padding: 0.75rem;
-  font-size: 0.95rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  color: #374151;
-  background-color: #ffffff;
-  transition: border-color 0.2s ease;
-
-  &:focus {
-    border-color: #8b5cf6;
-    outline: none;
-  }
-}
-
-
-::ng-deep .p-dialog-content {
-  max-height: 70vh;
-  overflow-y: auto;
 }

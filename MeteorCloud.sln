@@ -19,7 +19,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeteorCloud.Messaging", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WorkspaceService", "src\WorkspaceService\WorkspaceService.csproj", "{1028C317-1710-4CED-884F-CD1ED52AC31F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EmailService", "src\EmailService\EmailService.csproj", "{327A2E67-D3B6-4831-94C8-BB945BD3A9EB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationService", "src\NotificationService\NotificationService.csproj", "{327A2E67-D3B6-4831-94C8-BB945BD3A9EB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FileService", "src\FileService\FileService.csproj", "{C011F237-97F6-4C66-8E55-C2E424269D6F}"
 EndProject

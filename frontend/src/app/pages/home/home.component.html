@@ -1,31 +1,48 @@
 <div class="dashboard-container text-center">
-  <img src="assets/img/hero.png" class="dashboard-hero mb-3" alt="Hero" />
-  <h1 class="dashboard-title">Welcome to <span>MeteorCloud!</span></h1>
+  <!-- Welcome Section -->
+  <div *ngIf="!showRecents" @fadeUp class="welcome-wrapper">
+    <img src="assets/img/hero.png" class="dashboard-hero mb-3" alt="Hero" />
+    <h1 class="dashboard-title">Welcome to <span>MeteorCloud!</span></h1>
 
-  <div class="dashboard-search mt-4 mb-4 d-flex justify-content-center align-items-center">
-    <input
-      type="text"
-      class="form-control dashboard-input"
-      [placeholder]="placeholderText"
-    />
-    <button class="btn dashboard-search-icon">
-      <i class="pi pi-search"></i>
-    </button>
+    <div class="dashboard-search mt-4 mb-4 d-flex justify-content-center align-items-center">
+      <input type="text" class="form-control dashboard-input" [placeholder]="placeholderText" />
+      <button class="btn dashboard-search-icon"><i class="pi pi-search"></i></button>
+    </div>
+
+    <div class="dashboard-actions d-flex justify-content-center gap-3 flex-wrap">
+      <app-workspace-create></app-workspace-create>
+      <app-fast-link></app-fast-link>
+      <button class="btn dashboard-action"><i class="pi pi-upload me-2"></i> upload</button>
+    </div>
   </div>
 
-  <div class="dashboard-actions d-flex justify-content-center gap-3 flex-wrap">
-    <!-- 👇 Existing button -->
-    <app-workspace-create></app-workspace-create>
-    <app-fast-link></app-fast-link>
-    <button class="btn dashboard-action">
-      <i class="pi pi-upload me-2"></i> upload
-    </button>
+  <!-- Recent Work Section -->
+  <div *ngIf="showRecents" @fadeInCards class="recent-work-wrapper">
+    <h2 class="recent-title">Recent workspaces</h2>
+    <div class="recent-card-row d-flex justify-content-center gap-4 flex-wrap">
+      <div
+        class="workspace-card"
+        *ngFor="let workspace of recentWorkspaces"
+        @fadeInDelay
+        (click)="navigateToWorkspace(workspace.id)"
+      >
+        <div class="workspace-card-header d-flex justify-content-between align-items-start">
+          <div class="workspace-avatar"></div>
+          <span class="workspace-size">{{ workspace.size }}</span>
+        </div>
+        <div class="workspace-name">{{ workspace.name }}</div>
+        <div class="workspace-files text-danger">{{ workspace.fileCount }} files</div>
+        <div class="workspace-owner">{{ workspace.owner }}</div>
+        <div class="workspace-time">{{ workspace.date }} {{ workspace.time }}</div>
+      </div>
+    </div>
   </div>
 
+  <!-- Shared Arrow Toggle for both sections -->
   <div class="see-recents mt-4 text-muted text-center">
-    <div>see all recents work</div>
-    <div class="scroll-arrow mt-2 d-flex justify-content-center">
-      <i class="pi pi-chevron-down"></i>
+    <div>{{ showRecents ? 'go back up' : 'see all recents work' }}</div>
+    <div class="scroll-arrow mt-2 d-flex justify-content-center" (click)="toggleRecents()">
+      <i class="pi" [ngClass]="showRecents ? 'pi-chevron-up' : 'pi-chevron-down'"></i>
     </div>
   </div>
 </div>

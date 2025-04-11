@@ -19,18 +19,18 @@ namespace UserService.Features
 
     public class GetUserHandler
     {
-        private readonly UserManager _userManager;
+        private readonly Services.UserService _userService;
 
-        public GetUserHandler(UserManager userManager)
+        public GetUserHandler(Services.UserService userService)
         {
-            _userManager = userManager;
+            _userService = userService;
         }
 
         public async Task<ApiResult<GetUserResponse>> Handle(GetUserRequest request, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             
-            var user = await _userManager.GetUserByIdAsync(request.Id, cancellationToken);
+            var user = await _userService.GetUserByIdAsync(request.Id, cancellationToken);
             return user != null
                 ? new ApiResult<GetUserResponse>(new GetUserResponse(user))
                 : new ApiResult<GetUserResponse>(null, false, "User not found");

@@ -53,11 +53,14 @@ public class DatabaseInitializer
             await connection.OpenAsync();
 
             const string createTableQuery = @"
-                CREATE TABLE IF NOT EXISTS Credentials (
-                    Id SERIAL PRIMARY KEY,
-                    UserId INT UNIQUE NOT NULL,
+               CREATE TABLE IF NOT EXISTS Credentials (
+                    UserId SERIAL PRIMARY KEY,
                     Email VARCHAR(255) UNIQUE NOT NULL,
-                    PasswordHash TEXT NOT NULL
+                    PasswordHash TEXT NOT NULL,
+                    IsVerified BOOLEAN NOT NULL DEFAULT FALSE,
+                    VerificationCode TEXT, 
+                    VerificationExpiry TIMESTAMPTZ, 
+                    CreatedAt TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 );";
 
             await connection.ExecuteAsync(createTableQuery);

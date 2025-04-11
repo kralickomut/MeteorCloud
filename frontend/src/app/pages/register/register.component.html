@@ -1,53 +1,49 @@
 <div class="register-page d-flex justify-content-center align-items-center min-vh-100">
   <div class="register-container shadow rounded-4 overflow-hidden">
-    <!-- Left Panel -->
     <div class="register-left d-flex flex-column justify-content-center align-items-center p-4">
       <img src="assets/img/hero.png" alt="Hero" class="register-illustration mb-4" />
-      <h4 class="text-white mb-2">Welcome to Meteor Cloud</h4>
+      <h4 class="text-white mb-2 text-center">Welcome to Meteor Cloud</h4>
       <p class="text-white-50 text-center small">
-        Create, preview and collaborate on your files <br />
-        in a beautiful developer-friendly workspace.
+        Create, preview and collaborate on your files in a beautiful developer-friendly workspace.
       </p>
     </div>
 
-    <!-- Right Panel -->
-    <div class="register-right p-4">
+    <div class="register-right p-4 d-flex flex-column justify-content-center">
       <h2 class="mb-4 text-center"><b>Create Account</b></h2>
 
-      <p-floatLabel>
-        <input id="name" type="text" pInputText [(ngModel)]="model.name" />
-        <label for="name">Name</label>
-      </p-floatLabel>
+      <form [formGroup]="form" (ngSubmit)="onRegister()" novalidate>
+        <p-floatLabel>
+          <input id="name" pInputText formControlName="name" />
+          <label for="name">Name</label>
+          <small class="text-danger" *ngIf="f['name'].touched && f['name'].errors?.['required']">Name is required</small>
+          <small class="text-danger" *ngIf="f['name'].errors?.['minlength']">Name must be at least 2 characters</small>
+        </p-floatLabel>
 
-      <p-floatLabel>
-        <input id="email" type="email" pInputText [(ngModel)]="model.email" />
-        <label for="email">Email</label>
-      </p-floatLabel>
+        <p-floatLabel>
+          <input id="email" type="email" pInputText formControlName="email" />
+          <label for="email">Email</label>
+          <small class="text-danger" *ngIf="f['email'].touched && f['email'].errors?.['required']">Email is required</small>
+          <small class="text-danger" *ngIf="f['email'].errors?.['specificEmail']">Please enter a valid email like someone&#64;abc.cz</small>
+        </p-floatLabel>
 
-      <p-floatLabel>
-        <p-password
-          inputId="password"
-          [(ngModel)]="model.password"
-          [feedback]="true"
-          [toggleMask]="true"
-          styleClass="w-100"
-        ></p-password>
-        <label for="password">Password</label>
-      </p-floatLabel>
+        <p-floatLabel>
+          <p-password inputId="password" formControlName="password" [feedback]="true" [toggleMask]="true" styleClass="w-100"></p-password>
+          <label>Password</label>
+          <small class="text-danger" *ngIf="f['password'].touched && f['password'].errors?.['required']">Password is required</small>
+          <small class="text-danger" *ngIf="f['password'].errors?.['minlength']">Password must be at least 6 characters</small>
+          <small class="text-danger" *ngIf="f['password'].errors?.['lettersAndDigits']">Password must contain both letters and digits</small>
+          <small class="text-danger" *ngIf="f['password'].errors?.['uppercase']">Password must contain at least one uppercase letter</small>
+        </p-floatLabel>
 
-      <button
-        pButton
-        label="Register"
-        class="p-button-primary p-button-rounded mt-2"
-        [disabled]="!model.name || !model.email || !model.password"
-        (click)="onRegister()"
-      ></button>
+        <div *ngIf="errorMessage" class="alert alert-danger text-sm mt-2 text-center">{{ errorMessage }}</div>
+
+        <button type="submit" pButton label="Register" class="p-button-primary p-button-rounded mt-2" [disabled]="form.invalid"></button>
+      </form>
 
       <p class="text-center mt-3 small">
         Already have an account?
         <a routerLink="/login" class="text-primary text-decoration-none fw-semibold">Log in</a>
       </p>
-
     </div>
   </div>
 </div>

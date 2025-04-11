@@ -10,11 +10,14 @@ import {ProfileComponent} from './pages/profile/profile.component';
 import {LinksComponent} from './pages/links/links.component';
 import {WorkspaceHistoryPageComponent} from './pages/workspace-history-page/workspace-history-page.component';
 import {WorkspaceGeneralPageComponent} from "./pages/workspace-general-page/workspace-general-page.component";
+import {VerifyComponent} from "./pages/verify/verify.component";
+import {AuthGuard} from "./guards/auth.guard";
 
 const routes: Routes = [
   {
     path: '',
     component: MainLayoutComponent,
+    canActivate: [AuthGuard],
     children: [
       { path: 'home', component: HomeComponent },
       { path: 'workspaces', component: WorkspacesComponent },
@@ -30,6 +33,8 @@ const routes: Routes = [
   },
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
+  // Verify route with query parameter for email
+  { path: 'verify', component: VerifyComponent },
 ];
 
 @NgModule({

@@ -1,3 +1,5 @@
+@import "variables";
+
 .workspace-overview {
   .header {
     h4 {
@@ -64,11 +66,15 @@
       color: #374151;
       border-bottom: 1px solid #f1f5f9;
 
+      a {
+        color: $primaryColor;
+      }
+
       .avatar {
         width: 34px;
         height: 34px;
-        background: #e0e7ff;
-        color: #3730a3;
+        background: #FBE6F2FF;
+        color: $primaryColor;
         border-radius: 50%;
         display: flex;
         align-items: center;

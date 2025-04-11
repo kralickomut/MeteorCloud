@@ -18,10 +18,10 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
     public async Task Consume(ConsumeContext<UserRegisteredEvent> context)
     {
         var message = context.Message;
-        _logger.LogInformation($"Received UserRegisteredEvent for {message.Email}");
-
-        var emailBody = $"Hello {message.FirstName},\n\nWelcome to our platform!";
-
-        await _emailSender.SendEmailAsync(message.Email, "Welcome!", emailBody);
+        
+        await _emailSender.SendEmailAsync(message.Email, "Welcome!", "Ahoj");
+        await _emailSender.SendEmailAsync(message.Email, "Verify Your Account", $"This is a verification code: {message.VerificationCode}");
+        
+        _logger.LogInformation($"Email sent to {message.Email} with verification code {message.VerificationCode}");
     }
 }

@@ -1,0 +1,35 @@
+<div class="register-page d-flex justify-content-center align-items-center min-vh-100">
+  <div class="register-container shadow rounded-4 overflow-hidden">
+    <div class="register-left d-flex flex-column justify-content-center align-items-center p-4">
+      <img src="assets/img/hero.png" alt="Hero" class="register-illustration mb-4" />
+      <h4 class="text-white mb-2 text-center">Just One Last Step!</h4>
+      <p class="text-white-50 text-center small">
+        Enter the 6 digit code we've just sent to your email address to activate your account.
+      </p>
+    </div>
+
+    <div class="register-right p-4 d-flex flex-column justify-content-center">
+      <h2 class="mb-4 text-center"><b>6 Digit Code</b></h2>
+
+      <div class="d-flex justify-content-between code-inputs mb-3">
+        <input *ngFor="let n of codeInputs; let i = index"
+               class="code-box"
+               maxlength="1"
+               type="text"
+               [id]="'code'+i"
+               [value]="code[i]"
+               (input)="onInput($event, i)"
+               (keydown)="onKeyDown($event, i)"
+               (paste)="onPaste($event)"
+               autocomplete="off"
+               #codeBox />
+      </div>
+
+      <p class="text-muted small text-center">We have sent you a verification code</p>
+
+      <div *ngIf="errorMessage" class="alert alert-danger text-sm mt-2 text-center">{{ errorMessage }}</div>
+
+      <button class="btn btn-sm btn-outline-danger d-block mx-auto mt-2" (click)="onResend()">Resend code</button>
+    </div>
+  </div>
+</div>

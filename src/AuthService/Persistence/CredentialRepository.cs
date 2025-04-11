@@ -15,46 +15,86 @@ public class CredentialRepository
     public async Task<Credential?> GetCredentialByEmail(string email)
     {
         using var connection = await _context.CreateConnectionAsync();
-        const string query = "SELECT * FROM Credentials WHERE Email = @Email;";
-        var credential = await connection.QuerySingleOrDefaultAsync<Credential>(query, new { Email = email });
+        const string query = @"
+            SELECT 
+                UserId,
+                Email,
+                PasswordHash,
+                IsVerified,
+                VerificationCode,
+                VerificationExpiry,
+                CreatedAt
+            FROM Credentials
+            WHERE Email = @Email;
+        ";
 
-        return credential;
+        return await connection.QuerySingleOrDefaultAsync<Credential>(query, new { Email = email });
+    }
+
+    public async Task<int?> CreateCredential(Credential credential, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        using var connection = await _context.CreateConnectionAsync();
+
+        const string query = @"
+        INSERT INTO Credentials 
+            (Email, PasswordHash, IsVerified, VerificationCode, VerificationExpiry)
+        VALUES 
+            (@Email, @PasswordHash, @IsVerified, @VerificationCode, @VerificationExpiry)
+        RETURNING UserId;
+    ";
+
+        try
+        {
+            var userId = await connection.ExecuteScalarAsync<int>(query, credential);
+            return userId;
+        }
+        catch (PostgresException ex) when (ex.SqlState == "23505") // Duplicate key (Email)
+        {
+            return null;
+        }
     }
     
-    public async Task<Credential?> GetCredentialsByUserId(int userId)
+    public async Task<bool> UpdateCredential(Credential credential, CancellationToken cancellationToken)
     {
-        using var connection = await _context.CreateConnectionAsync();
-        const string query = "SELECT * FROM Credentials WHERE UserId = @UserId;";
-        var credential = await connection.QuerySingleOrDefaultAsync<Credential>(query, new { UserId = userId });
+        cancellationToken.ThrowIfCancellationRequested();
 
-        return credential;
-    }
-    
-    public async Task<int?> CreateCredential(Credential credential)
-    {
         using var connection = await _context.CreateConnectionAsync();
-        const string query = "INSERT INTO Credentials (Email, PasswordHash, UserId) VALUES (@Email, @PasswordHash, @UserId) RETURNING Id;";
-        var id = await connection.ExecuteScalarAsync<int>(query, credential);
 
-        return id;
-    }
-    
-    public async Task<bool> UpdateCredential(Credential credential)
-    {
-        using var connection = await _context.CreateConnectionAsync();
-        const string query = "UPDATE Credentials SET Email = @Email, PasswordHash = @PasswordHash, UserId = @UserId WHERE Id = @Id;";
+        const string query = @"
+            UPDATE Credentials
+            SET PasswordHash = @PasswordHash,
+                IsVerified = @IsVerified,
+                VerificationCode = @VerificationCode,
+                VerificationExpiry = @VerificationExpiry
+            WHERE UserId = @UserId;
+        ";
+
         var rowsAffected = await connection.ExecuteAsync(query, credential);
-
         return rowsAffected > 0;
     }
-    
-    public async Task<string?> DeleteCredential(int userId)
+
+    public async Task<Credential?> UpdateVerificationStatusAsync(string verificationCode, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         using var connection = await _context.CreateConnectionAsync();
-        const string query = "DELETE FROM Credentials WHERE UserId = @UserId RETURNING Email;";
 
-        var deletedEmail = await connection.ExecuteScalarAsync<string?>(query, new { UserId = userId });
+        const string query = @"
+            UPDATE Credentials
+            SET IsVerified = TRUE,
+                VerificationCode = NULL,
+                VerificationExpiry = NULL
+            WHERE VerificationCode = @VerificationCode
+              AND VerificationExpiry > NOW()
+            RETURNING 
+                UserId, Email, PasswordHash, IsVerified, VerificationCode, VerificationExpiry, CreatedAt;
+        ";
 
-        return deletedEmail; // Returns the deleted email, or null if not found
+        return await connection.QuerySingleOrDefaultAsync<Credential>(query, new
+        {
+            VerificationCode = verificationCode
+        }) ?? null;
     }
 }

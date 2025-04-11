@@ -26,22 +26,12 @@ public static class ServiceExtensions
         services.AddSingleton<DapperContext>();
 
         services.AddScoped<UserRepository>();
-        services.AddScoped<UserManager>();
+        services.AddScoped<Services.UserService>();
 
         services.AddSingleton<GetUserValidator>();
         services.AddScoped<GetUserHandler>();
         
-        services.AddSingleton<GetUsersValidator>();
-        services.AddScoped<GetUsersHandler>();
         
-        services.AddSingleton<UpdateUserValidator>();
-        services.AddScoped<UpdateUserHandler>();
-        
-        services.AddSingleton<CreateUserValidator>();
-        services.AddScoped<CreateUserHandler>();
-        
-        services.AddSingleton<DeleteUserValidator>();
-        services.AddScoped<DeleteUserHandler>();
         
         // Get Redis connection details from environment variables
         var redisHost = Environment.GetEnvironmentVariable("REDIS_HOST") ?? "localhost";
@@ -59,37 +49,27 @@ public static class ServiceExtensions
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "User Service API", Version = "v1" });
         });
 
-        services.AddMassTransit(busConfigurator =>
+        services.AddMassTransit(config =>
         {
-            busConfigurator.AddConsumer<WorkspaceCreatedConsumer>();
-            busConfigurator.AddConsumer<WorkspaceDeletedConsumer>();
-            
-            busConfigurator.UsingRabbitMq((context, rabbitCfg) =>
+            config.AddConsumer<UserRegisteredConsumer>();
+
+            config.UsingRabbitMq((context, cfg) =>
             {
-                rabbitCfg.Host("rabbitmq", h =>
+                cfg.Host("rabbitmq", h =>
                 {
                     h.Username("guest");
                     h.Password("guest");
                 });
-                
-                // Publish messages to the "users" exchange
-                rabbitCfg.Message<UserUpdatedEvent>(x => x.SetEntityName("users"));
-                rabbitCfg.Message<UserDeletedEvent>(x => x.SetEntityName("users"));
-                rabbitCfg.Message<UserRegisteredEvent>(x => x.SetEntityName("users"));
-                
-                rabbitCfg.ReceiveEndpoint("workspace-created-queue", e =>
+
+                cfg.ReceiveEndpoint("user-service-user-registered-queue", e =>
                 {
-                    e.Bind("workspaces");
-                    e.ConfigureConsumer<WorkspaceCreatedConsumer>(context);
+                    e.Bind("user-registered", x =>
+                    {
+                        x.ExchangeType = "fanout";
+                    });
+
+                    e.ConfigureConsumer<UserRegisteredConsumer>(context);
                 });
-                
-                rabbitCfg.ReceiveEndpoint("workspace-deleted-queue", e =>
-                {
-                    e.Bind("workspaces");
-                    e.ConfigureConsumer<WorkspaceDeletedConsumer>(context);
-                });
-                
-                rabbitCfg.ConfigureEndpoints(context);
             });
         });
         

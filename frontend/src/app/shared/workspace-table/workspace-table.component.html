@@ -1,21 +1,8 @@
 <p-confirmDialog></p-confirmDialog>
 <div class="workspace-detail d-flex gap-4 p-4">
-  <!-- Collaborators -->
-  <!--
-  <div class="collab-card bg-white shadow-sm p-3">
-    <h5 class="mb-3">Collaborators</h5>
 
-    <div *ngFor="let user of workspace.collaborators" class="collab-card-item d-flex align-items-center gap-3 mb-2">
-      <div class="collab-avatar">{{ user.name[0] }}</div>
-      <div>
-        <div class="collab-name">{{ user.name }}</div>
-        <div class="collab-role">{{ user.role }}</div>
-      </div>
-    </div>
-  </div>
-  -->
   <!-- File Browser -->
-  <div class="file-browser flex-grow-1 bg-white shadow-sm p-3">
+  <div class="file-browser flex-grow-1 bg-white shadow-sm p-3" [ngClass]="{ 'narrow': selectedFile }">
     <!-- Breadcrumbs + Upload Button Row -->
     <div class="d-flex justify-content-between align-items-center mb-3">
       <!-- Breadcrumbs (left) -->
@@ -72,9 +59,20 @@
     </p-dialog>
 
     <!-- Table of Contents -->
-    <div class="table-container">
+    <div
+      class="table-container"
+      (drop)="onDrop($event)"
+      (dragover)="onDragOver($event)"
+      (dragleave)="onDragLeave($event)"
+      [class.drag-active]="isDragOver"
+    >
+      <div class="drop-overlay" *ngIf="isDragOver">
+        <i class="pi pi-cloud-upload"></i>
+        <span>Drop files to upload</span>
+      </div>
 
-    <table class="workspace-table">
+
+      <table class="workspace-table">
       <thead>
       <tr>
         <th>Name</th>
@@ -141,7 +139,53 @@
       </tbody>
     </table>
     </div>
+  </div>
 
+  <!-- File Info Card (Right side) -->
+  <div class="file-info-card bg-white shadow-sm p-4 rounded" *ngIf="selectedFile">
+    <!-- Close Icon -->
+    <i class="pi pi-times file-close-icon" (click)="closeFileDetails()"></i>
 
+    <!-- Header -->
+    <div class="mb-2">
+      <div class="file-info-label">File name</div>
+      <div class="file-info-title">{{ selectedFile.name }}</div>
+      <div class="file-info-subtitle">{{ selectedFile.size ?? '–' }}</div>
+    </div>
+
+    <hr />
+
+    <!-- Metadata -->
+    <div class="file-info-meta">
+      <ng-container *ngIf="selectedFile.addedBy">
+        <div class="file-info-label">Owner</div>
+        <div class="file-info-value mb-3">{{ selectedFile.addedBy }}</div>
+      </ng-container>
+
+      <ng-container *ngIf="selectedFile.createdAt">
+        <div class="file-info-label">Date of create</div>
+        <div class="file-info-value mb-3">{{ selectedFile.createdAt | date: 'dd-MM-yyyy  HH:mm' }}</div>
+      </ng-container>
+
+      <ng-container *ngIf="selectedFile.editedAt">
+        <div class="file-info-label">Date of edit</div>
+        <div class="file-info-value mb-3">{{ selectedFile.editedAt | date: 'dd-MM-yyyy  HH:mm' }}</div>
+      </ng-container>
+
+      <ng-container *ngIf="selectedFile.type">
+        <div class="file-info-label">Type</div>
+        <div class="file-info-value mb-3">{{ selectedFile.type.toUpperCase() }}</div>
+      </ng-container>
+
+      <ng-container *ngIf="selectedFile.resolution">
+        <div class="file-info-label">Resolution</div>
+        <div class="file-info-value mb-3">{{ selectedFile.resolution }}</div>
+      </ng-container>
+
+      <ng-container *ngIf="selectedFile.colorSpace">
+        <div class="file-info-label">Color space</div>
+        <div class="file-info-value">{{ selectedFile.colorSpace }}</div>
+      </ng-container>
+    </div>
   </div>
 </div>

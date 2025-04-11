@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <UserSecretsId>dotnet-EmailService-d811557c-5e2d-407b-8cbc-6a1c643d0d21</UserSecretsId>
         <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+        <RootNamespace>EmailService</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

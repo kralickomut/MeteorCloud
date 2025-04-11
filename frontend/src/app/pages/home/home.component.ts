@@ -1,24 +1,90 @@
 import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+import { trigger, transition, style, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
-  styleUrl: './home.component.scss'
+  styleUrls: ['./home.component.scss'],
+  animations: [
+    trigger('fadeUp', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(20px)' }),
+        animate('700ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ]),
+      transition(':leave', [
+        animate('200ms ease-in', style({ opacity: 0, transform: 'translateY(-20px)' }))
+      ])
+    ]),
+    trigger('fadeInCards', [
+      transition(':enter', [
+        style({ opacity: 0 }),
+        animate('700ms ease-out', style({ opacity: 1 }))
+      ])
+    ]),
+    trigger('fadeInDelay', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(10px)' }),
+        animate('{{delay}}ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ], { params: { delay: 700 } })
+    ])
+  ]
 })
 export class HomeComponent {
 
-  // Typing animation
+  constructor(private router: Router) {}
+
+  navigateToWorkspace(id: string) {
+    this.router.navigate(['/workspaces', id]);
+  }
+
+
   placeholderText = '';
   searchSuggestions = ['marketing brief', 'design system', 'roadmap 2025', 'team folders'];
   currentPhraseIndex = 0;
   charIndex = 0;
   isDeleting = false;
-  typingSpeed = 100; // ms between letters
-  pauseBetween = 1500; // wait after full word
+  typingSpeed = 100;
+  pauseBetween = 1500;
 
+  showRecents = false;
+
+  recentWorkspaces = [
+    {
+      id: '1',
+      name: 'Workspace',
+      size: '13MB',
+      fileCount: 87,
+      owner: 'František Hromek',
+      date: '21/03/2025',
+      time: '16:09'
+    },
+    {
+      id: '2',
+      name: 'Workspace',
+      size: '13MB',
+      fileCount: 87,
+      owner: 'František Hromek',
+      date: '21/03/2025',
+      time: '16:09'
+    },
+    {
+      id: '3',
+      name: 'Workspace',
+      size: '13MB',
+      fileCount: 87,
+      owner: 'František Hromek',
+      date: '21/03/2025',
+      time: '16:09'
+    }
+  ];
 
   ngOnInit() {
     this.startTyping();
+  }
+
+  toggleRecents() {
+    this.showRecents = !this.showRecents;
   }
 
   startTyping() {
@@ -41,5 +107,4 @@ export class HomeComponent {
       setTimeout(() => this.startTyping(), this.isDeleting ? 50 : this.typingSpeed);
     }
   }
-
 }

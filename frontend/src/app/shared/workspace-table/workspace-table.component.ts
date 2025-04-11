@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ConfirmationService } from 'primeng/api';
+import { WorkspaceFile } from '../../models/WorkspaceFile';
 
 @Component({
   selector: 'app-workspace-table',
@@ -18,6 +19,69 @@ export class WorkspaceTableComponent implements OnInit {
   ngOnInit(): void {
     this.workspaceId = this.route.snapshot.paramMap.get('id') ?? '';
 
+    const files: WorkspaceFile[] = [
+      {
+        name: 'plan.pdf',
+        addedBy: 'Alice',
+        date: '2025-03-25',
+        createdAt: new Date('2025-03-25T10:00:00'),
+        editedAt: new Date('2025-03-25T12:00:00'),
+        type: 'pdf',
+        size: '2MB',
+        resolution: '582 × 530',
+        colorSpace: 'RGB',
+        status: 'Active'
+      },
+      {
+        name: 'notes.txt',
+        addedBy: 'Bob',
+        date: '2025-03-26',
+        createdAt: new Date('2025-03-26T10:00:00'),
+        editedAt: new Date('2025-03-26T12:00:00'),
+        type: 'txt',
+        size: '500KB',
+        resolution: '582 × 530',
+        colorSpace: 'RGB',
+        status: 'Draft'
+      },
+      {
+        name: 'readme.md',
+        addedBy: 'Charlie',
+        date: '2025-03-27',
+        createdAt: new Date('2025-03-27T10:00:00'),
+        editedAt: new Date('2025-03-27T12:00:00'),
+        type: 'md',
+        size: '800KB',
+        resolution: '582 × 530',
+        colorSpace: 'RGB',
+        status: 'Draft'
+      },
+      {
+        name: 'logo.svg',
+        addedBy: 'Alice',
+        date: '2025-03-28',
+        createdAt: new Date('2025-03-28T10:00:00'),
+        editedAt: new Date('2025-03-28T12:00:00'),
+        type: 'svg',
+        size: '1MB',
+        resolution: '582 × 530',
+        colorSpace: 'RGB',
+        status: 'Active'
+      },
+      {
+        name: 'logo.png',
+        addedBy: 'Bob',
+        date: '2025-03-29',
+        createdAt: new Date('2025-03-29T10:00:00'),
+        editedAt: new Date('2025-03-29T12:00:00'),
+        type: 'png',
+        size: '1MB',
+        resolution: '582 × 530',
+        colorSpace: 'RGB',
+        status: 'Archived'
+      }
+    ];
+
     this.workspace = {
       id: this.workspaceId,
       name: 'Marketing Campaign',
@@ -32,14 +96,7 @@ export class WorkspaceTableComponent implements OnInit {
           {
             name: 'Design System',
             folders: [],
-            files: [
-              {
-                name: 'readme.md',
-                date: '2025-03-01',
-                addedBy: 'Alice',
-                status: 'Draft'
-              }
-            ]
+            files: files
           },
           {
             name: 'Assets',
@@ -47,88 +104,13 @@ export class WorkspaceTableComponent implements OnInit {
               {
                 name: 'Icons',
                 folders: [],
-                files: [
-                  {
-                    name: 'logo.svg',
-                    date: '2025-03-02',
-                    addedBy: 'Charlie',
-                    status: 'Active'
-                  }
-                ]
+                files: files
               }
             ],
-            files: [
-              {
-                name: 'logo.png',
-                date: '2025-03-01',
-                addedBy: 'Bob',
-                status: 'Archived'
-              }
-            ]
+            files: files
           }
         ],
-        files: [
-          {
-            name: 'plan.pdf',
-            date: '2025-03-25',
-            addedBy: 'Alice',
-            status: 'Active'
-          },
-          {
-            name: 'notes.txt',
-            date: '2025-03-26',
-            addedBy: 'Bob',
-            status: 'Draft'
-          },
-          {
-            name: 'readme.md',
-            date: '2025-03-27',
-            addedBy: 'Charlie',
-            status: 'Draft'
-          },
-          {
-            name: 'logo.svg',
-            date: '2025-03-28',
-            addedBy: 'Alice',
-            status: 'Active'
-          },
-          {
-            name: 'logo.png',
-            date: '2025-03-29',
-            addedBy: 'Bob',
-            status: 'Archived'
-          },
-          {
-            name: 'notes.txt',
-            date: '2025-03-30',
-            addedBy: 'Charlie',
-            status: 'Draft'
-          },
-          {
-            name: 'readme.md',
-            date: '2025-03-31',
-            addedBy: 'Alice',
-            status: 'Draft'
-          },
-          {
-            name: 'logo.svg',
-            date: '2025-04-01',
-            addedBy: 'Bob',
-            status: 'Active'
-          },
-          {
-            name: 'logo.png',
-            date: '2025-04-02',
-            addedBy: 'Charlie',
-            status: 'Archived'
-          },
-          {
-            name: 'notes.txt',
-            date: '2025-04-03',
-            addedBy: 'Alice',
-            status: 'Draft'
-          }
-        ]
+        files: files
       }
     };
 
@@ -163,10 +145,6 @@ export class WorkspaceTableComponent implements OnInit {
     return ['Root', ...this.currentPath];
   }
 
-  viewFile(file: any): void {
-    console.log('Viewing file:', file.name);
-    // You can later open a modal or preview
-  }
 
   deleteFile(file: any): void {
     this.confirmationService.confirm({
@@ -187,10 +165,18 @@ export class WorkspaceTableComponent implements OnInit {
     const file: File = event.target.files[0];
     if (!file) return;
 
-    const newFile = {
+    const now = new Date();
+
+    const newFile: WorkspaceFile = {
       name: file.name,
-      date: new Date().toISOString().split('T')[0],
       addedBy: 'You',
+      date: now.toISOString().split('T')[0],
+      createdAt: now,
+      editedAt: now,
+      type: file.name.split('.').pop()?.toLowerCase() || 'unknown',
+      size: `${(file.size / 1024 / 1024).toFixed(1)}MB`,
+      resolution: 'Unknown',
+      colorSpace: 'Unknown',
       status: 'Active'
     };
 
@@ -233,6 +219,55 @@ export class WorkspaceTableComponent implements OnInit {
         this.currentFolder.folders = this.currentFolder.folders.filter((f: any) => f !== folder);
       }
     });
+  }
+
+
+  isDragOver = false;
+
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragOver = true;
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragOver = false;
+  }
+
+  onDrop(event: DragEvent): void {
+    event.preventDefault();
+    this.isDragOver = false;
+
+    if (event.dataTransfer?.files) {
+      Array.from(event.dataTransfer.files).forEach(file => {
+        const now = new Date();
+        const newFile: WorkspaceFile = {
+          name: file.name,
+          addedBy: 'You',
+          date: now.toISOString().split('T')[0],
+          createdAt: now,
+          editedAt: now,
+          type: file.name.split('.').pop()?.toLowerCase() || 'unknown',
+          size: `${(file.size / 1024 / 1024).toFixed(1)}MB`,
+          resolution: 'Unknown',
+          colorSpace: 'Unknown',
+          status: 'Active'
+        };
+
+        this.currentFolder.files.push(newFile);
+      });
+    }
+  }
+
+
+  selectedFile: any = null;
+
+  viewFile(file: any): void {
+    this.selectedFile = file;
+  }
+
+  closeFileDetails(): void {
+    this.selectedFile = null;
   }
 
 }

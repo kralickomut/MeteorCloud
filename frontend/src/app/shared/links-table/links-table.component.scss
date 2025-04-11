@@ -78,7 +78,7 @@
       }
 
       .link-name {
-        color: rgba(var(--bs-link-color-rgb), var(--bs-link-opacity, 1));
+        color: $primaryColor;
         font-weight: 500;
         text-decoration: none;
 

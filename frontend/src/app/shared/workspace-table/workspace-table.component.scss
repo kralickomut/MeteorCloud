@@ -1,44 +1,6 @@
 @import "variables";
 
 .workspace-detail {
-  .collab-card {
-    width: 240px;
-    border-radius: 1rem;
-
-    .collab-card-item {
-      padding: 0.75rem;
-      background-color: #f9fafb;
-      border-radius: 0.75rem;
-      transition: background 0.2s ease;
-
-      &:hover {
-        background-color: #f3f4f6;
-      }
-    }
-
-    .collab-avatar {
-      background-color: $primaryColorLight;
-      color: $primaryColor;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-
-    .collab-name {
-      font-weight: 600;
-      font-size: 0.95rem;
-    }
-
-    .collab-role {
-      font-size: 0.75rem;
-      color: #6b7280;
-    }
-  }
 
   .file-browser {
     border-radius: 1rem;
@@ -103,6 +65,35 @@
       border-radius: 0.75rem;
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
       max-height: 500px;
+      min-height: 500px;
+      position: relative;
+
+      &.drag-active {
+        border: 2px dashed #e11d48;
+        background-color: #fff0f5;
+      }
+
+      .drop-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.9);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        pointer-events: none;
+        font-size: 1.1rem;
+        color: #e11d48;
+        z-index: 10;
+
+        i {
+          font-size: 2rem;
+          margin-bottom: 0.5rem;
+        }
+      }
     }
 
 
@@ -210,3 +201,78 @@
   background: #d1d5db;
   border-radius: 4px;
 }
+
+
+.workspace-detail {
+  .file-browser {
+    transition: all 0.3s ease;
+    width: 100%;
+
+    &.narrow {
+      width: calc(100% - 340px); // leaves room for the detail card
+    }
+  }
+
+  .file-info-card {
+    width: 320px;
+    border-radius: 1rem;
+    background-color: #f9fafb;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    gap: 1rem;
+
+    .file-close-icon {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 1.1rem;
+      color: #9ca3af;
+      cursor: pointer;
+
+      &:hover {
+        color: #111827;
+      }
+    }
+
+    .file-info-label {
+      font-size: 0.75rem;
+      color: #6b7280;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    .file-info-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #111827;
+      margin-top: 0.2rem;
+      word-break: break-word;
+    }
+
+    .file-info-subtitle {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #9ca3af;
+      margin-top: 0.25rem;
+    }
+
+    .file-info-value {
+      font-size: 0.9rem;
+      color: #111827;
+      margin-top: 0.1rem;
+    }
+
+    .file-info-meta {
+      display: flex;
+      flex-direction: column;
+    }
+
+    hr {
+      margin: 0.5rem 0 0.75rem;
+      border: none;
+      border-top: 1px solid #e5e7eb;
+    }
+  }
+}
+

@@ -1,120 +1,138 @@
 .workspace-general-page {
-  .workspace-title {
+  padding: 2rem;
+
+  .title {
+    font-size: 2rem;
     font-weight: 700;
-    font-size: 1.75rem;
     color: #1f2937;
   }
 
-  .general-layout {
-    align-items: flex-start;
+  .editable-input {
+    width: 100%;
+    max-width: 600px;
   }
 
-  .left-column {
+  .content {
+    display: flex;
+    gap: 2rem;
+    align-items: stretch;
+  }
+
+  .left, .right {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .left {
     flex: 1;
+  }
 
-    .general-info-card {
-      background: white;
-      border-radius: 1rem;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
-      font-size: 0.95rem;
-      color: #374151;
+  .right {
+    flex: 1;
+  }
 
-      div {
-        margin-bottom: 0.6rem;
-      }
+  .card {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    border: none;
+
+    .card-title {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.75rem;
     }
 
-    .workspace-insights {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1.5rem;
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
 
-      .insight-card {
-        background: white;
-        border-radius: 1rem;
-        padding: 1.5rem;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
-        min-height: 180px;
-
-        .insight-header {
-          font-weight: 600;
-          font-size: 1rem;
-          margin-bottom: 1rem;
-          display: flex;
-          align-items: center;
-          color: #1f2937;
-        }
-
-        .insight-list {
-          list-style: none;
-          padding: 0;
-          font-size: 0.88rem;
-          color: #4b5563;
-
-          li {
-            margin-bottom: 0.5rem;
-
-            .text-muted {
-              color: #9ca3af;
-            }
-
-            .text-success {
-              color: #059669;
-              font-weight: 500;
-            }
-          }
-        }
+      li {
+        margin-bottom: 0.5rem;
       }
     }
   }
 
-  .collaborators-sidebar {
-    width: 260px;
+  .search-wrapper {
+    position: relative;
 
-    .sidebar-card {
-      background: white;
-      border-radius: 1rem;
-      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
-      height: 100%;
+    .search-icon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9ca3af;
+      font-size: 1rem;
+    }
 
-      .collab-user {
-        padding: 0.75rem;
-        border-radius: 0.75rem;
-        transition: background 0.2s ease;
+    .search-input {
+      padding-left: 2.2rem;
+      height: 2.25rem;
+      border-radius: 0.5rem;
+      width: 100%;
+    }
+  }
 
-        &:hover {
-          background-color: #f9fafb;
-        }
+  .table-container {
+    overflow-y: auto;
+    max-height: 400px;
 
-        .collab-avatar {
+    table {
+      width: 100%;
+      border-collapse: collapse;
+
+      th {
+        text-align: left;
+        padding: 1rem;
+        font-size: 0.85rem;
+        color: #6b7280;
+        border-bottom: 1px solid #e5e7eb;
+        background: white;
+      }
+
+      td {
+        padding: 1rem;
+        font-size: 0.9rem;
+        color: #374151;
+        border-bottom: 1px solid #f3f4f6;
+
+        .avatar {
           background-color: #f3f4f6;
           color: #1f2937;
-          width: 36px;
-          height: 36px;
+          width: 34px;
+          height: 34px;
           border-radius: 50%;
           display: flex;
           align-items: center;
           justify-content: center;
           font-weight: 600;
-          font-size: 0.9rem;
         }
       }
     }
   }
 }
 
-@media (max-width: 992px) {
-  .workspace-general-page {
-    .general-layout {
-      flex-direction: column;
+.badge {
+  font-size: 0.75rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  display: inline-block;
+}
 
-      .workspace-insights {
-        grid-template-columns: 1fr;
-      }
+.badge-owner {
+  background-color: #dbeafe;
+  color: #1e40af;
+}
 
-      .collaborators-sidebar {
-        width: 100%;
-      }
-    }
-  }
+.badge-manager {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.badge-guest {
+  background-color: #fef3c7;
+  color: #92400e;
 }

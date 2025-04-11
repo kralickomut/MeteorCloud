@@ -32,11 +32,7 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
 
 app.UseEndpoints(endpoints =>
 {
-    CreateUserEndpoint.Register(endpoints);
     GetUserEndpoint.Register(endpoints);
-    GetUsersEndpoint.Register(endpoints);
-    UpdateUserEndpoint.Register(endpoints);
-    DeleteUserEndpoint.Register(endpoints);
 });
 
 app.Run();

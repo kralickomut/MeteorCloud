@@ -3,15 +3,33 @@ import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';
+import { ReactiveFormsModule } from '@angular/forms';
 
 
+// My modules
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 import { RegisterComponent } from './pages/register/register.component';
 import { NotificationBarComponent } from './shared/notification-bar/notification-bar.component';
 import { FastLinkComponent } from './shared/fast-link/fast-link.component';
 import { WorkspaceCreateComponent } from './shared/workspace-create/workspace-create.component';
-
+import { LoginComponent } from './pages/login/login.component';
+import { HomeComponent } from './pages/home/home.component';
+import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
+import { SidebarComponent } from './shared/sidebar/sidebar.component';
+import { UserWorkspacesComponent } from './shared/user-workspaces/user-workspaces.component';
+import { WorkspacesComponent } from './pages/workspaces/workspaces.component';
+import { WorkspaceDetailComponent } from './pages/workspace-detail/workspace-detail.component';
+import { WorkspaceTableComponent } from './shared/workspace-table/workspace-table.component';
+import { ProfileComponent } from './pages/profile/profile.component';
+import { ProfileDetailComponent } from './shared/profile-detail/profile-detail.component';
+import { LinksComponent } from './pages/links/links.component';
+import { LinksTableComponent } from './shared/links-table/links-table.component';
+import { InviteWorkspaceComponent } from './shared/invite-workspace/invite-workspace.component';
+import { WorkspaceHistoryComponent } from './shared/workspace-history/workspace-history.component';
+import { WorkspaceHistoryPageComponent } from './pages/workspace-history-page/workspace-history-page.component';
+import { WorkspaceGeneralComponent } from './shared/workspace-general/workspace-general.component';
+import { WorkspaceGeneralPageComponent } from './pages/workspace-general-page/workspace-general-page.component';
 
 // PrimeNG modules
 import { ToastModule } from 'primeng/toast';
@@ -23,40 +41,33 @@ import { PasswordModule } from 'primeng/password';
 import { TooltipModule } from 'primeng/tooltip';
 import { TableModule } from 'primeng/table';
 import { MessageService } from 'primeng/api';
-import { LoginComponent } from './pages/login/login.component';
-import { HomeComponent } from './pages/home/home.component';
-import { MainLayoutComponent } from './layouts/main-layout/main-layout.component';
-import { SidebarComponent } from './shared/sidebar/sidebar.component';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextareaModule } from 'primeng/inputtextarea';
 import { DividerModule } from 'primeng/divider';
 import { DropdownModule } from 'primeng/dropdown';
 import { FileUploadModule } from 'primeng/fileupload';
 import { SidebarModule } from 'primeng/sidebar';
-import { UserWorkspacesComponent } from './shared/user-workspaces/user-workspaces.component';
-import { WorkspacesComponent } from './pages/workspaces/workspaces.component';
 import { KeyFilterModule } from 'primeng/keyfilter';
-import { WorkspaceDetailComponent } from './pages/workspace-detail/workspace-detail.component';
-import { WorkspaceTableComponent } from './shared/workspace-table/workspace-table.component';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
-import { ProfileComponent } from './pages/profile/profile.component';
-import { ProfileDetailComponent } from './shared/profile-detail/profile-detail.component';
-import { LinksComponent } from './pages/links/links.component';
-import { LinksTableComponent } from './shared/links-table/links-table.component';
-import { InviteWorkspaceComponent } from './shared/invite-workspace/invite-workspace.component';
-import { WorkspaceHistoryComponent } from './shared/workspace-history/workspace-history.component';
-import { WorkspaceHistoryPageComponent } from './pages/workspace-history-page/workspace-history-page.component';
-import { WorkspaceGeneralComponent } from './shared/workspace-general/workspace-general.component';
-import { WorkspaceGeneralPageComponent } from './pages/workspace-general-page/workspace-general-page.component';
+import { MenuModule } from 'primeng/menu';
+import { VerifyComponent } from './pages/verify/verify.component';
+
 
 
 // TODO: Logout button at sidebar - DONE
 // TODO: Add a new user to workspace - DONE
 // TODO: Page for viewing files from a link or downloading
 // TODO: Page for workspace history - DONE
-// TODO: Drag and drop files to upload
-
+// TODO: Drag and drop files to upload - DONE
+// TODO: Recent work on main page
+// TODO: Color of workspace list names / links - DONE
+// TODO: General workspace page info - DONE
+// TODO: Settings page
+// TODO: Workspace detail page blank space at bottom fix
+// TODO: RESPONSIVENESS ACROSS WHOLE APP
+// TODO: Filters at tables
+// TODO: Click on whole row to open file tab
 
 
 @NgModule({
@@ -83,12 +94,14 @@ import { WorkspaceGeneralPageComponent } from './pages/workspace-general-page/wo
     WorkspaceHistoryPageComponent,
     WorkspaceGeneralComponent,
     WorkspaceGeneralPageComponent,
+    VerifyComponent,
   ],
   imports: [
     BrowserModule,
     BrowserAnimationsModule,
     AppRoutingModule,
     FormsModule,
+    ReactiveFormsModule,
 
     // PrimeNG modules
     ToastModule,
@@ -107,7 +120,8 @@ import { WorkspaceGeneralPageComponent } from './pages/workspace-general-page/wo
     HttpClientModule,
     SidebarModule,
     KeyFilterModule,
-    ConfirmDialogModule
+    ConfirmDialogModule,
+    MenuModule,
   ],
   providers: [MessageService, ConfirmationService],
   bootstrap: [AppComponent]
