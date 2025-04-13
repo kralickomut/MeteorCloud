@@ -1,14 +1,15 @@
+using System.Security.Cryptography;
 using MeteorCloud.Caching.Abstraction;
 using MeteorCloud.Caching.Services;
 using Microsoft.OpenApi.Models;
 using MassTransit;
-using MeteorCloud.Messaging.Events;
-using MeteorCloud.Messaging.Events.Workspace;
+using MeteorCloud.Shared.Jwt;
+
 using StackExchange.Redis;
 using UserService.Consumers;
 using UserService.Features;
 using UserService.Persistence;
-using UserService.Services;
+using Microsoft.Extensions.Configuration;
 
 namespace UserService.Extensions;
 
@@ -52,6 +53,7 @@ public static class ServiceExtensions
         services.AddMassTransit(config =>
         {
             config.AddConsumer<UserRegisteredConsumer>();
+            config.AddConsumer<UserLoggedInConsumer>();
 
             config.UsingRabbitMq((context, cfg) =>
             {
@@ -70,8 +72,20 @@ public static class ServiceExtensions
 
                     e.ConfigureConsumer<UserRegisteredConsumer>(context);
                 });
+                
+                cfg.ReceiveEndpoint("user-service-user-logged-in-queue", e =>
+                {
+                    e.Bind("user-logged-in", x =>
+                    {
+                        x.ExchangeType = "fanout";
+                    });
+
+                    e.ConfigureConsumer<UserLoggedInConsumer>(context);
+                });
             });
         });
+        
+        
         
         return services;
     }

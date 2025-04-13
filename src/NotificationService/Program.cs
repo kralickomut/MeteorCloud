@@ -1,51 +1,57 @@
-using EmailService.Abstraction;
-using EmailService.Consumers.Auth;
-using EmailService.Consumers.Users;
-using EmailService.Senders;
-using MassTransit;
+using EmailService.Extensions;
+using EmailService.Features;
+using EmailService.Hubs;
+using MeteorCloud.Shared.Jwt;
 
-var host = Host.CreateDefaultBuilder(args)
-    .ConfigureServices((context, services) =>
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.AddAuthorization();
+
+var configuration = builder.Configuration;
+
+builder.Services.AddCors(opt =>
+{
+    opt.AddPolicy("CorsPolicy", builder =>
     {
-        services.Configure<EmailSettings>(context.Configuration.GetSection("EmailSettings"));
-        services.AddTransient<IEmailSender, SmtpEmailSender>();
+        builder.AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials()
+            .WithOrigins("http://localhost:4200");
+    });
+});
 
-        services.AddMassTransit(config =>
-        {
-            config.AddConsumer<UserRegisteredConsumer>();
-            config.AddConsumer<VerificationCodeResentConsumer>();
+builder.Services.RegisterServices(configuration);
 
-            config.UsingRabbitMq((context, cfg) =>
-            {
-                cfg.Host("rabbitmq", h =>
-                {
-                    h.Username("guest");
-                    h.Password("guest");
-                });
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(5160);
+});
 
-                cfg.ReceiveEndpoint("email-service-user-registered-queue", e =>
-                {
-                    e.Bind("user-registered", x =>
-                    {
-                        x.ExchangeType = "fanout";
-                    });
+var app = builder.Build();
 
-                    e.ConfigureConsumer<UserRegisteredConsumer>(context);
-                });
-                
-                
-                cfg.ReceiveEndpoint("email-service-verification-code-resent-queue", e =>
-                {
-                    e.Bind("verification-code-resent", x =>
-                    {
-                        x.ExchangeType = "fanout";
-                    });
+await app.InitializeDatabaseAsync();
 
-                    e.ConfigureConsumer<VerificationCodeResentConsumer>(context);
-                });
-            });
-        });
-    })
-    .Build();
+app.UseRouting();
+if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Email Service API V1");
+    });
+}
 
-await host.RunAsync();
+app.UseCors("CorsPolicy");
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseEndpoints(endpoints =>
+{
+    GetUnreadNotificationsEndpoint.Register(endpoints);
+    MarkAsReadEndpoint.Register(endpoints);
+});
+
+app.MapHub<NotificationHub>("/hub/notifications");
+
+app.Run();

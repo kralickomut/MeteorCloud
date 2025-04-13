@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { HttpClientModule } from '@angular/common/http';
+import {HTTP_INTERCEPTORS, HttpClientModule} from '@angular/common/http';
 import { ReactiveFormsModule } from '@angular/forms';
 
 
@@ -52,6 +52,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';
 import { MenuModule } from 'primeng/menu';
 import { VerifyComponent } from './pages/verify/verify.component';
+import {AuthInterceptor} from "./interceptors/auth.interceptor";
 
 
 
@@ -68,6 +69,7 @@ import { VerifyComponent } from './pages/verify/verify.component';
 // TODO: RESPONSIVENESS ACROSS WHOLE APP
 // TODO: Filters at tables
 // TODO: Click on whole row to open file tab
+// TODO: Add verified animation to verify page
 
 
 @NgModule({
@@ -123,7 +125,12 @@ import { VerifyComponent } from './pages/verify/verify.component';
     ConfirmDialogModule,
     MenuModule,
   ],
-  providers: [MessageService, ConfirmationService],
+  providers: [MessageService, ConfirmationService,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true
+    }],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

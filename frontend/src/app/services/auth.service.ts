@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { enviroment} from "../../../enviroment";
-import { Observable } from 'rxjs';
+import {catchError, map, Observable, switchMap, tap, throwError} from 'rxjs';
 import {ApiResult} from "../models/api-result";
+import {User, UserService} from "./user.service";
 
 
 interface RegisterRequest {
@@ -26,7 +27,7 @@ interface VerifyRequest {
 export class AuthService {
   private authUrl = enviroment.authUrl + '/api';
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private userService: UserService) { }
 
   register(data: RegisterRequest): Observable<ApiResult<boolean>> {
     return this.http.post<ApiResult<boolean>>(`${this.authUrl}/auth/register`, data);
@@ -40,8 +41,30 @@ export class AuthService {
     return this.http.post(`${this.authUrl}/auth/resend`, { email });
   }
 
-  login(data: LoginModel): Observable<ApiResult<{ token: string }>> {
-    return this.http.post<ApiResult<{ token: string }>>(`${this.authUrl}/auth/login`, data);
+  loginAndStore(data: LoginModel): Observable<boolean> {
+    return this.http
+      .post<ApiResult<{ token: string; userId: number }>>(`${this.authUrl}/auth/login`, data)
+      .pipe(
+        map(res => {
+          if (!res.success || !res.data?.token || !res.data.userId) {
+            throw new Error(res.error?.message || 'Login failed.');
+          }
+
+          localStorage.setItem('auth_token', res.data.token);
+          localStorage.setItem('user_id', res.data.userId.toString());
+
+          return true;
+        }),
+        catchError(err => {
+          const errorMessage = err?.error?.message || err?.message || 'Login failed.';
+          return throwError(() => new Error(errorMessage));
+        })
+      );
+  }
+
+  logout(): void {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('user_id');
   }
 
 }

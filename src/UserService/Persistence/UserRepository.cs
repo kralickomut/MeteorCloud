@@ -12,9 +12,9 @@ public class UserRepository
         _context = context;
     }
 
-    public async Task<User?> GetUserByIdAsync(int id, CancellationToken cancellationToken)
+    public async Task<User?> GetUserByIdAsync(int id, CancellationToken? cancellationToken = null)
     {
-        cancellationToken.ThrowIfCancellationRequested();
+        cancellationToken?.ThrowIfCancellationRequested();
 
         using var connection = await _context.CreateConnectionAsync();
         const string query = "SELECT * FROM Users WHERE Id = @Id;";
@@ -41,5 +41,26 @@ public class UserRepository
         {
             return false;
         }
+    }
+    
+    public async Task<bool> UpdateUserAsync(User user, CancellationToken? cancellationToken = null)
+    {
+        cancellationToken?.ThrowIfCancellationRequested();
+
+        using var connection = await _context.CreateConnectionAsync();
+
+        const string query = @"
+            UPDATE Users
+            SET Name = @Name,
+                Email = @Email,
+                Description = @Description,
+                InTotalWorkspaces = @InTotalWorkspaces,
+                LastLogin = @LastLogin,
+                UpdatedAt = @UpdatedAt
+            WHERE Id = @Id;
+        ";
+
+        var rows = await connection.ExecuteAsync(query, user);
+        return rows == 1;
     }
 }

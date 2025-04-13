@@ -1,0 +1,7 @@
+{
+  "JwtSettings": {
+    "Issuer": "MeteorCloud.AuthService",
+    "Audience": "MeteorCloud.All",
+    "PublicKeyPath": "/app/Keys/public.pem"
+  }
+}

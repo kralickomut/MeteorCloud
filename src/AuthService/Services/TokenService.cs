@@ -1,40 +1,43 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Reflection;
 using System.Security.Claims;
-using System.Text;
+using System.Security.Cryptography;
+using MeteorCloud.Shared.Jwt;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AuthService.Services;
 
 public class TokenService
 {
-    private readonly IConfiguration _configuration;
+    private readonly RsaSecurityKey _key;
+    private readonly IConfiguration _config;
 
-    public TokenService(IConfiguration configuration)
+    public TokenService(IConfiguration config)
     {
-        _configuration = configuration;
+        _config = config;
+        _key = RsaKeyUtils.LoadEmbeddedPrivateKey("MeteorCloud.Shared.Jwt.Keys.private.pem");
     }
 
     public string GenerateToken(int userId, string email)
     {
-        var key = Encoding.UTF8.GetBytes(_configuration["JwtSettings:Secret"]!);
-        var tokenHandler = new JwtSecurityTokenHandler();
-            
+        var handler = new JwtSecurityTokenHandler();
+        var credentials = new SigningCredentials(_key, SecurityAlgorithms.RsaSha256);
+
         var claims = new List<Claim>
         {
             new Claim("id", userId.ToString()),
-            new Claim(JwtRegisteredClaimNames.Email, email),
+            new Claim(JwtRegisteredClaimNames.Email, email)
         };
 
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            Expires = DateTime.UtcNow.AddMinutes(double.Parse(_configuration["JwtSettings:ExpiresInMinutes"]!)),
-            Issuer = _configuration["JwtSettings:Issuer"],
-            Audience = _configuration["JwtSettings:Audience"],
-            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
+            Expires = DateTime.UtcNow.AddMinutes(30),
+            Issuer = _config["JwtSettings:Issuer"],
+            Audience = _config["JwtSettings:Audience"],
+            SigningCredentials = credentials
         };
 
-        var token = tokenHandler.CreateToken(tokenDescriptor);
-        return tokenHandler.WriteToken(token);
+        return handler.WriteToken(handler.CreateToken(tokenDescriptor));
     }
 }

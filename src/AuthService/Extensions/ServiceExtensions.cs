@@ -1,3 +1,4 @@
+using System.Text;
 using AuthService.Features.Auth;
 using AuthService.Persistence;
 using AuthService.Services;
@@ -6,6 +7,8 @@ using MeteorCloud.Caching.Abstraction;
 using MeteorCloud.Caching.Services;
 using MeteorCloud.Messaging.Events;
 using MeteorCloud.Messaging.Events.Auth;
+using MeteorCloud.Shared.Jwt;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
 
@@ -41,6 +44,8 @@ public static class ServiceExtensions
 
         services.AddSingleton<TokenService>();
         
+        
+        
         // Get Redis connection details from environment variables
         var redisHost = Environment.GetEnvironmentVariable("REDIS_HOST") ?? "localhost";
         var redisPort = Environment.GetEnvironmentVariable("REDIS_PORT") ?? "6379";
@@ -59,7 +64,6 @@ public static class ServiceExtensions
 
         services.AddMassTransit(busConfigurator =>
         {
-
             busConfigurator.UsingRabbitMq((context, rabbitCfg) =>
             {
                 rabbitCfg.Host("rabbitmq", h =>
@@ -76,6 +80,7 @@ public static class ServiceExtensions
             
             
         });
+        
         
         return services;
     }

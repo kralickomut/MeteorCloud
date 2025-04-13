@@ -1,12 +1,14 @@
 using AuthService.Services;
 using FluentValidation;
+using MassTransit;
+using MeteorCloud.Messaging.Events;
 using MeteorCloud.Shared.ApiResults;
 
 namespace AuthService.Features.Auth;
 
 public record LoginRequest(string Email, string Password);
 
-public record LoginResponse(string Token);
+public record LoginResponse(string Token, int UserId);
 
 public class LoginValidator : AbstractValidator<LoginRequest>
 {
@@ -44,12 +46,20 @@ public class LoginHandler
 {
     private readonly CredentialService _credentialService;
     private readonly TokenService _tokenService;
+    private readonly IPublishEndpoint _publishEndpoint;
+    private readonly ILogger<LoginHandler> _logger;
 
-    public LoginHandler(CredentialService credentialService, TokenService tokenService)
+    public LoginHandler(CredentialService credentialService,
+        TokenService tokenService, 
+        IPublishEndpoint publishEndpoint,
+        ILogger<LoginHandler> logger)
     {
+        _logger = logger;
         _credentialService = credentialService;
         _tokenService = tokenService;
+        _publishEndpoint = publishEndpoint;
     }
+
 
     public async Task<ApiResult<LoginResponse>> Handle(LoginRequest request)
     {
@@ -66,8 +76,10 @@ public class LoginHandler
         }
 
         var token = _tokenService.GenerateToken(credentials.UserId, credentials.Email);
-
-        return new ApiResult<LoginResponse>(new LoginResponse(token));
+        await _publishEndpoint.Publish(new UserLoggedInEvent(credentials.UserId));
+        _logger.LogInformation("User {UserId} logged in successfully.", credentials.UserId);
+        
+        return new ApiResult<LoginResponse>(new LoginResponse(token, credentials.UserId));
     }
 }
 

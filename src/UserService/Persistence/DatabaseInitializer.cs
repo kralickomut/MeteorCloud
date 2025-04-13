@@ -65,6 +65,7 @@ public class DatabaseInitializer
                     Description TEXT DEFAULT '',
                     InTotalWorkspaces INT NOT NULL DEFAULT 0,
                     RegistrationDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    LastLoginDate TIMESTAMP DEFAULT NULL,
                     UpdatedAt TIMESTAMP
                 );";
 

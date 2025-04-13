@@ -57,7 +57,8 @@ namespace UserService.Features
                     return response.Success == true
                         ? Results.Ok(response)
                         : Results.NotFound(response);
-                }).WithName("GetUser");
+                }).WithName("GetUser")
+                .RequireAuthorization();
         }
     }
 }

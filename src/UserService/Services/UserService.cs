@@ -22,7 +22,7 @@ public class UserService
         _logger = logger;
     }
     
-    public async Task<User?> GetUserByIdAsync(int id, CancellationToken cancellationToken)
+    public async Task<User?> GetUserByIdAsync(int id, CancellationToken? cancellationToken = null)
     {
         var cachedUser = await _cache.GetAsync(_serviceCacheKey, "user", id.ToString());
         if (cachedUser != null)
@@ -44,6 +44,16 @@ public class UserService
     public async Task CreateUserAsync(User user)
     {
         var success = await _userRepository.CreateUserAsync(user);
+
+        if (success)
+        {
+            await _cache.SetAsync(_serviceCacheKey, "user", user.Id.ToString(), JsonConvert.SerializeObject(user), TimeSpan.FromMinutes(10));
+        }
+    }
+    
+    public async Task UpdateUserAsync(User user)
+    {
+        var success = await _userRepository.UpdateUserAsync(user);
 
         if (success)
         {

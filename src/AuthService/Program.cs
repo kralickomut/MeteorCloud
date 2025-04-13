@@ -1,10 +1,10 @@
 using AuthService.Extensions;
 using AuthService.Features.Auth;
+using MeteorCloud.Shared.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var configuration = builder.Configuration;
-
 
 builder.Services.AddCors(opt =>
 {
@@ -29,6 +29,8 @@ var app = builder.Build();
 
 await app.InitializeDatabaseAsync();
 
+
+
 app.UseRouting();
 
 if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
@@ -39,7 +41,6 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "User Service API V1");
     });
 }
-
 
 app.UseCors("CorsPolicy");
 
