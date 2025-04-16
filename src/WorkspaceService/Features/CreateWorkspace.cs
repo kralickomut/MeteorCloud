@@ -1,92 +1,97 @@
-using System.ComponentModel.DataAnnotations;
+using System.Runtime.InteropServices.JavaScript;
 using FluentValidation;
-using MeteorCloud.Communication;
+using MeteorCloud.Messaging.Events.Workspace;
 using MeteorCloud.Shared.ApiResults;
+using Microsoft.AspNetCore.SignalR;
+using WorkspaceService.Hubs;
 using WorkspaceService.Persistence;
 using WorkspaceService.Services;
 
 namespace WorkspaceService.Features;
 
-public record CreateWorkspaceRequest(string Name, string Description, int OwnerId);
+public record CreateWorkspaceRequest(string Name, string Description, int OwnerId, string ownerName);
 
 public record CreateWorkspaceResponse(int WorkspaceId);
 
-public class CreateWorkspaceRequestValidator : AbstractValidator<CreateWorkspaceRequest>
+public class CreateWorkspaceValidator : AbstractValidator<CreateWorkspaceRequest>
 {
-    public CreateWorkspaceRequestValidator()
+    public CreateWorkspaceValidator()
     {
-        RuleFor(x => x.Name).NotEmpty().MaximumLength(100);
-        RuleFor(x => x.Description).NotEmpty().MaximumLength(500);
-        RuleFor(x => x.OwnerId).GreaterThan(0);
+        RuleFor(x => x.Name)
+            .NotEmpty()
+            .WithMessage("Workspace name is required.")
+            .MaximumLength(20)
+            .WithMessage("Workspace name must be less than 20 characters.");
+        
+        RuleFor(x => x.Description)
+            .MaximumLength(100)
+            .WithMessage("Workspace description must be less than 100 characters.");
+        
+        RuleFor(x => x.OwnerId)
+            .NotEmpty()
+            .GreaterThan(0)
+            .WithMessage("Owner ID must be greater than 0.");
+
+        RuleFor(x => x.ownerName)
+            .NotEmpty()
+            .WithMessage("Owner name is required.");
     }
 }
 
 public class CreateWorkspaceHandler
 {
     private readonly WorkspaceManager _workspaceManager;
-    private readonly MSHttpClient _httpClient;
 
-    public CreateWorkspaceHandler(WorkspaceManager workspaceManager, MSHttpClient httpClient)
+    public CreateWorkspaceHandler(WorkspaceManager workspaceManager)
     {
         _workspaceManager = workspaceManager;
-        _httpClient = httpClient;
     }
-
-    public async Task<ApiResult<CreateWorkspaceResponse>> Handle(CreateWorkspaceRequest request, CancellationToken cancellationToken)
+    
+    public async Task<ApiResult<Workspace>> Handle(CreateWorkspaceRequest request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-
-        var userExists = await _httpClient.CheckUserExistsAsync(request.OwnerId, cancellationToken);
         
-        if (userExists is false)
-        {
-            return new ApiResult<CreateWorkspaceResponse>(null, false, "User not found");
-        }
-        
-        var workspace = new Workspace
+        var workspace = await _workspaceManager.CreateWorkspaceAsync(new Workspace
         {
             Name = request.Name,
             Description = request.Description,
-            OwnerId = request.OwnerId
-        };
+            OwnerName = request.ownerName,
+            OwnerId = request.OwnerId,
+            Status = "Active",
+            SizeInGB = 0,
+            TotalFiles = 0,
+            CreatedOn = DateTime.UtcNow,
+            LastUploadOn = null
+        }, cancellationToken);
+
+        if (workspace is null)
+        {
+            return new ApiResult<Workspace>(null, false, "Failed to create workspace.");
+        }
         
-        var workspaceId = await _workspaceManager.CreateWorkspaceAsync(workspace, cancellationToken);
-        
-        return workspaceId.HasValue
-            ? new ApiResult<CreateWorkspaceResponse>(new CreateWorkspaceResponse(workspaceId.Value), true, "Workspace created successfully")
-            : new ApiResult<CreateWorkspaceResponse>(null, false, "Workspace creation failed");
+        return new ApiResult<Workspace>(workspace, true, "Workspace created successfully.");
     }
 }
 
-
-public static class CreateWorkspaceEndpoint
+public class CreateWorkspaceEndpoint
 {
     public static void Register(IEndpointRouteBuilder app)
     {
-        app.MapPost("/api/workspace", async (CreateWorkspaceRequest request, CreateWorkspaceRequestValidator validator, CancellationToken cancellationToken, CreateWorkspaceHandler handler) =>
+        app.MapPost("/api/workspace", 
+            async (CreateWorkspaceRequest request, CreateWorkspaceHandler handler, CreateWorkspaceValidator validator, CancellationToken cancellationToken) =>
         {
             var validationResult = await validator.ValidateAsync(request, cancellationToken);
-            
             if (!validationResult.IsValid)
             {
                 var errorMessages = validationResult.Errors.Select(x => x.ErrorMessage);
-                return Results.BadRequest(new ApiResult<IEnumerable<string>>(errorMessages, false));
+                return Results.BadRequest(new ApiResult<IEnumerable<string>>(errorMessages));
             }
-            
+
             var response = await handler.Handle(request, cancellationToken);
-            
-            return response.Success == true
+
+            return response.Success
                 ? Results.Ok(response)
-                : Results.BadRequest(response);
+                : Results.NotFound(response);
         });
     }
 }
-
-
-
-
-
-
-
-
-

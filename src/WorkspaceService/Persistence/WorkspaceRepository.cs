@@ -1,6 +1,8 @@
-using System.Collections.Immutable;
 using System.Data;
 using Dapper;
+using Npgsql;
+using WorkspaceService.Models;
+using WorkspaceService.Persistence.Entities;
 
 namespace WorkspaceService.Persistence;
 
@@ -8,228 +10,292 @@ public class WorkspaceRepository
 {
     private readonly DapperContext _context;
     private readonly ILogger<WorkspaceRepository> _logger;
-    
+
     public WorkspaceRepository(DapperContext context, ILogger<WorkspaceRepository> logger)
     {
         _context = context;
         _logger = logger;
     }
-    
-    public async Task<IEnumerable<Workspace>> GetWorkspacesByUserId(int userId)
-    { 
-        await using var connection = await _context.CreateConnectionAsync();
-        
-        const string query = "SELECT * FROM Workspaces WHERE OwnerId = @UserId;";
-        var workspaces = await connection.QueryAsync<Workspace>(query, new { UserId = userId });
-        
-        return workspaces;
-    }
-    
-    public async Task<int?> CreateWorkspaceAsync(Workspace workspace, CancellationToken cancellationToken)
+
+    public async Task<Workspace?> GetWorkspaceByIdAsync(int workspaceId)
     {
-        cancellationToken.ThrowIfCancellationRequested(); // ✅ Stop early if canceled
+        await using var connection = await _context.CreateConnectionAsync();
+
+        const string query = "SELECT * FROM Workspaces WHERE Id = @WorkspaceId;";
+        return await connection.QuerySingleOrDefaultAsync<Workspace>(query, new { WorkspaceId = workspaceId });
+    }
+
+    public async Task<Workspace?> GetWorkspaceByIdIncludeUsersAsync(int workspaceId)
+    {
+        await using var connection = await _context.CreateConnectionAsync();
+
+        const string workspaceQuery = "SELECT * FROM Workspaces WHERE Id = @WorkspaceId;";
+        const string usersQuery = "SELECT * FROM WorkspaceUsers WHERE WorkspaceId = @WorkspaceId;";
+
+        var workspace = await connection.QuerySingleOrDefaultAsync<Workspace>(
+            workspaceQuery, new { WorkspaceId = workspaceId });
+
+        if (workspace is null)
+            return null;
+
+        var users = (await connection.QueryAsync<WorkspaceUser>(
+            usersQuery, new { WorkspaceId = workspaceId })).ToList();
+
+        workspace.Users = users;
+        return workspace;
+    }
+
+    public async Task<List<Workspace>> GetUserWorkspacesAsync(int userId, int page, int pageSize, CancellationToken? cancellationToken = null)
+    {
+        cancellationToken?.ThrowIfCancellationRequested();
+
+        await using var connection = await _context.CreateConnectionAsync();
+
+        const string query = @"
+            SELECT *
+            FROM Workspaces w
+            WHERE EXISTS (
+                SELECT 1 FROM WorkspaceUsers wu
+                WHERE wu.WorkspaceId = w.Id AND wu.UserId = @UserId
+            )
+            ORDER BY w.CreatedOn DESC
+            LIMIT @PageSize OFFSET @Offset;
+        ";
+
+        var result = await connection.QueryAsync<Workspace>(
+            query,
+            new
+            {
+                UserId = userId,
+                PageSize = pageSize,
+                Offset = (page - 1) * pageSize
+            }
+        );
+
+        return result.ToList();
+    }
+
+    public async Task<Workspace?> CreateWorkspaceAsync(Workspace workspace, CancellationToken? cancellationToken = null)
+    {
+        cancellationToken?.ThrowIfCancellationRequested();
 
         try
         {
-            await using var connection = await _context.CreateConnectionAsync(); // ✅ Fully async connection
-            await using var transaction = await connection.BeginTransactionAsync(); // ✅ Fully async transaction
+            await using var connection = await _context.CreateConnectionAsync();
+            await using var transaction = await connection.BeginTransactionAsync();
 
             const string insertWorkspaceQuery = @"
-            INSERT INTO Workspaces (Name, Description, OwnerId)
-            VALUES (@Name, @Description, @OwnerId)
-            RETURNING Id;
+                INSERT INTO Workspaces (Name, Description, OwnerId, OwnerName, Status, SizeInGB, TotalFiles, CreatedOn, LastUploadOn)
+                VALUES (@Name, @Description, @OwnerId, @OwnerName, @Status, @SizeInGB, @TotalFiles, @CreatedOn, @LastUploadOn)
+                RETURNING *;
             ";
-            
-            var workspaceId = await connection.ExecuteScalarAsync<int>(
-                insertWorkspaceQuery, workspace, transaction: transaction
+
+            var createdWorkspace = await connection.QuerySingleOrDefaultAsync<Workspace>(
+                insertWorkspaceQuery,
+                new
+                {
+                    workspace.Name,
+                    workspace.Description,
+                    workspace.OwnerId,
+                    workspace.OwnerName,
+                    workspace.Status,
+                    workspace.SizeInGB,
+                    workspace.TotalFiles,
+                    workspace.CreatedOn,
+                    workspace.LastUploadOn
+                },
+                transaction: transaction
             );
 
-            if (workspaceId > 0)
+            if (createdWorkspace is not null)
             {
-                const string insertRelationQuery = @"
-                INSERT INTO WorkspaceUsers (WorkspaceId, UserId, Role)
-                VALUES (@WorkspaceId, @OwnerId, @Role);
+                const string insertOwnerRelationQuery = @"
+                    INSERT INTO WorkspaceUsers (WorkspaceId, UserId, Role)
+                    VALUES (@WorkspaceId, @UserId, @Role);
                 ";
 
                 await connection.ExecuteAsync(
-                    insertRelationQuery,
-                    new { WorkspaceId = workspaceId, OwnerId = workspace.OwnerId, Role = "owner" },
+                    insertOwnerRelationQuery,
+                    new
+                    {
+                        WorkspaceId = createdWorkspace.Id,
+                        UserId = createdWorkspace.OwnerId,
+                        Role = (int)Role.Owner
+                    },
                     transaction: transaction
                 );
             }
 
-            await transaction.CommitAsync(); 
-            return workspaceId;
+            await transaction.CommitAsync();
+            return createdWorkspace;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error creating workspace for user {OwnerId}", workspace.OwnerId);
+            _logger.LogError(ex, "Error creating workspace for owner {OwnerId}", workspace.OwnerId);
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Returns null when the user is already a member of the workspace
+    /// Throws exception when the user has already been invited
+    /// </summary>
+    /// <param name="workspaceId"></param>
+    /// <param name="email"></param>
+    /// <param name="invitedByUserId"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    public async Task<WorkspaceInvitation?> CreateInvitationAsync(int workspaceId, string email, int invitedByUserId, CancellationToken? ct = null)
+    {
+        ct?.ThrowIfCancellationRequested();
+
+        var normalizedEmail = email.ToLowerInvariant().Trim();
+        await using var connection = await _context.CreateConnectionAsync();
+        
+        // 1. Check if there's an existing invitation in status 'Pending'
+        const string existingInviteQuery = @"
+            SELECT Status
+            FROM WorkspaceInvitations
+            WHERE WorkspaceId = @WorkspaceId AND LOWER(Email) = @Email
+            ORDER BY CreatedOn DESC
+            LIMIT 1;
+        ";
+
+        var lastInviteStatus = await connection.QueryFirstOrDefaultAsync<string>(existingInviteQuery, new
+        {
+            WorkspaceId = workspaceId,
+            Email = normalizedEmail
+        });
+
+        if (lastInviteStatus == "Pending")
+        {
+            _logger.LogInformation("An invitation is already pending for {Email} in workspace {WorkspaceId}. Skipping.", normalizedEmail, workspaceId);
+            return null;
+        }
+
+        // 2. Insert new invitation
+        var invitation = new WorkspaceInvitation
+        {
+            WorkspaceId = workspaceId,
+            Email = normalizedEmail,
+            InvitedByUserId = invitedByUserId,
+            Token = Guid.NewGuid(),
+            Status = "Pending",
+            CreatedOn = DateTime.UtcNow
+        };
+
+        const string insertQuery = @"
+            INSERT INTO WorkspaceInvitations
+                (WorkspaceId, Email, InvitedByUserId, Token, Status, CreatedOn)
+            VALUES
+                (@WorkspaceId, @Email, @InvitedByUserId, @Token, @Status, @CreatedOn)
+            RETURNING Id;
+        ";
+
+        try
+        {
+            var id = await connection.ExecuteScalarAsync<int>(insertQuery, invitation);
+            invitation.Id = id;
+            return invitation;
+        }
+        catch (PostgresException ex) when (ex.SqlState == "23505")
+        {
+            _logger.LogWarning("Invitation already exists for workspace {WorkspaceId} and email {Email}", workspaceId, normalizedEmail);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating invitation for workspace {WorkspaceId}", workspaceId);
             return null;
         }
     }
     
-    public async Task<bool> DeleteWorkspaceAsync(int workspaceId, CancellationToken cancellationToken)
+    /// <summary>
+    /// Returning userIds of users that were part of the workspace
+    /// </summary>
+    /// <param name="workspaceId"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    public async Task<List<int>?> DeleteWorkspaceAsync(int workspaceId, CancellationToken? cancellationToken = null)
     {
-        cancellationToken.ThrowIfCancellationRequested();
+        cancellationToken?.ThrowIfCancellationRequested();
 
         try
         {
             await using var connection = await _context.CreateConnectionAsync();
             await using var transaction = await connection.BeginTransactionAsync();
 
-            // Delete from WorkspaceUsers first (due to FK constraint)
-            const string deleteWorkspaceUsersQuery = @"
-            DELETE FROM WorkspaceUsers WHERE WorkspaceId = @WorkspaceId;
+            // Get all users that were part of the workspace (before deleting!)
+            const string getUserIdsQuery = @"
+            SELECT UserId FROM WorkspaceUsers
+            WHERE WorkspaceId = @WorkspaceId;
         ";
 
-            await connection.ExecuteAsync(
-                deleteWorkspaceUsersQuery,
+            var userIds = (await connection.QueryAsync<int>(
+                getUserIdsQuery,
                 new { WorkspaceId = workspaceId },
-                transaction: transaction
-            );
+                transaction
+            )).ToList();
 
-            // Delete from Workspaces table
-            const string deleteWorkspaceQuery = @"
-            DELETE FROM Workspaces WHERE Id = @WorkspaceId;
-        ";
+            // Delete users
+            const string deleteUsersQuery = "DELETE FROM WorkspaceUsers WHERE WorkspaceId = @WorkspaceId;";
+            await connection.ExecuteAsync(deleteUsersQuery, new { WorkspaceId = workspaceId }, transaction);
 
-            var rowsAffected = await connection.ExecuteAsync(
-                deleteWorkspaceQuery,
-                new { WorkspaceId = workspaceId },
-                transaction: transaction
-            );
+            // Optionally delete invitations if you use them
+            const string deleteInvitationsQuery = "DELETE FROM WorkspaceInvitations WHERE WorkspaceId = @WorkspaceId;";
+            await connection.ExecuteAsync(deleteInvitationsQuery, new { WorkspaceId = workspaceId }, transaction);
 
-            if (rowsAffected == 0)
-            {
-                await transaction.RollbackAsync();
-                return false; // Workspace not found
-            }
+            // Delete workspace
+            const string deleteWorkspaceQuery = "DELETE FROM Workspaces WHERE Id = @WorkspaceId;";
+            await connection.ExecuteAsync(deleteWorkspaceQuery, new { WorkspaceId = workspaceId }, transaction);
 
             await transaction.CommitAsync();
-            return true;
+
+            return userIds;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting workspace {WorkspaceId}", workspaceId);
-            return false;
+            return null;
         }
     }
     
-    public async Task<bool> UpdateWorkspaceAsync(Workspace workspace, CancellationToken cancellationToken)
+    
+    public async Task<WorkspaceInvitation?> GetInvitationByEmailAsync(string email, CancellationToken? ct = null)
     {
-        cancellationToken.ThrowIfCancellationRequested();
+        ct?.ThrowIfCancellationRequested();
 
-        try
-        {
-            await using var connection = await _context.CreateConnectionAsync();
+        await using var connection = await _context.CreateConnectionAsync();
 
-            const string updateWorkspaceQuery = @"
-            UPDATE Workspaces
-            SET Name = @Name, Description = @Description, OwnerId = @OwnerId
-            WHERE Id = @Id;
+        const string query = @"
+            SELECT * FROM WorkspaceInvitations
+            WHERE Email = @Email;
         ";
 
-            var rowsAffected = await connection.ExecuteAsync(
-                updateWorkspaceQuery,
-                new { workspace.Name, workspace.Description, workspace.OwnerId, workspace.Id }
-            );
-
-            return rowsAffected > 0;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating workspace {WorkspaceId}", workspace.Id);
-            return false;
-        }
+        return await connection.QuerySingleOrDefaultAsync<WorkspaceInvitation>(query, new { Email = email });
     }
     
     
-    public async Task<bool> ChangeWorkspaceOwnerAsync(int workspaceId, int newOwnerId, CancellationToken cancellationToken)
+    public async Task<bool> IsUserInWorkspaceAsync(int workspaceId, int userId, CancellationToken? ct = null)
     {
-        cancellationToken.ThrowIfCancellationRequested();
+        ct?.ThrowIfCancellationRequested();
 
-        try
-        {
-            await using var connection = await _context.CreateConnectionAsync();
-            await using var transaction = await connection.BeginTransactionAsync();
+        const string query = @"
+        SELECT EXISTS (
+            SELECT 1
+            FROM WorkspaceUsers
+            WHERE WorkspaceId = @WorkspaceId AND UserId = @UserId
+        );
+    ";
 
-            // Verify new owner exists in workspace
-            const string userExistsQuery = @"
-                SELECT COUNT(*) FROM WorkspaceUsers
-                WHERE WorkspaceId = @WorkspaceId AND UserId = @NewOwnerId;
-            ";
-
-            var userExists = await connection.ExecuteScalarAsync<int>(
-                userExistsQuery,
-                new { WorkspaceId = workspaceId, NewOwnerId = newOwnerId },
-                transaction: transaction
-            );
-
-            if (userExists == 0)
-            {
-                await transaction.RollbackAsync();
-                return false; // New owner not found in workspace
-            }
-
-            // Get current owner
-            const string getCurrentOwnerQuery = @"
-                SELECT OwnerId FROM Workspaces WHERE Id = @WorkspaceId;
-            ";
-
-            var currentOwnerId = await connection.ExecuteScalarAsync<int>(
-                getCurrentOwnerQuery,
-                new { WorkspaceId = workspaceId },
-                transaction: transaction
-            );
-
-            // Update Workspace owner
-            const string updateOwnerQuery = @"
-                UPDATE Workspaces SET OwnerId = @NewOwnerId WHERE Id = @WorkspaceId;
-            ";
-
-            await connection.ExecuteAsync(
-                updateOwnerQuery,
-                new { NewOwnerId = newOwnerId, WorkspaceId = workspaceId },
-                transaction: transaction
-            );
-
-            // Update roles in WorkspaceUsers
-            const string updateRoleQuery = @"
-                UPDATE WorkspaceUsers
-                SET Role = CASE
-                    WHEN UserId = @NewOwnerId THEN 'owner'
-                    WHEN UserId = @CurrentOwnerId THEN 'member'
-                    ELSE Role
-                END
-                WHERE WorkspaceId = @WorkspaceId AND UserId IN (@NewOwnerId, @CurrentOwnerId);
-            ";
-
-            await connection.ExecuteAsync(
-                updateRoleQuery,
-                new { NewOwnerId = newOwnerId, CurrentOwnerId = currentOwnerId, WorkspaceId = workspaceId },
-                transaction: transaction
-            );
-
-            await transaction.CommitAsync();
-            return true;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error changing owner for workspace {WorkspaceId}", workspaceId);
-            return false;
-        }
-    }
-    
-    public async Task<IEnumerable<int>> GetUserIdsInWorkspaceAsync(int workspaceId)
-    {
         await using var connection = await _context.CreateConnectionAsync();
-        
-        const string query = "SELECT UserId FROM WorkspaceUsers WHERE WorkspaceId = @WorkspaceId;";
-        var userIds = await connection.QueryAsync<int>(query, new { WorkspaceId = workspaceId });
-        
-        return userIds;
+
+        var isMember = await connection.ExecuteScalarAsync<bool>(query, new
+        {
+            WorkspaceId = workspaceId,
+            UserId = userId
+        });
+
+        return isMember;
     }
-    
-    
-    
 }

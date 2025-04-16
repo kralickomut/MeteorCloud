@@ -18,6 +18,8 @@ export class VerifyComponent implements AfterViewInit {
   code: string[] = ['', '', '', '', '', ''];
   email!: string;
   errorMessage: string | null = null;
+  messageType: 'success' | 'error' | null = null;
+  verified: boolean = false;
 
   constructor(private route: ActivatedRoute, private authService: AuthService, private cdr: ChangeDetectorRef, private router: Router) {
     this.route.queryParams.subscribe(params => {
@@ -81,19 +83,39 @@ export class VerifyComponent implements AfterViewInit {
       this.authService.verifyCode({ code: full }).subscribe({
         next: (res) => {
           if (res.success) {
-            this.router.navigate(['/login']);
+            this.verified = true;
+            this.messageType = 'success';
+            this.errorMessage = 'Your email has been verified!';
+            setTimeout(() => this.router.navigate(['/login']), 2000);
           } else {
             this.errorMessage = res.error?.message ?? 'Invalid code.';
+            this.messageType = 'error';
           }
         },
         error: () => {
           this.errorMessage = 'Verification failed. Please try again.';
+          this.messageType = 'error';
         }
       });
     }
   }
 
   onResend() {
-    console.log('Resend verification email');
+    this.authService.resendVerificationCode({ email: this.email }).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.errorMessage = 'Verification code resent successfully.';
+          this.messageType = 'success';
+        } else {
+          this.errorMessage = res.error?.message ?? 'Failed to resend verification code.';
+          this.messageType = 'error';
+        }
+      },
+      error: () => {
+        this.errorMessage = 'Failed to resend verification code.';
+        this.messageType = 'error';
+      }
+    });
   }
 }
+

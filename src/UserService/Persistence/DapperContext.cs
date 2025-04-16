@@ -20,7 +20,7 @@ public class DapperContext
             .WaitAndRetryAsync(3, attempt => TimeSpan.FromMilliseconds(100 * Math.Pow(2, attempt)));
     }
 
-    public async Task<IDbConnection> CreateConnectionAsync()
+    public async Task<NpgsqlConnection> CreateConnectionAsync()
     {
         var connection = new NpgsqlConnection(_connectionString);
         await _retryPolicy.ExecuteAsync(() => connection.OpenAsync());

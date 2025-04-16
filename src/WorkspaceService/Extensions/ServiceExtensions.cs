@@ -3,9 +3,12 @@ using MeteorCloud.Caching.Abstraction;
 using MeteorCloud.Caching.Services;
 using MeteorCloud.Communication;
 using MeteorCloud.Messaging.Events.Workspace;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
+using WorkspaceService.Consumers;
 using WorkspaceService.Features;
+using WorkspaceService.Hubs;
 using WorkspaceService.Persistence;
 using WorkspaceService.Services;
 
@@ -29,18 +32,25 @@ public static class ServiceExtensions
         
         // Register WorkspaceManager
         services.AddScoped<WorkspaceManager>();
-        
-        // Register CreateWorkspaceHandler
+
+        services.AddSingleton<CreateWorkspaceValidator>();
         services.AddScoped<CreateWorkspaceHandler>();
-        services.AddSingleton<CreateWorkspaceRequestValidator>();
         
-        // Register DeleteWorkspaceHandler
+        services.AddSingleton<InviteToWorkspaceValidator>();
+        services.AddScoped<InviteToWorkspaceHandler>();
+        
+        services.AddSingleton<GetUserWorkspacesValidator>();
+        services.AddScoped<GetUserWorkspacesHandler>();
+        
+        services.AddSingleton<DeleteWorkspaceValidator>();
         services.AddScoped<DeleteWorkspaceHandler>();
-        services.AddSingleton<DeleteWorkspaceRequestValidator>();
+
+        services.AddSingleton<GetWorkspaceByIdValidator>();
+        services.AddScoped<GetWorkspaceByIdHandler>();
+
+        services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
+        services.AddSignalR();
         
-        // Register UpdateWorkspaceHandler
-        services.AddScoped<UpdateWorkspaceHandler>();
-        services.AddSingleton<UpdateWorkspaceRequestValidator>();
         
         // Get Redis connection details from environment variables
         var redisHost = Environment.GetEnvironmentVariable("REDIS_HOST") ?? "localhost";
@@ -59,9 +69,11 @@ public static class ServiceExtensions
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "Workspace Service API", Version = "v1" });
         });
-
+        
         services.AddMassTransit(busConfigurator =>
         {
+            busConfigurator.AddConsumer<UserRegisteredConsumer>();
+            
             busConfigurator.UsingRabbitMq((context, rabbitCfg) =>
             {
                 rabbitCfg.Host("rabbitmq", h =>
@@ -70,8 +82,21 @@ public static class ServiceExtensions
                     h.Password("guest");
                 });
                 
-                rabbitCfg.Message<WorkspaceCreatedEvent>(x => x.SetEntityName("workspaces"));
-                rabbitCfg.Message<WorkspaceDeletedEvent>(x => x.SetEntityName("workspaces"));
+                rabbitCfg.Message<WorkspaceCreatedEvent>(x => x.SetEntityName("workspace-created"));
+                rabbitCfg.Message<WorkspaceInviteEvent>(x => x.SetEntityName("workspace-invite"));
+                rabbitCfg.Message<WorkspaceDeletedEvent>(x => x.SetEntityName("workspace-deleted"));    
+                rabbitCfg.Message<WorkspaceInvitationMatchOnRegisterEvent>(x => x.SetEntityName("workspace-invitation-match-on-register"));
+                
+                rabbitCfg.ReceiveEndpoint("workspace-service-user-registered-queue", e =>
+                {
+                    e.Bind("user-registered", x =>
+                    {
+                        x.ExchangeType = "fanout";
+                    });
+                    
+                    e.ConfigureConsumer<UserRegisteredConsumer>(context);
+                });
+                
                 
                 rabbitCfg.ConfigureEndpoints(context);
                 

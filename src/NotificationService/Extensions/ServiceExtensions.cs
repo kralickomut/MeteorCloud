@@ -4,8 +4,11 @@ using EmailService.Persistence;
 using EmailService.Senders;
 using MassTransit;
 using EmailService.Abstraction;
+using EmailService.Consumers.Workspace;
 using EmailService.Features;
 using EmailService.Hubs;
+using MeteorCloud.Communication;
+using MeteorCloud.Messaging.Events.Workspace;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.OpenApi.Models;
 
@@ -29,6 +32,8 @@ public static class ServiceExtensions
         services.AddSingleton<DapperContext>();
         services.AddScoped<NotificationRepository>();
 
+        services.AddHttpClient<MSHttpClient>();
+
         
         // Configuration for the SignalR hub
         services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
@@ -46,6 +51,8 @@ public static class ServiceExtensions
         {
             config.AddConsumer<UserRegisteredConsumer>();
             config.AddConsumer<VerificationCodeResentConsumer>();
+            config.AddConsumer<WorkspaceInviteConsumer>();
+            config.AddConsumer<WorkspaceInvitationMatchOnRegisterConsumer>();
 
             config.UsingRabbitMq((context, cfg) =>
             {
@@ -65,6 +72,18 @@ public static class ServiceExtensions
                 {
                     e.Bind("verification-code-resent", x => x.ExchangeType = "fanout");
                     e.ConfigureConsumer<VerificationCodeResentConsumer>(context);
+                });
+                
+                cfg.ReceiveEndpoint("email-service-workspace-invite-queue", e =>
+                {
+                    e.Bind("workspace-invite", x => x.ExchangeType = "fanout");
+                    e.ConfigureConsumer<WorkspaceInviteConsumer>(context);
+                });
+                
+                cfg.ReceiveEndpoint("email-service-workspace-invitation-match-on-register-queue", e =>
+                {
+                    e.Bind("workspace-invitation-match-on-register", x => x.ExchangeType = "fanout");
+                    e.ConfigureConsumer<WorkspaceInvitationMatchOnRegisterConsumer>(context);
                 });
             });
         });

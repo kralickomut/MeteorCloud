@@ -35,6 +35,6 @@
   </div>
 
   <ng-template pTemplate="footer">
-    <button pButton label="Create" icon="pi pi-check" class="p-button-primary" (click)="createWorkspace()"></button>
+    <button pButton label="Create" icon="pi pi-check" class="p-button-primary" [disabled]="!newWorkspaceName" (click)="createWorkspace()"></button>
   </ng-template>
 </p-dialog>

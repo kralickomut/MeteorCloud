@@ -21,6 +21,10 @@ interface VerifyRequest {
   code: string;
 }
 
+interface ResendCodeRequest {
+  email: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -37,8 +41,8 @@ export class AuthService {
     return this.http.post<ApiResult<null>>(`${this.authUrl}/auth/verify`, data);
   }
 
-  resendVerificationCode(email: string): Observable<any> {
-    return this.http.post(`${this.authUrl}/auth/resend`, { email });
+  resendVerificationCode(data: ResendCodeRequest): Observable<ApiResult<boolean>> {
+    return this.http.post<ApiResult<boolean>>(`${this.authUrl}/auth/resend-code`, data );
   }
 
   loginAndStore(data: LoginModel): Observable<boolean> {

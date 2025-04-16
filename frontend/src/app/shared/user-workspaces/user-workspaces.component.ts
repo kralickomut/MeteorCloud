@@ -1,110 +1,38 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { WorkspaceService } from '../../services/workspace.service';
+import {Workspace} from "../../models/WorkspaceFile";
+import {ConfirmationService, MessageService} from "primeng/api";
 
 @Component({
   selector: 'app-user-workspaces',
   templateUrl: './user-workspaces.component.html',
   styleUrl: './user-workspaces.component.scss'
 })
-export class UserWorkspacesComponent {
-  workspaces = [
-    {
-      id: 1,
-      initials: 'MC',
-      name: 'Marketing Campaign',
-      owner: 'Alice Johnson',
-      company: 'BriteMank',
-      email: 'alice@britemank.com',
-      source: 'Website',
-      status: 'Active'
-    },
-    {
-      id: 2,
-      initials: 'DS',
-      name: 'Design System',
-      owner: 'Bob Williams',
-      company: 'Wavelength',
-      email: 'bob@wavelength.com',
-      source: 'Cold Call',
-      status: 'Inactive'
-    },
-    {
-      id: 3,
-      initials: 'PP',
-      name: 'Product Pitch',
-      owner: 'Carla Evans',
-      company: 'ZenTrailMs',
-      email: 'carla@zentrailms.com',
-      source: 'Linkedin',
-      status: 'Prospect'
-    },
-    {
-      id: 4,
-      initials: 'RP',
-      name: 'Roadmap Planning',
-      owner: 'David Brown',
-      company: 'TechNova',
-      email: 'davidbrown@gmail.com',
-      source: 'Email',
-      status: 'Active'
-    },
-    {
-      id: 5,
-      initials: 'RP',
-      name: 'Roadmap Planning',
-      owner: 'David Brown',
-      company: 'TechNova',
-      email: 'davidbrown@gmail.com',
-      source: 'Email',
-      status: 'Active'
-    },
-    {
-      id: 6,
-      initials: 'RP',
-      name: 'Roadmap Planning',
-      owner: 'David Brown',
-      company: 'TechNova',
-      email: 'davidbrown@gmail.com',
-      source: 'Email',
-      status: 'Active'
-    },
-    {
-      id: 7,
-      initials: 'RP',
-      name: 'Roadmap Planning',
-      owner: 'David Brown',
-      company: 'TechNova',
-      email: 'davidbrown@gmail.com',
-      source: 'Email',
-      status: 'Active'
-    },
-    {
-      id: 8,
-      initials: 'RP',
-      name: 'Roadmap Planning',
-      owner: 'David Brown',
-      company: 'TechNova',
-      email: 'davidbrown@gmail.com',
-      source: 'Email',
-      status: 'Active'
-    },
-    {
-      id: 9,
-      initials: 'RP',
-      name: 'Roadmap Planning',
-      owner: 'David Brown',
-      company: 'TechNova',
-      email: 'davidbrown@gmail.com',
-      source: 'Email',
-      status: 'Active'
-    },
+export class UserWorkspacesComponent implements OnInit {
+  workspaces: Workspace[] = [];
 
-
-  ];
-
-  // workspace-overview.component.ts
   searchText = '';
   currentPage = 1;
   itemsPerPage = 10;
+
+  constructor(
+              private workspaceService: WorkspaceService,
+              private confirmationService: ConfirmationService,
+              private messageService: MessageService) {}
+
+  ngOnInit(): void {
+    const userId = Number(localStorage.getItem('user_id'));
+
+    this.workspaceService.workspaceCreated$.subscribe(newWorkspace => {
+      this.workspaces.unshift(newWorkspace);
+    });
+
+    this.workspaceService.getUserWorkspaces(userId, this.currentPage, this.itemsPerPage).subscribe(res => {
+      if (res.success) {
+        this.workspaces = res.data ?? [];
+      }
+    });
+  }
 
   get filteredWorkspaces() {
     return this.workspaces.filter(w =>
@@ -132,4 +60,45 @@ export class UserWorkspacesComponent {
       this.currentPage--;
     }
   }
+
+  deleteWorkspace(workspace: Workspace): void {
+    this.confirmationService.confirm({
+      message: `Are you sure you want to delete the workspace "${workspace.name}"?`,
+      header: 'Delete Workspace',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      acceptButtonStyleClass: 'p-button-danger',
+      rejectButtonStyleClass: 'p-button-text',
+      accept: () => {
+        this.workspaceService.deleteWorkspace(workspace.id).subscribe({
+          next: (res) => {
+            if (res.success) {
+              this.workspaces = this.workspaces.filter(w => w.id !== workspace.id);
+              this.messageService.add({
+                severity: 'success',
+                summary: 'Deleted',
+                detail: `Workspace "${workspace.name}" has been deleted.`,
+                life: 3000
+              });
+            } else {
+              this.messageService.add({
+                severity: 'error',
+                summary: 'Failed',
+                detail: res.error?.message || 'Workspace could not be deleted.'
+              });
+            }
+          },
+          error: () => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Error',
+              detail: 'An unexpected error occurred.'
+            });
+          }
+        });
+      }
+    });
+  }
+
 }

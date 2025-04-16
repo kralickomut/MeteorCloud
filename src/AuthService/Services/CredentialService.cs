@@ -27,7 +27,7 @@ public class CredentialService
         return credential;
     }
     
-    public async Task RegisterUserAsync(string email, string name, string password, CancellationToken cancellationToken)
+    public async Task<Credential?> RegisterUserAsync(string email, string name, string password, CancellationToken cancellationToken)
     {
         var credential = new Credential
         {
@@ -39,15 +39,14 @@ public class CredentialService
             CreatedAt = DateTime.UtcNow
         };
         
-        var userId = await _credentialRepository.CreateCredential(credential, cancellationToken);
+        var newCredential = await _credentialRepository.CreateCredential(credential, cancellationToken);
         
-        if (!userId.HasValue)
+        if (newCredential is null)
         {
             throw new Exception("Failed to create credential. Email already in use.");
         }
 
-        await _publishEndpoint.Publish(new UserRegisteredEvent(userId.Value, credential.Email, name, credential.VerificationCode));
-        _logger.LogInformation("User registered event published for user email: {Email}", email);  
+        return newCredential;
     }
 
     public async Task<bool> Verify(string code, CancellationToken cancellationToken)

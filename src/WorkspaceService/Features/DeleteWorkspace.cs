@@ -1,18 +1,30 @@
-using System.Data;
 using FluentValidation;
+using MassTransit;
+using MeteorCloud.Messaging.Events.Workspace;
 using MeteorCloud.Shared.ApiResults;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.SignalR;
+using WorkspaceService.Hubs;
 using WorkspaceService.Services;
 
 namespace WorkspaceService.Features;
 
-public record DeleteWorkspaceRequest(int Id);
+public record DeleteWorkspaceRequest(int Id, int DeletedByUserId);
 
-public class DeleteWorkspaceRequestValidator : AbstractValidator<DeleteWorkspaceRequest>
+public class DeleteWorkspaceValidator : AbstractValidator<DeleteWorkspaceRequest>
 {
-    public DeleteWorkspaceRequestValidator()
+    public DeleteWorkspaceValidator()
     {
-        RuleFor(x => x.Id).GreaterThan(0);
+        RuleFor(x => x.Id)
+            .NotEmpty()
+            .WithMessage("Workspace ID is required.")
+            .GreaterThan(0)
+            .WithMessage("Workspace ID must be greater than 0.");
+        
+        RuleFor(x => x.DeletedByUserId)
+            .NotEmpty()
+            .WithMessage("User ID is required.")
+            .GreaterThan(0)
+            .WithMessage("User ID must be greater than 0.");
     }
 }
 
@@ -20,46 +32,74 @@ public class DeleteWorkspaceRequestValidator : AbstractValidator<DeleteWorkspace
 public class DeleteWorkspaceHandler
 {
     private readonly WorkspaceManager _workspaceManager;
+    private readonly IHubContext<WorkspaceHub> _hubContext;
+    private readonly IPublishEndpoint _publishEndpoint;
+    private readonly ILogger<DeleteWorkspaceHandler> _logger;
 
-    public DeleteWorkspaceHandler(WorkspaceManager workspaceManager)
+    public DeleteWorkspaceHandler(
+        WorkspaceManager workspaceManager, 
+        IHubContext<WorkspaceHub> hubContext, 
+        IPublishEndpoint publishEndpoint,
+        ILogger<DeleteWorkspaceHandler> logger)
     {
         _workspaceManager = workspaceManager;
+        _hubContext = hubContext;
+        _publishEndpoint = publishEndpoint;
+        _logger = logger;
     }
-
-    public async Task<ApiResult<object>> Handle(DeleteWorkspaceRequest request, CancellationToken cancellationToken)
+    
+    public async Task<ApiResult<bool>> Handle(DeleteWorkspaceRequest request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        
+        var result = await _workspaceManager.DeleteWorkspaceAsync(request.Id, cancellationToken);
 
-        var success = await _workspaceManager.DeleteWorkspaceAsync(request.Id, cancellationToken);
-
-        return success
-            ? new ApiResult<object>(null)
-            : new ApiResult<object>(null, false, "Workspace not found");
+        if (result is not null)
+        {
+            var workspaceId = result.Value.workspaceId;
+            var userIds = result.Value.userIds;
+            
+            await _hubContext.Clients.Users(userIds.Select(id => id.ToString()))
+                .SendAsync("WorkspaceDeleted", new
+                {
+                    WorkspaceId = workspaceId
+                });
+            
+            
+            await _publishEndpoint.Publish(new WorkspaceDeletedEvent(workspaceId, userIds));
+            _logger.LogInformation("Workspace {WorkspaceId} deleted by user {UserId}", workspaceId, request.DeletedByUserId);
+        }
+        
+        return result is not null
+            ? new ApiResult<bool>(true, true, "Workspace deleted successfully.")
+            : new ApiResult<bool>(false, false, "Failed to delete workspace.");
     }
 }
+
 
 public static class DeleteWorkspaceEndpoint
 {
     public static void Register(IEndpointRouteBuilder app)
     {
-        app.MapDelete("/api/workspace/{id}",
-            async (int id, DeleteWorkspaceHandler handler, DeleteWorkspaceRequestValidator validator, CancellationToken cancellationToken) =>
+        app.MapDelete("/api/workspace/{id:int}", 
+            async (int id, HttpContext context, DeleteWorkspaceHandler handler, DeleteWorkspaceValidator validator, CancellationToken cancellationToken) =>
+        {
+            var userId = context.User.FindFirst("UserId")?.Value;
+            
+            var request = new DeleteWorkspaceRequest(id, userId != null ? int.Parse(userId) : 0);
+            var validationResult = await validator.ValidateAsync(request, cancellationToken);
+            
+            if (!validationResult.IsValid)
             {
-                var request = new DeleteWorkspaceRequest(id);
-                var validationResult = await validator.ValidateAsync(request, cancellationToken);
-                
-                if (!validationResult.IsValid)
-                {
-                    var errorMessages = validationResult.Errors.Select(x => x.ErrorMessage).ToList();
-                    return Results.BadRequest(new ApiResult<object>(null, false, string.Join(", ", errorMessages)));
-                }
-                
-                var result = await handler.Handle(request, cancellationToken);
-                
-                return result.Success
-                    ? Results.Ok(result)
-                    : Results.BadRequest(result);
-                
-            });
+                var errorMessages = validationResult.Errors.Select(x => x.ErrorMessage);
+                return Results.BadRequest(new ApiResult<IEnumerable<string>>(errorMessages));
+            }
+
+            var response = await handler.Handle(request, cancellationToken);
+
+            return response.Success
+                ? Results.Ok(response)
+                : Results.NotFound(response);
+        });
     }
 }

@@ -116,10 +116,4 @@ public class MSHttpClient
         }
     }
     
-    public async Task<bool> CheckUserExistsAsync(int userId, CancellationToken cancellationToken)
-    {
-        var url = MicroserviceEndpoints.UserService + $"/api/users/{userId}";
-        var response = await GetAsync<object>(url, cancellationToken);
-        return response.Success;
-    }
 }

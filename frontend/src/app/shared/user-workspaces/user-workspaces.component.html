@@ -1,3 +1,4 @@
+<p-confirmDialog></p-confirmDialog>
 <div class="workspace-overview p-4">
   <!-- Toolbar Section -->
   <div class="toolbar d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
@@ -39,37 +40,47 @@
       <tr>
         <th>Name</th>
         <th>Owner</th>
-        <th>Company</th>
-        <th>Email</th>
-        <th>Source</th>
+        <th>Size (GB)</th>
+        <th>Total Files</th>
+        <th>Last Upload</th>
         <th>Status</th>
+        <th>Action</th>
       </tr>
       </thead>
       <tbody>
       <tr *ngFor="let w of paginatedWorkspaces">
         <td>
           <div class="d-flex align-items-center gap-2">
-            <div class="avatar">{{ w.initials }}</div>
+            <div class="avatar">{{ w.name.slice(0, 2).toUpperCase() }}</div>
             <a [routerLink]="['/workspaces', w.id]" class="fw-semibold text-decoration-none">
               {{ w.name }}
             </a>
           </div>
         </td>
-        <td>{{ w.owner }}</td>
-        <td>{{ w.company }}</td>
-        <td>{{ w.email }}</td>
-        <td>{{ w.source }}</td>
+        <td>{{ w.ownerName }}</td>
+        <td>{{ w.sizeInGB.toFixed(2) }}</td>
+        <td>{{ w.totalFiles }}</td>
+        <td>{{ w.lastUploadOn ? (w.lastUploadOn | date: 'short') : '—' }}</td>
         <td>
-            <span
-              class="badge"
-              [ngClass]="{
-                'badge-success': w.status === 'Active',
-                'badge-danger': w.status === 'Inactive',
-                'badge-info': w.status === 'Prospect'
-              }"
-            >
-              {{ w.status }}
-            </span>
+        <span
+          class="badge"
+          [ngClass]="{
+            'badge-success': w.status === 'Active',
+            'badge-danger': w.status === 'Inactive',
+            'badge-info': w.status === 'Pending'
+          }"
+        >
+          {{ w.status }}
+        </span>
+        </td>
+        <td>
+          <div class="file-actions">
+            <i
+              class="pi pi-trash"
+              tooltipPosition="top"
+              (click)="deleteWorkspace(w)"
+            ></i>
+          </div>
         </td>
       </tr>
       </tbody>

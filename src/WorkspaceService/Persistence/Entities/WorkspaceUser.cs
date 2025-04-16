@@ -1,3 +1,5 @@
+using WorkspaceService.Models;
+
 namespace WorkspaceService.Persistence;
 
 public class WorkspaceUser
@@ -7,7 +9,7 @@ public class WorkspaceUser
     public int WorkspaceId { get; set; }
     
     public int UserId { get; set; }
-    
-    public required string Role { get; set; }
-    
+
+    public Role Role { get; set; } = Role.Guest; // Owner, Manager, Guest
+
 }

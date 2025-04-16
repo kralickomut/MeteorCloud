@@ -26,6 +26,20 @@
       </div>
       <div class="notification-content">
         <div class="notification-message">{{ notification.message }}</div>
+
+        <div *ngIf="notification.title === 'Workspace Invitation'" class="notification-actions">
+          <!-- Show buttons only if no action has been taken -->
+          <ng-container *ngIf="!notification.localAction; else resultText">
+            <button class="accept-btn" (click)="acceptInvitation(notification)">Accept</button>
+            <button class="decline-btn" (click)="declineInvitation(notification)">Decline</button>
+          </ng-container>
+
+          <ng-template #resultText>
+            <span class="action-result" [ngClass]="notification.localAction">
+              {{ notification.localAction === 'accepted' ? 'Accepted' : 'Declined' }}
+            </span>
+          </ng-template>
+        </div>
         <div class="notification-time">{{ notification.time }}</div>
       </div>
     </div>

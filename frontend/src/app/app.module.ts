@@ -66,10 +66,13 @@ import {AuthInterceptor} from "./interceptors/auth.interceptor";
 // TODO: General workspace page info - DONE
 // TODO: Settings page
 // TODO: Workspace detail page blank space at bottom fix
-// TODO: RESPONSIVENESS ACROSS WHOLE APP
+// TODO: RESPONSIVENESS ACROSS WHOLE APP !IMPORTANT
 // TODO: Filters at tables
 // TODO: Click on whole row to open file tab
 // TODO: Add verified animation to verify page
+// TODO: When user removed from a workspace -> show notification + if he is in the workspace cancel the view immediately
+// TODO: When user is invited to a workspace -> show notification
+// TODO: Resend code on verification page
 
 
 @NgModule({

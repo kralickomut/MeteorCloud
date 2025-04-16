@@ -33,7 +33,9 @@ export class RegisterComponent implements OnInit {
     this.authService.register(this.form.value).subscribe({
       next: res => {
         if (res.success) {
-          this.router.navigate(['/verify']);
+          this.router.navigate(['/verify'], {
+            queryParams: { email: this.form.value.email }
+          });
         } else {
           this.errorMessage = res.error?.message ?? 'Invalid code.';
         }

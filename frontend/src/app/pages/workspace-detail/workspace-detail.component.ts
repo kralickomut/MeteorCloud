@@ -1,28 +1,39 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { WorkspaceService } from '../../services/workspace.service';
+import { Workspace } from '../../models/WorkspaceFile';
 
 @Component({
   selector: 'app-workspace-detail',
   templateUrl: './workspace-detail.component.html',
-  styleUrl: './workspace-detail.component.scss'
+  styleUrls: ['./workspace-detail.component.scss']
 })
-export class WorkspaceDetailComponent {
-  workspaceName: string = 'Name fetched from API';
+export class WorkspaceDetailComponent implements OnInit {
+  workspaceId!: number;
+  workspace?: Workspace;
 
-  recentActivity = [
-    'Alice uploaded plan.pdf',
-    'Bob deleted old_logo.png',
-    'Charlie created Assets folder'
-  ];
+  constructor(
+    private route: ActivatedRoute,
+    private workspaceService: WorkspaceService
+  ) {}
 
-  activeFiles = [
-    'notes.txt',
-    'readme.md',
-    'logo.svg'
-  ];
+  ngOnInit(): void {
+    this.route.paramMap.subscribe(params => {
+      const id = Number(params.get('id'));
+      if (!isNaN(id)) {
+        this.workspaceId = id;
+        this.fetchWorkspace();
+      }
+    });
+  }
 
-  invitedUsers = [
-    { name: 'David', invitedBy: 'Alice', status: 'Pending' },
-    { name: 'Emma', invitedBy: 'Bob', status: 'Accepted' }
-  ];
+  fetchWorkspace(): void {
+    this.workspaceService.getWorkspaceById(this.workspaceId).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.workspace = res.data;
+        }
+      }
+    });
+  }
 }

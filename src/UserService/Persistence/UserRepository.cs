@@ -16,16 +16,25 @@ public class UserRepository
     {
         cancellationToken?.ThrowIfCancellationRequested();
 
-        using var connection = await _context.CreateConnectionAsync();
+        await using var connection = await _context.CreateConnectionAsync();
         const string query = "SELECT * FROM Users WHERE Id = @Id;";
         return await connection.QuerySingleOrDefaultAsync<User>(query, new { Id = id });
+    }
+    
+    public async Task<User?> GetUserByEmailAsync(string email, CancellationToken? cancellationToken = null)
+    {
+        cancellationToken?.ThrowIfCancellationRequested();
+
+        await using var connection = await _context.CreateConnectionAsync();
+        const string query = "SELECT * FROM Users WHERE Email = @Email;";
+        return await connection.QuerySingleOrDefaultAsync<User>(query, new { Email = email });
     }
 
     public async Task<bool> CreateUserAsync(User user, CancellationToken? cancellationToken = null)
     {
         cancellationToken?.ThrowIfCancellationRequested();
 
-        using var connection = await _context.CreateConnectionAsync();
+        await using var connection = await _context.CreateConnectionAsync();
 
         const string query = @"
             INSERT INTO Users (Id, Name, Email, Description, InTotalWorkspaces, UpdatedAt)
@@ -47,7 +56,7 @@ public class UserRepository
     {
         cancellationToken?.ThrowIfCancellationRequested();
 
-        using var connection = await _context.CreateConnectionAsync();
+        await using var connection = await _context.CreateConnectionAsync();
 
         const string query = @"
             UPDATE Users
@@ -63,4 +72,25 @@ public class UserRepository
         var rows = await connection.ExecuteAsync(query, user);
         return rows == 1;
     }
+    
+    
+    public async Task<bool> DecrementWorkspaceCountsAsync(IEnumerable<int> userIds, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        if (userIds == null || !userIds.Any())
+            return false;
+
+        await using var connection = await _context.CreateConnectionAsync();
+
+        const string query = @"
+        UPDATE Users
+        SET InTotalWorkspaces = InTotalWorkspaces - 1
+        WHERE UserId = ANY(@UserIds);
+    ";
+
+        var affectedRows = await connection.ExecuteAsync(query, new { UserIds = userIds.ToArray() });
+        return affectedRows == userIds.Count();
+    }
+    
 }

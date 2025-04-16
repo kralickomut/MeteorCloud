@@ -54,6 +54,7 @@ app.UseAuthorization();
 app.UseEndpoints(endpoints =>
 {
     GetUserEndpoint.Register(endpoints);
+    GetUserByEmailEndpoint.Register(endpoints);
 });
 
 

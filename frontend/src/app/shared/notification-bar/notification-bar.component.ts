@@ -5,6 +5,7 @@ import { NotificationService, Notification } from '../../services/notification.s
 interface DisplayNotification extends Notification {
   icon: string;
   time: string;
+  localAction?: 'accepted' | 'declined';
 }
 
 
@@ -77,6 +78,26 @@ export class NotificationBarComponent implements OnInit {
       notification.isRead = true;
       this.unreadCount = this.notifications.filter(n => !n.isRead).length;
     });
+  }
+
+  acceptInvitation(notification: DisplayNotification) {
+    console.log('✅ Accept invitation for:', notification);
+    notification.localAction = 'accepted';
+
+    // Optional: call backend API
+    // this.notificationService.acceptInvitation(notification.id).subscribe(() => {
+    //  this.markNotificationAsRead(notification);
+    //});
+  }
+
+  declineInvitation(notification: DisplayNotification) {
+    console.log('❌ Decline invitation for:', notification);
+    notification.localAction = 'declined';
+
+    // Optional: call backend API
+    // this.notificationService.declineInvitation(notification.id).subscribe(() => {
+    //  this.markNotificationAsRead(notification);
+    //});
   }
 
 }

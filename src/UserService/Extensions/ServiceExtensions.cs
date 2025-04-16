@@ -32,6 +32,8 @@ public static class ServiceExtensions
         services.AddSingleton<GetUserValidator>();
         services.AddScoped<GetUserHandler>();
         
+        services.AddSingleton<GetUserByEmailValidator>();
+        services.AddScoped<GetUserByEmailHandler>();
         
         
         // Get Redis connection details from environment variables
@@ -54,6 +56,8 @@ public static class ServiceExtensions
         {
             config.AddConsumer<UserRegisteredConsumer>();
             config.AddConsumer<UserLoggedInConsumer>();
+            config.AddConsumer<WorkspaceCreatedConsumer>();
+            config.AddConsumer<WorkspaceDeletedConsumer>();
 
             config.UsingRabbitMq((context, cfg) =>
             {
@@ -82,10 +86,28 @@ public static class ServiceExtensions
 
                     e.ConfigureConsumer<UserLoggedInConsumer>(context);
                 });
+                
+                cfg.ReceiveEndpoint("user-service-workspace-created-queue", e =>
+                {
+                    e.Bind("workspace-created", x =>
+                    {
+                        x.ExchangeType = "fanout";
+                    });
+
+                    e.ConfigureConsumer<WorkspaceCreatedConsumer>(context);
+                });
+                
+                cfg.ReceiveEndpoint("user-service-workspace-deleted-queue", e =>
+                {
+                    e.Bind("workspace-deleted", x =>
+                    {
+                        x.ExchangeType = "fanout";
+                    });
+
+                    e.ConfigureConsumer<WorkspaceDeletedConsumer>(context);
+                });
             });
         });
-        
-        
         
         return services;
     }

@@ -31,7 +31,7 @@ public class CredentialRepository
         return await connection.QuerySingleOrDefaultAsync<Credential>(query, new { Email = email });
     }
 
-    public async Task<int?> CreateCredential(Credential credential, CancellationToken cancellationToken)
+    public async Task<Credential?> CreateCredential(Credential credential, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -42,15 +42,15 @@ public class CredentialRepository
             (Email, PasswordHash, IsVerified, VerificationCode, VerificationExpiry)
         VALUES 
             (@Email, @PasswordHash, @IsVerified, @VerificationCode, @VerificationExpiry)
-        RETURNING UserId;
+        RETURNING *;
     ";
 
         try
         {
-            var userId = await connection.ExecuteScalarAsync<int>(query, credential);
-            return userId;
+            var createdCredential = await connection.QuerySingleOrDefaultAsync<Credential>(query, credential);
+            return createdCredential;
         }
-        catch (PostgresException ex) when (ex.SqlState == "23505") // Duplicate key (Email)
+        catch (PostgresException ex) when (ex.SqlState == "23505") // Unique constraint (Email)
         {
             return null;
         }

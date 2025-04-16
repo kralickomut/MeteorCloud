@@ -1,5 +1,7 @@
 import { Component, Input } from '@angular/core';
 import { MessageService } from 'primeng/api';
+import {WorkspaceService} from "../../services/workspace.service";
+import {UserService} from "../../services/user.service";
 
 @Component({
   selector: 'app-workspace-create',
@@ -9,17 +11,15 @@ import { MessageService } from 'primeng/api';
 export class WorkspaceCreateComponent {
   @Input() buttonLabel = 'create workspace';
 
-  constructor(private messageService: MessageService) {
-
-  }
-
-
-  // Dialog
   showCreateDialog = false;
   newWorkspaceName = '';
   newWorkspaceDescription = '';
 
-
+  constructor(
+    private messageService: MessageService,
+    private workspaceService: WorkspaceService,
+    private userService: UserService
+  ) {}
 
   openCreateWorkspace() {
     this.showCreateDialog = true;
@@ -31,18 +31,51 @@ export class WorkspaceCreateComponent {
   }
 
   createWorkspace() {
-    console.log('Creating workspace:', this.newWorkspaceName, this.newWorkspaceDescription);
-    this.showCreateDialog = false;
+    const userId = localStorage.getItem('user_id');
 
-    // Show success message
-    this.messageService.add({
-      severity: 'success',
-      summary: 'Workspace Created',
-      detail: 'Your new workspace ' + this.newWorkspaceName + ' has been successfully created!',
-      life: 3000, // optional: auto close duration in ms
+    if (!userId) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'User Not Logged In',
+        detail: 'You must be logged in to create a workspace.',
+      });
+      return;
+    }
+
+    const payload = {
+      name: this.newWorkspaceName,
+      description: this.newWorkspaceDescription,
+      ownerId: userId,
+      ownerName: this.userService.currentUser?.name || '',
+    };
+
+    this.workspaceService.createWorkspace(payload).subscribe({
+      next: (result) => {
+        if (result.success && result.data) {
+          this.workspaceService.emitWorkspaceCreated(result.data);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Workspace Created',
+            detail: `Workspace "${this.newWorkspaceName}" created successfully!`,
+            life: 3000,
+          });
+          this.closeDialog();
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Creation Failed',
+            detail: result.error?.message || 'Unknown error',
+          });
+        }
+      },
+      error: (err) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Server Error',
+          detail: err?.error?.message || 'Something went wrong.',
+        });
+      }
     });
-
-    this.resetForm();
   }
 
   private resetForm() {

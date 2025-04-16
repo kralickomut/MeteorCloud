@@ -49,7 +49,7 @@ public class DatabaseInitializer
                 _logger.LogInformation("✅ Database '{Database}' already exists.", _databaseName);
             }
 
-            // Now connect to the actual microservice database and ensure tables exist
+            // Connect to the actual microservice database and ensure tables exist
             await using var connection = new NpgsqlConnection(_connectionString);
             await connection.OpenAsync();
 
@@ -57,31 +57,51 @@ public class DatabaseInitializer
                 CREATE TABLE IF NOT EXISTS Workspaces (
                     Id SERIAL PRIMARY KEY,
                     OwnerId INT NOT NULL,  -- Acts as a reference to Users (external service)
+                    OwnerName VARCHAR(50) NOT NULL,
                     Name VARCHAR(255) NOT NULL,
                     Description TEXT NULL,
+                    Status VARCHAR(50),
+                    SizeInGB DOUBLE PRECISION DEFAULT 0,
+                    TotalFiles INT DEFAULT 0,
                     CreatedOn TIMESTAMP NOT NULL DEFAULT NOW(),
-                    LastUploadOn TIMESTAMP NOT NULL DEFAULT NOW()
+                    LastUploadOn TIMESTAMP NULL DEFAULT NOW()
                 );
 
+                -- Indexes
                 CREATE INDEX IF NOT EXISTS idx_workspaces_owner_id ON Workspaces (OwnerId);
             ";
 
                         const string createWorkspaceUsersTable = @"
                 CREATE TABLE IF NOT EXISTS WorkspaceUsers (
                     Id SERIAL PRIMARY KEY,
-                    WorkspaceId INT NOT NULL,  -- References Workspaces table
-                    UserId INT NOT NULL,  -- Acts as a reference to Users (external service)
-                    Role VARCHAR(50) NOT NULL DEFAULT 'member',
+                    WorkspaceId INT NOT NULL,
+                    UserId INT NOT NULL,
+                    Role INT NOT NULL DEFAULT 3,  -- Match default (Guest)
                     CONSTRAINT unique_workspace_user UNIQUE (WorkspaceId, UserId)
                 );
 
-                -- Indexes for fast lookups
                 CREATE INDEX IF NOT EXISTS idx_workspace_users_user_id ON WorkspaceUsers (UserId);
                 CREATE INDEX IF NOT EXISTS idx_workspace_users_workspace_id ON WorkspaceUsers (WorkspaceId);
             ";
 
+            const string createInvitationsTable = @"
+                        CREATE TABLE WorkspaceInvitations (
+                        Id SERIAL PRIMARY KEY,
+                        WorkspaceId INT NOT NULL,
+                        Email VARCHAR(255) NOT NULL,
+                        InvitedByUserId INT NOT NULL,
+                        Token UUID NOT NULL UNIQUE,
+                        Status VARCHAR(20) NOT NULL DEFAULT 'Pending', -- 'Pending', 'Accepted', 'Declined', 'Revoked'
+                        AcceptedByUserId INT NULL, -- filled when accepted by a registered user
+                        CreatedOn TIMESTAMP NOT NULL DEFAULT NOW(),
+                        AcceptedOn TIMESTAMP NULL
+                    );
+
+                            ";
+
             await connection.ExecuteAsync(createWorkspacesTable);
             await connection.ExecuteAsync(createWorkspaceUsersTable);
+            await connection.ExecuteAsync(createInvitationsTable);
             _logger.LogInformation("✅ Tables initialized successfully.");
         }
         catch (Exception ex)

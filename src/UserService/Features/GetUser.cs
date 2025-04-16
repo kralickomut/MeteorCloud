@@ -54,7 +54,7 @@ namespace UserService.Features
 
                     var response = await handler.Handle(request, cancellationToken);
 
-                    return response.Success == true
+                    return response.Success
                         ? Results.Ok(response)
                         : Results.NotFound(response);
                 }).WithName("GetUser")

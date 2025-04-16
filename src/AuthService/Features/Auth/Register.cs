@@ -2,6 +2,8 @@ using System.Text.Json;
 using AuthService.Persistence;
 using AuthService.Services;
 using FluentValidation;
+using MassTransit;
+using MeteorCloud.Messaging.Events;
 using MeteorCloud.Shared.ApiResults;
 
 namespace AuthService.Features.Auth;
@@ -44,10 +46,14 @@ public class RegisterValidator : AbstractValidator<RegisterRequest>
 public class RegisterHandler
 {
     private readonly CredentialService _credentialService;
+    private readonly IPublishEndpoint _publishEndpoint;
+    private readonly ILogger<RegisterHandler> _logger;
 
-    public RegisterHandler(CredentialService credentialService)
+    public RegisterHandler(CredentialService credentialService, IPublishEndpoint publishEndpoint, ILogger<RegisterHandler> logger)
     {
         _credentialService = credentialService;
+        _publishEndpoint = publishEndpoint;
+        _logger = logger;
     }
 
     public async Task<ApiResult<bool>> Handle(RegisterRequest request, CancellationToken cancellationToken)
@@ -59,7 +65,10 @@ public class RegisterHandler
             return new ApiResult<bool>(false, false, "Email already in use.");
         }
 
-        await _credentialService.RegisterUserAsync(request.Email, request.Name, request.Password, cancellationToken);
+        var credentials = await _credentialService.RegisterUserAsync(request.Email, request.Name, request.Password, cancellationToken);
+        
+        await _publishEndpoint.Publish(new UserRegisteredEvent(credentials.UserId, credentials.Email, request.Name, credentials.VerificationCode));
+        _logger.LogInformation("User registered event published for user email: {Email}", credentials.Email); 
 
         return new ApiResult<bool>(true, true, "User registered successfully.");
     }

@@ -9,27 +9,51 @@
     </div>
 
     <div class="register-right p-4 d-flex flex-column justify-content-center">
-      <h2 class="mb-4 text-center"><b>6 Digit Code</b></h2>
+      <ng-container *ngIf="!verified; else successBlock">
+        <h2 class="mb-4 text-center"><b>6 Digit Code</b></h2>
 
-      <div class="d-flex justify-content-between code-inputs mb-3">
-        <input *ngFor="let n of codeInputs; let i = index"
-               class="code-box"
-               maxlength="1"
-               type="text"
-               [id]="'code'+i"
-               [value]="code[i]"
-               (input)="onInput($event, i)"
-               (keydown)="onKeyDown($event, i)"
-               (paste)="onPaste($event)"
-               autocomplete="off"
-               #codeBox />
-      </div>
+        <div class="d-flex justify-content-between code-inputs mb-3">
+          <input *ngFor="let n of codeInputs; let i = index"
+                 class="code-box"
+                 maxlength="1"
+                 type="text"
+                 [id]="'code'+i"
+                 [value]="code[i]"
+                 (input)="onInput($event, i)"
+                 (keydown)="onKeyDown($event, i)"
+                 (paste)="onPaste($event)"
+                 autocomplete="off"
+                 #codeBox />
+        </div>
 
-      <p class="text-muted small text-center">We have sent you a verification code</p>
+        <p class="text-muted small text-center">We have sent you a verification code</p>
 
-      <div *ngIf="errorMessage" class="alert alert-danger text-sm mt-2 text-center">{{ errorMessage }}</div>
+        <div
+          *ngIf="errorMessage"
+          [ngClass]="{
+            'alert': true,
+            'alert-danger': messageType === 'error',
+            'alert-success': messageType === 'success',
+            'text-sm': true,
+            'mt-2': true,
+            'text-center': true
+          }">
+          {{ errorMessage }}
+        </div>
 
-      <button class="btn btn-sm btn-outline-danger d-block mx-auto mt-2" (click)="onResend()">Resend code</button>
+        <button class="btn btn-sm btn-outline-danger d-block mx-auto mt-2" (click)="onResend()">Resend code</button>
+      </ng-container>
+
+      <!-- ✅ Success Animation -->
+      <ng-template #successBlock>
+        <div class="text-center">
+          <div class="checkmark-circle mb-3">
+            <div class="checkmark draw"></div>
+          </div>
+          <h4 class="text-success fw-bold mb-2">Email Verified!</h4>
+          <p class="text-muted small">Redirecting to login...</p>
+        </div>
+      </ng-template>
     </div>
   </div>
 </div>

@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.SignalR;
 
-namespace EmailService.Hubs;
+namespace WorkspaceService.Hubs;
 
-public class NotificationHub : Hub
+public class WorkspaceHub : Hub
 {
     
 }

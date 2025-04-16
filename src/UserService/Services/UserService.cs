@@ -1,6 +1,5 @@
 using MassTransit;
 using MeteorCloud.Caching.Abstraction;
-using MeteorCloud.Messaging.Events;
 using Newtonsoft.Json;
 using UserService.Persistence;
 
@@ -41,6 +40,15 @@ public class UserService
         return user;
     }
     
+    public async Task<User?> GetUserByEmailAsync(string email)
+    {
+        
+        var user = await _userRepository.GetUserByEmailAsync(email);
+        
+        
+        return user;
+    }
+    
     public async Task CreateUserAsync(User user)
     {
         var success = await _userRepository.CreateUserAsync(user);
@@ -59,6 +67,21 @@ public class UserService
         {
             await _cache.SetAsync(_serviceCacheKey, "user", user.Id.ToString(), JsonConvert.SerializeObject(user), TimeSpan.FromMinutes(10));
         }
+    }
+    
+    public async Task<bool> DecrementWorkspacesCountAsync(IEnumerable<int> userIds)
+    {
+        var result = await _userRepository.DecrementWorkspaceCountsAsync(userIds);
+        
+        if (result)
+        {
+            foreach (var userId in userIds)
+            {
+                await _cache.RemoveAsync(_serviceCacheKey, "user", userId.ToString());
+            }
+        }
+        
+        return result;
     }
     
 }

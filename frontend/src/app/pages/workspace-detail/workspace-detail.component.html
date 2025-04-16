@@ -1,15 +1,17 @@
 <div class="workspace-detail-page">
   <!-- Header -->
   <div class="page-header mb-4 p-4">
-    <h2 class="workspace-title mb-1">{{ workspaceName }}</h2>
+    <h2 class="workspace-title mb-1">{{ workspace?.name }}</h2>
     <p class="text-muted">A detailed overview of workspace structure and activity.</p>
   </div>
 
   <!-- Navigation -->
   <div class="d-flex">
-    <app-workspace-general buttonLabel="General" class="ps-4"></app-workspace-general>
-    <app-invite-workspace buttonText="Invite colleague" class="ps-4"></app-invite-workspace>
-    <app-workspace-history buttonLabel="History" class="ps-4"></app-workspace-history>
+    <div class="d-flex" *ngIf="workspace">
+      <app-workspace-general buttonLabel="General" class="ps-4"></app-workspace-general>
+      <app-invite-workspace [workspaceId]="workspace.id" buttonText="Invite colleague" class="ps-4"></app-invite-workspace>
+      <app-workspace-history buttonLabel="History" class="ps-4"></app-workspace-history>
+    </div>
   </div>
 
   <!-- File Table Component -->
