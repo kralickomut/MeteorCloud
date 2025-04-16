@@ -58,6 +58,8 @@ app.UseEndpoints(endpoints =>
     GetUserWorkspacesEndpoint.Register(endpoints);
     DeleteWorkspaceEndpoint.Register(endpoints);
     GetWorkspaceByIdEndpoint.Register(endpoints);
+    RespondToInviteEndpoint.Register(endpoints);
+    GetWorkspaceInvitationByTokenEndpoint.Register(endpoints);
 });
 
 app.MapHub<WorkspaceHub>("/hub/workspaces");

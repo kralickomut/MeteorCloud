@@ -35,10 +35,10 @@ public static class AuthenticationExtensions
                         var accessToken = context.Request.Query["access_token"];
                         var path = context.HttpContext.Request.Path;
 
-                        // Only apply this to your SignalR hub path (adjust if needed)
-                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hub/notifications"))
+                        if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hub"))
                         {
                             context.Token = accessToken;
+                            Console.WriteLine($"🔐 JWT attached to SignalR connection on {path}");
                         }
 
                         return Task.CompletedTask;

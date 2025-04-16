@@ -1,64 +1,96 @@
 import { Component, OnInit } from '@angular/core';
 import { WorkspaceService } from '../../services/workspace.service';
-import {Workspace} from "../../models/WorkspaceFile";
-import {ConfirmationService, MessageService} from "primeng/api";
+import { Workspace } from '../../models/WorkspaceFile';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { UserService, User } from '../../services/user.service';
+import { filter, take } from 'rxjs/operators';
 
 @Component({
   selector: 'app-user-workspaces',
   templateUrl: './user-workspaces.component.html',
-  styleUrl: './user-workspaces.component.scss'
+  styleUrls: ['./user-workspaces.component.scss']
 })
 export class UserWorkspacesComponent implements OnInit {
   workspaces: Workspace[] = [];
-
-  searchText = '';
+  totalWorkspaces = 0;
   currentPage = 1;
   itemsPerPage = 10;
+  searchText = '';
+
+  private currentUserId: number | null = null;
 
   constructor(
-              private workspaceService: WorkspaceService,
-              private confirmationService: ConfirmationService,
-              private messageService: MessageService) {}
+    private workspaceService: WorkspaceService,
+    private userService: UserService,
+    private confirmationService: ConfirmationService,
+    private messageService: MessageService
+  ) {}
 
   ngOnInit(): void {
-    const userId = Number(localStorage.getItem('user_id'));
+    // Wait until user is available
+    this.userService.user$
+      .pipe(
+        filter((u): u is User => !!u),
+        take(1)
+      )
+      .subscribe(user => {
+        this.currentUserId = user.id;
+        this.totalWorkspaces = user.inTotalWorkspaces;
+        this.fetchWorkspaces();
+      });
 
-    this.workspaceService.workspaceCreated$.subscribe(newWorkspace => {
-      this.workspaces.unshift(newWorkspace);
-    });
+    // Handle real-time workspace events
+    this.workspaceService.workspaceCreated$.subscribe(() => this.refreshWorkspaces());
+    this.workspaceService.workspaceJoined$.subscribe(() => this.refreshWorkspaces());
+  }
 
-    this.workspaceService.getUserWorkspaces(userId, this.currentPage, this.itemsPerPage).subscribe(res => {
-      if (res.success) {
-        this.workspaces = res.data ?? [];
-      }
+  fetchWorkspaces(): void {
+    if (!this.currentUserId) return;
+
+    this.workspaceService.getUserWorkspaces(this.currentUserId, this.currentPage, this.itemsPerPage)
+      .subscribe(res => {
+        if (res.success) {
+          this.workspaces = res.data ?? [];
+        }
+      });
+  }
+
+  refreshWorkspaces(): void {
+    this.fetchWorkspaces();
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Refreshed',
+      detail: 'Workspaces list updated.',
+      life: 2000
     });
   }
 
-  get filteredWorkspaces() {
+  get filteredWorkspaces(): Workspace[] {
     return this.workspaces.filter(w =>
       w.name.toLowerCase().includes(this.searchText.toLowerCase())
     );
   }
 
-  get totalPages() {
-    return Math.ceil(this.filteredWorkspaces.length / this.itemsPerPage);
+  get totalPages(): number {
+    return Math.ceil(this.totalWorkspaces / this.itemsPerPage);
   }
 
-  get paginatedWorkspaces() {
-    const start = (this.currentPage - 1) * this.itemsPerPage;
-    return this.filteredWorkspaces.slice(start, start + this.itemsPerPage);
-  }
-
-  nextPage() {
+  nextPage(): void {
     if (this.currentPage < this.totalPages) {
       this.currentPage++;
+      this.fetchWorkspaces();
     }
   }
 
-  prevPage() {
+  prevPage(): void {
     if (this.currentPage > 1) {
       this.currentPage--;
+      this.fetchWorkspaces();
     }
+  }
+
+  get paginatedWorkspaces(): Workspace[] {
+    return this.filteredWorkspaces;
   }
 
   deleteWorkspace(workspace: Workspace): void {
@@ -74,7 +106,7 @@ export class UserWorkspacesComponent implements OnInit {
         this.workspaceService.deleteWorkspace(workspace.id).subscribe({
           next: (res) => {
             if (res.success) {
-              this.workspaces = this.workspaces.filter(w => w.id !== workspace.id);
+              this.fetchWorkspaces();
               this.messageService.add({
                 severity: 'success',
                 summary: 'Deleted',
@@ -100,5 +132,4 @@ export class UserWorkspacesComponent implements OnInit {
       }
     });
   }
-
 }

@@ -47,4 +47,25 @@ public class RedisCacheService : ICacheService
             }
         }
     }
+
+    public async Task RemoveByPrefixAsync(string service, string group, string keyPrefix)
+    {
+        var fullPrefix = $"{service}:{group}:{keyPrefix}"; // e.g. workspace-service:user-workspaces:1-
+
+        var endpoints = _database.Multiplexer.GetEndPoints();
+        foreach (var endpoint in endpoints)
+        {
+            var server = _database.Multiplexer.GetServer(endpoint);
+
+            if (!server.IsConnected)
+                continue;
+
+            var keys = server.Keys(pattern: $"{fullPrefix}*").ToArray();
+
+            if (keys.Length > 0)
+            {
+                await _database.KeyDeleteAsync(keys);
+            }
+        }
+    }
 }

@@ -53,6 +53,7 @@ import { ConfirmationService } from 'primeng/api';
 import { MenuModule } from 'primeng/menu';
 import { VerifyComponent } from './pages/verify/verify.component';
 import {AuthInterceptor} from "./interceptors/auth.interceptor";
+import { ProfileUserComponent } from './pages/profile-user/profile-user.component';
 
 
 
@@ -73,6 +74,7 @@ import {AuthInterceptor} from "./interceptors/auth.interceptor";
 // TODO: When user removed from a workspace -> show notification + if he is in the workspace cancel the view immediately
 // TODO: When user is invited to a workspace -> show notification
 // TODO: Resend code on verification page
+// TODO: Add a new user to workspace - DONE
 
 
 @NgModule({
@@ -100,6 +102,7 @@ import {AuthInterceptor} from "./interceptors/auth.interceptor";
     WorkspaceGeneralComponent,
     WorkspaceGeneralPageComponent,
     VerifyComponent,
+    ProfileUserComponent,
   ],
   imports: [
     BrowserModule,

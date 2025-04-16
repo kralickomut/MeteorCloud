@@ -12,6 +12,7 @@ import {WorkspaceHistoryPageComponent} from './pages/workspace-history-page/work
 import {WorkspaceGeneralPageComponent} from "./pages/workspace-general-page/workspace-general-page.component";
 import {VerifyComponent} from "./pages/verify/verify.component";
 import {AuthGuard} from "./guards/auth.guard";
+import {ProfileUserComponent} from "./pages/profile-user/profile-user.component";
 
 const routes: Routes = [
   {
@@ -26,6 +27,7 @@ const routes: Routes = [
       { path: 'workspaces/:id/history', component: WorkspaceHistoryPageComponent },
       { path: 'workspaces/:id/general', component: WorkspaceGeneralPageComponent },
       { path: 'profile', component: ProfileComponent },
+      { path: 'profile/:id', component: ProfileUserComponent },
       { path: 'links', component: LinksComponent }
       //{ path: 'upload', component: UploadComponent },
       // other logged-in routes

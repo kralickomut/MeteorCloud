@@ -13,6 +13,7 @@ export interface Notification {
   message: string;
   isRead: boolean;
   createdAt: string;
+  workspaceId?: number;
 }
 
 @Injectable({ providedIn: 'root' })

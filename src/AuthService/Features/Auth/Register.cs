@@ -15,7 +15,7 @@ public class RegisterValidator : AbstractValidator<RegisterRequest>
     public RegisterValidator()
     {
         RuleFor(x => x.Email).NotEmpty().EmailAddress();
-        RuleFor(x => x.Name).NotEmpty();
+        RuleFor(x => x.Name).NotEmpty().MaximumLength(50).WithMessage("Name must be less than 50 characters.");
         RuleFor(x => x.Password).NotEmpty().MinimumLength(6)
             .Must(ValidatePassword)
             .WithMessage("Password must contain at least one uppercase letter, one digit.");

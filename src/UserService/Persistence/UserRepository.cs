@@ -86,7 +86,7 @@ public class UserRepository
         const string query = @"
         UPDATE Users
         SET InTotalWorkspaces = InTotalWorkspaces - 1
-        WHERE UserId = ANY(@UserIds);
+        WHERE Id = ANY(@UserIds);
     ";
 
         var affectedRows = await connection.ExecuteAsync(query, new { UserIds = userIds.ToArray() });

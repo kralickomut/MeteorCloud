@@ -20,7 +20,7 @@ public class CreateWorkspaceValidator : AbstractValidator<CreateWorkspaceRequest
         RuleFor(x => x.Name)
             .NotEmpty()
             .WithMessage("Workspace name is required.")
-            .MaximumLength(20)
+            .MaximumLength(30)
             .WithMessage("Workspace name must be less than 20 characters.");
         
         RuleFor(x => x.Description)

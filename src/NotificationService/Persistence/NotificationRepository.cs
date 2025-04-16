@@ -30,8 +30,8 @@ public class NotificationRepository
     public async Task<Notification> CreateAsync(Notification notification)
     {
         var query = @"
-        INSERT INTO Notifications (UserId, Title, Message, IsRead)
-        VALUES (@UserId, @Title, @Message, @IsRead)
+        INSERT INTO Notifications (UserId, Title, Message, IsRead, WorkspaceId)
+        VALUES (@UserId, @Title, @Message, @IsRead, @WorkspaceId)
         RETURNING *;
     ";
 
@@ -68,5 +68,14 @@ public class NotificationRepository
 
         using var connection = await _context.CreateConnectionAsync();
         await connection.ExecuteAsync(query, new { Id = id });
+    }
+    
+    
+    public async Task DeleteByWorkspaceIdAsync(int workspaceId)
+    {
+        var query = "DELETE FROM Notifications WHERE WorkspaceId = @WorkspaceId";
+
+        using var connection = await _context.CreateConnectionAsync();
+        await connection.ExecuteAsync(query, new { WorkspaceId = workspaceId });
     }
 }

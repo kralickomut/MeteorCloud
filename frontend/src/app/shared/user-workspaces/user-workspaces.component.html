@@ -22,7 +22,12 @@
     <!-- Pagination + buttons -->
     <div class="d-flex align-items-center gap-2">
       <button pButton icon="pi pi-filter" class="filter-button p-button-outlined">Filter</button>
-      <button pButton icon="pi pi-refresh" class="p-button-outlined p-button-sm"></button>
+      <button
+        pButton
+        icon="pi pi-refresh"
+        class="p-button-outlined p-button-sm"
+        (click)="refreshWorkspaces()"
+      ></button>
 
       <div class="pagination-status">
         {{ currentPage }} of {{ totalPages }}
@@ -85,5 +90,9 @@
       </tr>
       </tbody>
     </table>
+    <div *ngIf="paginatedWorkspaces.length === 0" class="no-workspaces-message text-center p-4">
+      <p class="fw-semibold mb-2">No workspaces yet</p>
+      <p class="text-muted">Start by creating your first workspace above.</p>
+    </div>
   </div>
 </div>

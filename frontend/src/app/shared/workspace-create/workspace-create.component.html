@@ -18,9 +18,19 @@
       id="workspaceName"
       pInputText
       [(ngModel)]="newWorkspaceName"
+      name="workspaceName"
+      #nameInput="ngModel"
+      required
+      maxlength="30"
       placeholder="e.g. Marketing Brief"
-      class="form-input mb-3"
+      class="form-input mb-1"
     />
+
+    <!-- ⚠️ Validation Error Message -->
+    <small *ngIf="nameInput.invalid && nameInput.touched" class="p-error">
+      <ng-container *ngIf="nameInput.errors?.['required']">Workspace name is required.</ng-container>
+      <ng-container *ngIf="nameInput.errors?.['maxlength']">Max 30 characters allowed.</ng-container>
+    </small>
 
     <!-- Label and Textarea -->
     <label for="description" class="form-label">Description</label>
@@ -35,6 +45,13 @@
   </div>
 
   <ng-template pTemplate="footer">
-    <button pButton label="Create" icon="pi pi-check" class="p-button-primary" [disabled]="!newWorkspaceName" (click)="createWorkspace()"></button>
+    <button
+      pButton
+      label="Create"
+      icon="pi pi-check"
+      class="p-button-primary"
+      [disabled]="nameInput.invalid"
+      (click)="createWorkspace()"
+    ></button>
   </ng-template>
 </p-dialog>

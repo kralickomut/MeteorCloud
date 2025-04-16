@@ -2,6 +2,8 @@ import {ChangeDetectorRef, Component, OnInit} from '@angular/core';
 import {User, UserService} from '../../services/user.service';
 import { Router } from '@angular/router';
 import {NotificationService} from "../../services/notification.service";
+import {WorkspaceService} from "../../services/workspace.service";
+import {filter, take} from "rxjs";
 
 @Component({
   selector: 'app-main-layout',
@@ -17,7 +19,8 @@ export class MainLayoutComponent implements OnInit {
     private userService: UserService,
     private router: Router,
     private cdr: ChangeDetectorRef,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private workspaceService: WorkspaceService
   ) {}
 
 
@@ -33,31 +36,13 @@ export class MainLayoutComponent implements OnInit {
 
     // Start SignalR connection
     this.notificationService.startConnection(token);
+    this.workspaceService.startConnection(token);
 
-    const cachedUser = this.userService.currentUser;
-    if (cachedUser) {
-      this.user = cachedUser;
-      return;
-    }
-
-    this.userService.getUser(+userId).subscribe({
-      next: (res) => {
-        if (res.success && res.data) {
-          this.user = res.data.user;
-          this.userService.setActualLoggedUser(this.user);
-          console.log('User data:', this.user);
-          this.cdr.detectChanges();
-        } else {
-          this.logout();
-        }
-      },
-      error: () => this.logout()
-    });
-  }
-
-  logout() {
-    localStorage.clear();
-    this.router.navigate(['/login']);
+    this.userService.user$
+      .pipe(filter((u): u is User => !!u), take(1))
+      .subscribe(user => {
+        this.user = user;
+      });
   }
 
   toggleMobileMenu() {

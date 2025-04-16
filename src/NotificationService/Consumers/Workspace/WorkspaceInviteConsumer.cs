@@ -5,6 +5,7 @@ using EmailService.Persistence;
 using MassTransit;
 using MeteorCloud.Communication;
 using MeteorCloud.Messaging.Events.Workspace;
+using MeteorCloud.Shared.ApiResults.SharedDto;
 using Microsoft.AspNetCore.SignalR;
 
 namespace EmailService.Consumers.Workspace;
@@ -55,12 +56,24 @@ public class WorkspaceInviteConsumer : IConsumer<WorkspaceInviteEvent>
             
         } else {
             int userId = ((JsonElement)response.Data!).GetInt32();
+            
+            // Get workspace details
+            var wsUrl = MicroserviceEndpoints.WorkspaceService.GetWorkspaceById(message.WorkspaceId);
+            var workspace = await _httpClient.GetAsync<WorkspaceModel>(wsUrl);
+            
+            if (!workspace.Success) 
+            {
+                _logger.LogError("Failed to get workspace details for ID {WorkspaceId}.", message.WorkspaceId);
+                return;
+            }
+            
             var notification = new Notification
             {
                 UserId = userId,
                 Title = "Workspace Invitation",
-                Message = $"You have been invited to join a workspace with ID: {message.WorkspaceId}.",
+                Message = $"{message.Token}-You have been invited to join a workspace: {workspace.Data.Name}.", 
                 IsRead = false,
+                WorkspaceId = message.WorkspaceId
             };
 
             var newNotification = await _notificationRepository.CreateAsync(notification);

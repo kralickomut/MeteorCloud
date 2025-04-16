@@ -48,6 +48,12 @@ public static class ServiceExtensions
         services.AddSingleton<GetWorkspaceByIdValidator>();
         services.AddScoped<GetWorkspaceByIdHandler>();
 
+        services.AddSingleton<RespondToInviteValidator>();
+        services.AddScoped<RespondToInviteHandler>();
+
+        services.AddSingleton<GetWorkspaceInvitationByTokenValidator>();
+        services.AddScoped<GetWorkspaceInvitationByTokenHandler>();
+
         services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
         services.AddSignalR();
         
@@ -86,6 +92,7 @@ public static class ServiceExtensions
                 rabbitCfg.Message<WorkspaceInviteEvent>(x => x.SetEntityName("workspace-invite"));
                 rabbitCfg.Message<WorkspaceDeletedEvent>(x => x.SetEntityName("workspace-deleted"));    
                 rabbitCfg.Message<WorkspaceInvitationMatchOnRegisterEvent>(x => x.SetEntityName("workspace-invitation-match-on-register"));
+                rabbitCfg.Message<WorkspaceInvitationAcceptedEvent>(x => x.SetEntityName("workspace-invitation-accepted"));
                 
                 rabbitCfg.ReceiveEndpoint("workspace-service-user-registered-queue", e =>
                 {

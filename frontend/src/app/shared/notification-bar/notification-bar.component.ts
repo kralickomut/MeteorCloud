@@ -1,11 +1,15 @@
 // src/app/components/notification-bar/notification-bar.component.ts
 import { Component, OnInit } from '@angular/core';
 import { NotificationService, Notification } from '../../services/notification.service';
+import {WorkspaceService} from "../../services/workspace.service";
+import {MessageService} from "primeng/api";
 
 interface DisplayNotification extends Notification {
   icon: string;
   time: string;
   localAction?: 'accepted' | 'declined';
+  token?: string;
+  invitationStatus?: 'Accepted' | 'Declined' | 'Pending';
 }
 
 
@@ -21,22 +25,26 @@ export class NotificationBarComponent implements OnInit {
   notifications: DisplayNotification[] = [];
 
 
-  constructor(private notificationService: NotificationService) {}
+  constructor(private notificationService: NotificationService, private workspaceService: WorkspaceService, private messageService: MessageService) {}
 
   ngOnInit(): void {
     const token = localStorage.getItem('auth_token');
-    if (token) {
-      this.notificationService.startConnection(token);
-    }
 
     this.notificationService.getRecent().subscribe({
       next: (res) => {
         if (res.success && res.data) {
-          this.notifications = res.data.map(n => ({
-            ...n,
-            icon: 'pi-bell',
-            time: this.timeSince(new Date(n.createdAt)),
-          }));
+          this.notifications = res.data.map(n => {
+            const token = this.extractToken(n.message);
+            const cleanMessage = n.message.replace(/^([0-9a-fA-F-]+)-/, ''); // remove token from message
+            return {
+              ...n,
+              message: cleanMessage,
+              icon: 'pi-bell',
+              time: this.timeSince(new Date(n.createdAt)),
+              token: token
+            };
+          });
+
           this.unreadCount = res.data.filter(n => !n.isRead).length;
         }
       }
@@ -47,11 +55,17 @@ export class NotificationBarComponent implements OnInit {
       const exists = this.notifications.some(n => n.id === incoming.id);
       if (exists) return;
 
+      const token = this.extractToken(incoming.message);
+      const cleanMessage = incoming.message.replace(/^([0-9a-fA-F-]+)-/, '');
+
       this.notifications.unshift({
         ...incoming,
+        message: cleanMessage,
         icon: 'pi-bell',
         time: this.timeSince(new Date(incoming.createdAt)),
+        token: token
       });
+
       this.unreadCount++;
     });
   }
@@ -81,23 +95,75 @@ export class NotificationBarComponent implements OnInit {
   }
 
   acceptInvitation(notification: DisplayNotification) {
-    console.log('✅ Accept invitation for:', notification);
-    notification.localAction = 'accepted';
+    console.log('✅ Accepting invitation for:', notification);
 
-    // Optional: call backend API
-    // this.notificationService.acceptInvitation(notification.id).subscribe(() => {
-    //  this.markNotificationAsRead(notification);
-    //});
+    if (!notification.token) {
+      console.warn('No token found for this invitation.');
+      return;
+    }
+
+    this.workspaceService.respondToInvitation(notification.token, true).subscribe({
+      next: (res) => {
+        if (res.success) {
+          notification.localAction = 'accepted'; // ✅ only after success
+          this.markNotificationAsRead(notification);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Invitation Accepted',
+            detail: 'You have accepted the workspace invitation.',
+            life: 3000
+          });
+        } else {
+          this.showErrorToast(res.error?.message || 'Could not accept invite.');
+        }
+      },
+      error: () => {
+        this.showErrorToast('An error occurred while accepting the invitation.');
+      }
+    });
   }
 
   declineInvitation(notification: DisplayNotification) {
-    console.log('❌ Decline invitation for:', notification);
-    notification.localAction = 'declined';
+    console.log('❌ Declining invitation for:', notification);
 
-    // Optional: call backend API
-    // this.notificationService.declineInvitation(notification.id).subscribe(() => {
-    //  this.markNotificationAsRead(notification);
-    //});
+    if (!notification.token) {
+      console.warn('No token found for this invitation.');
+      return;
+    }
+
+    this.workspaceService.respondToInvitation(notification.token, false).subscribe({
+      next: (res) => {
+        if (res.success) {
+          notification.localAction = 'declined'; // ✅ only after success
+          this.markNotificationAsRead(notification);
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Invitation Declined',
+            detail: 'You have declined the workspace invitation.',
+            life: 3000
+          });
+        } else {
+          this.showErrorToast(res.error?.message || 'Could not decline invite.');
+        }
+      },
+      error: () => {
+        this.showErrorToast('An error occurred while declining the invitation.');
+      }
+    });
+  }
+
+  private extractToken(message: string): string | undefined {
+    const match = message.match(/^([0-9a-fA-F-]+)-/);
+    return match?.[1];
+  }
+
+  private showErrorToast(message: string) {
+    this.messageService.add({
+      severity: 'error',
+      summary: 'Action Failed',
+      detail: message,
+      life: 3000
+    });
   }
 
 }

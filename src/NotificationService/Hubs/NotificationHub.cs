@@ -4,7 +4,12 @@ namespace EmailService.Hubs;
 
 public class NotificationHub : Hub
 {
-    
+    public override async Task OnConnectedAsync()
+    {
+        var userId = Context.User?.FindFirst("userId")?.Value;
+        Console.WriteLine($"🔗 SignalR connected: ConnectionId={Context.ConnectionId}, UserId={userId}");
+        await base.OnConnectedAsync();
+    }
 }
 
 public class CustomUserIdProvider : IUserIdProvider
@@ -14,3 +19,4 @@ public class CustomUserIdProvider : IUserIdProvider
         return connection.User?.FindFirst("id")?.Value;
     }
 }
+

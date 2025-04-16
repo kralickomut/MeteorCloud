@@ -24,10 +24,12 @@ public class WorkspaceInvitationMatchOnRegisterConsumer : IConsumer<WorkspaceInv
         var notification = await _notificationRepository.CreateAsync(new Notification
         {
             UserId = message.UserId,
-            Message = $"You've been invited to join a workspace {message.WorkspaceName}!",
+            Message = $"{message.Token}-You've been invited to join a workspace {message.WorkspaceName}!",
             Title = "Workspace Invitation",
             IsRead = false,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow,
+            WorkspaceId = message.WorkspaceId,
+            
         });
         
         if (notification is null)

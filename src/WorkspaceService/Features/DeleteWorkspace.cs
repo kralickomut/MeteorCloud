@@ -8,7 +8,7 @@ using WorkspaceService.Services;
 
 namespace WorkspaceService.Features;
 
-public record DeleteWorkspaceRequest(int Id, int DeletedByUserId);
+public record DeleteWorkspaceRequest(int Id);
 
 public class DeleteWorkspaceValidator : AbstractValidator<DeleteWorkspaceRequest>
 {
@@ -20,11 +20,6 @@ public class DeleteWorkspaceValidator : AbstractValidator<DeleteWorkspaceRequest
             .GreaterThan(0)
             .WithMessage("Workspace ID must be greater than 0.");
         
-        RuleFor(x => x.DeletedByUserId)
-            .NotEmpty()
-            .WithMessage("User ID is required.")
-            .GreaterThan(0)
-            .WithMessage("User ID must be greater than 0.");
     }
 }
 
@@ -67,7 +62,7 @@ public class DeleteWorkspaceHandler
             
             
             await _publishEndpoint.Publish(new WorkspaceDeletedEvent(workspaceId, userIds));
-            _logger.LogInformation("Workspace {WorkspaceId} deleted by user {UserId}", workspaceId, request.DeletedByUserId);
+            _logger.LogInformation("Workspace with id: {WorkspaceId} DELETED", workspaceId);
         }
         
         return result is not null
@@ -84,9 +79,10 @@ public static class DeleteWorkspaceEndpoint
         app.MapDelete("/api/workspace/{id:int}", 
             async (int id, HttpContext context, DeleteWorkspaceHandler handler, DeleteWorkspaceValidator validator, CancellationToken cancellationToken) =>
         {
+            // For future
             var userId = context.User.FindFirst("UserId")?.Value;
             
-            var request = new DeleteWorkspaceRequest(id, userId != null ? int.Parse(userId) : 0);
+            var request = new DeleteWorkspaceRequest(id);
             var validationResult = await validator.ValidateAsync(request, cancellationToken);
             
             if (!validationResult.IsValid)

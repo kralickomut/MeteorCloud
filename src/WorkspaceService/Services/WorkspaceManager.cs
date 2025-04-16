@@ -72,18 +72,24 @@ public class WorkspaceManager
     
     public async Task<List<Workspace>> GetUserWorkspacesAsync(int userId, int page, int pageSize, CancellationToken? cancellationToken = null)
     {
-        var cachedWorkspaces = await _cache.GetAsync(_serviceCacheKey, "user-workspaces", userId.ToString());
-        
+        var cacheKey = $"{userId}-page-{page}-size-{pageSize}";
+
+        var cachedWorkspaces = await _cache.GetAsync(_serviceCacheKey, "user-workspaces", cacheKey);
         if (cachedWorkspaces != null)
         {
             return JsonConvert.DeserializeObject<List<Workspace>>(cachedWorkspaces);
         }
-        
+
         var workspaces = await _workspaceRepository.GetUserWorkspacesAsync(userId, page, pageSize, cancellationToken);
-        
-        if (workspaces != null || workspaces.Count != 0)
+
+        if (workspaces is { Count: > 0 })
         {
-            await _cache.SetAsync(_serviceCacheKey, "user-workspaces", userId.ToString(), JsonConvert.SerializeObject(workspaces), TimeSpan.FromMinutes(10));
+            await _cache.SetAsync(
+                _serviceCacheKey,
+                "user-workspaces",
+                cacheKey,
+                JsonConvert.SerializeObject(workspaces),
+                TimeSpan.FromMinutes(10));
         }
 
         return workspaces;
@@ -95,7 +101,7 @@ public class WorkspaceManager
         
         if (newWorkspace != null)
         {
-            await _cache.RemoveAsync(_serviceCacheKey, "user-workspaces", newWorkspace.OwnerId.ToString());
+            await _cache.RemoveByPrefixAsync(_serviceCacheKey, "user-workspaces", $"{newWorkspace.OwnerId}-page-");
             await _cache.SetAsync(_serviceCacheKey, "workspace", newWorkspace.Id.ToString(), 
                 JsonConvert.SerializeObject(newWorkspace), TimeSpan.FromMinutes(10));
         }
@@ -124,13 +130,13 @@ public class WorkspaceManager
 
         if (userIds is not null)
         {
-            await _cache.RemoveAsync(_serviceCacheKey, "user-workspaces", workspace.OwnerId.ToString());
+            await _cache.RemoveByPrefixAsync(_serviceCacheKey, "user-workspaces", $"{workspace.OwnerId}-page-");
             await _cache.RemoveAsync(_serviceCacheKey, "workspace", workspaceId.ToString());
             await _cache.RemoveAsync(_serviceCacheKey, "workspace-users", workspaceId.ToString());
             
             foreach (var user in workspace.Users)
             {
-                await _cache.RemoveAsync(_serviceCacheKey, "user-workspaces", user.UserId.ToString());
+                await _cache.RemoveByPrefixAsync(_serviceCacheKey, "user-workspaces", $"{user.UserId}-page-");
             }
         }
 
@@ -144,13 +150,57 @@ public class WorkspaceManager
         return invitation;
     }
     
+    public async Task<WorkspaceInvitation?> GetInvitationByTokenAsync(Guid token, CancellationToken cancellationToken = default)
+    {
+        var invitation = await _workspaceRepository.GetWorkspaceInvitationByTokenAsync(token, cancellationToken);
+
+        return invitation;
+    }
+    
     public async Task<bool> IsUserInWorkspaceAsync(int userId, int workspaceId, CancellationToken? cancellationToken = null)
     {
         var isUserInWorkspace = await _workspaceRepository.IsUserInWorkspaceAsync(userId, workspaceId, cancellationToken);
 
         return isUserInWorkspace;
     }
-    
+
+    public async Task<(bool success, int? userId, int? workspaceId)> RespondToInvitationAsync(Guid token, bool accept,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        
+        
+       var invitation = await _workspaceRepository.GetInvitationByTokenAsync(token, cancellationToken);
+       
+       if (invitation is null)
+       {
+           return (false, null, null);
+       }
+
+       var url = MicroserviceEndpoints.UserService.GetUserByEmail(invitation.Email);
+       var response = await _httpClient.GetAsync<int>(url);
+       
+       int userId = response.Data;
+       
+       // Sets new user in workspace + updates status
+       // Or sets status as declined
+       var success = await _workspaceRepository.RespondToInvitationAsync(token, accept, userId, cancellationToken);
+       
+         if (success)
+         {
+             if (accept)
+             {
+                 await _cache.RemoveByPrefixAsync(_serviceCacheKey, "user-workspaces", $"{userId}-page-");
+                 await _cache.RemoveAsync(_serviceCacheKey, "workspace-users", invitation.WorkspaceId.ToString());
+
+                 await _publishEndpoint.Publish(new WorkspaceInvitationAcceptedEvent(userId, invitation.WorkspaceId));
+                 _logger.LogInformation(
+                     "User {UserId} accepted invitation to workspace {WorkspaceId}", userId, invitation.WorkspaceId);
+             }
+         }
+
+         return (success, userId, invitation.WorkspaceId);
+    }
 }
     
 

@@ -58,6 +58,7 @@ public class DatabaseInitializer
                     UserId INT NOT NULL,
                     Title TEXT NOT NULL,
                     Message TEXT NOT NULL,
+                    WorkspaceId INT NULL,
                     CreatedAt TIMESTAMPTZ NOT NULL DEFAULT NOW(),
                     IsRead BOOLEAN NOT NULL DEFAULT FALSE
                 );";

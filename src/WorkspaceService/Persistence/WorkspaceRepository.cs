@@ -74,6 +74,20 @@ public class WorkspaceRepository
 
         return result.ToList();
     }
+    
+    public async Task<WorkspaceInvitation?> GetWorkspaceInvitationByTokenAsync(Guid token, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        
+        await using var connection = await _context.CreateConnectionAsync();
+
+        const string query = @"
+            SELECT * FROM WorkspaceInvitations
+            WHERE Token = @Token;
+        ";
+
+        return await connection.QuerySingleOrDefaultAsync<WorkspaceInvitation>(query, new { Token = token });
+    }
 
     public async Task<Workspace?> CreateWorkspaceAsync(Workspace workspace, CancellationToken? cancellationToken = null)
     {
@@ -276,7 +290,7 @@ public class WorkspaceRepository
     }
     
     
-    public async Task<bool> IsUserInWorkspaceAsync(int workspaceId, int userId, CancellationToken? ct = null)
+    public async Task<bool> IsUserInWorkspaceAsync(int userId, int workspaceId, CancellationToken? ct = null)
     {
         ct?.ThrowIfCancellationRequested();
 
@@ -298,4 +312,91 @@ public class WorkspaceRepository
 
         return isMember;
     }
+    
+    public async Task<WorkspaceInvitation?> GetInvitationByTokenAsync(Guid token, CancellationToken ct)
+    {
+        const string query = @"SELECT * FROM WorkspaceInvitations WHERE Token = @Token";
+        await using var connection = await _context.CreateConnectionAsync();
+        return await connection.QueryFirstOrDefaultAsync<WorkspaceInvitation>(query, new { Token = token });
+    }
+
+    public async Task<bool> RespondToInvitationAsync(Guid token, bool accept, int userId, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+        
+        await using var connection = await _context.CreateConnectionAsync();
+        await using var transaction = await connection.BeginTransactionAsync(ct);
+
+        try
+        {
+            // 1. Get the invitation
+            const string getInvitationQuery = @"
+                SELECT * FROM WorkspaceInvitations 
+                WHERE Token = @Token FOR UPDATE;
+            ";
+
+            var invitation = await connection.QueryFirstOrDefaultAsync<WorkspaceInvitation>(
+                getInvitationQuery,
+                new { Token = token },
+                transaction
+            );
+
+            if (invitation is null || invitation.Status != "Pending")
+            {
+                return false; // Not found or already accepted/declined
+            }
+
+            if (accept)
+            {
+                var role = Role.Guest; // or whatever logic you use to decide the role
+
+                const string addUserQuery = @"
+                    INSERT INTO WorkspaceUsers (WorkspaceId, UserId, Role)
+                    VALUES (@WorkspaceId, @UserId, @Role);
+                ";
+
+                await connection.ExecuteAsync(
+                    addUserQuery,
+                    new
+                    {
+                        WorkspaceId = invitation.WorkspaceId,
+                        UserId = userId,
+                        Role = (int)role, // 💡 enum cast to int here
+                        JoinedOn = DateTime.UtcNow
+                    },
+                    transaction
+                );
+            }
+
+            // 3. Update invitation status
+            const string updateStatusQuery = @"
+                UPDATE WorkspaceInvitations
+                SET Status = @Status,
+                    AcceptedByUserId = @AcceptedByUserId
+                WHERE Token = @Token;
+            ";
+
+            await connection.ExecuteAsync(
+                updateStatusQuery,
+                new
+                {
+                    Token = token,
+                    Status = accept ? "Accepted" : "Declined",
+                    AcceptedByUserId = userId
+                },
+                transaction
+            );
+
+            await transaction.CommitAsync(ct);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync(ct);
+            _logger.LogError(ex, "❌ Error responding to workspace invitation for token {Token}", token);
+            return false;
+        }
+    }
+    
+    
 }

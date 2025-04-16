@@ -16,6 +16,14 @@ export interface User {
   updatedAt: string;
 }
 
+export interface UserUpdateRequest {
+  name?: string;
+  email?: string;
+  description?: string;
+}
+
+export interface UserUpdateResponse extends UserUpdateRequest {}
+
 interface UserResponse {
   user: User;
 }
@@ -31,6 +39,10 @@ export class UserService {
 
   getUser(userId: number): Observable<ApiResult<UserResponse>> {
     return this.http.get<ApiResult<UserResponse>>(`${this.userUrl}/users/${userId}`);
+  }
+
+  updateUser(data: UserUpdateRequest) : Observable<ApiResult<UserUpdateResponse>> {
+    return this.http.put<ApiResult<UserUpdateResponse>>(`${this.userUrl}/user/`, data);
   }
 
   setActualLoggedUser(user: User): void {

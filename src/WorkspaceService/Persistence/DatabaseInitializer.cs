@@ -58,7 +58,7 @@ public class DatabaseInitializer
                     Id SERIAL PRIMARY KEY,
                     OwnerId INT NOT NULL,  -- Acts as a reference to Users (external service)
                     OwnerName VARCHAR(50) NOT NULL,
-                    Name VARCHAR(255) NOT NULL,
+                    Name VARCHAR(30) NOT NULL,
                     Description TEXT NULL,
                     Status VARCHAR(50),
                     SizeInGB DOUBLE PRECISION DEFAULT 0,

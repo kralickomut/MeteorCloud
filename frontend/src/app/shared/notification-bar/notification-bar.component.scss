@@ -133,3 +133,16 @@
     }
   }
 }
+
+
+.badge.accepted {
+  font-size: 0.75rem;
+  color: #10b981;
+  font-weight: bold;
+}
+
+.badge.declined {
+  font-size: 0.75rem;
+  color: #ef4444;
+  font-weight: bold;
+}

@@ -55,6 +55,7 @@ app.UseEndpoints(endpoints =>
 {
     GetUserEndpoint.Register(endpoints);
     GetUserByEmailEndpoint.Register(endpoints);
+    UpdateUserEndpoint.Register(endpoints);
 });
 
 

@@ -60,8 +60,8 @@ public class DatabaseInitializer
             const string createTableQuery = @"
                 CREATE TABLE IF NOT EXISTS Users (
                     Id INT PRIMARY KEY,  -- Provided by AuthService, NOT auto-incremented
-                    Name VARCHAR(100) NOT NULL,
-                    Email VARCHAR(255) UNIQUE NOT NULL,
+                    Name VARCHAR(50) NOT NULL,
+                    Email VARCHAR(50) UNIQUE NOT NULL,
                     Description TEXT DEFAULT '',
                     InTotalWorkspaces INT NOT NULL DEFAULT 0,
                     RegistrationDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
