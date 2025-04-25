@@ -1,13 +1,55 @@
-import { Component } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
+import {WorkspaceInvitationHistoryDto, WorkspaceService} from "../../services/workspace.service";
+import {ActivatedRoute} from "@angular/router";
+import {MessageService} from "primeng/api";
 
 @Component({
   selector: 'app-workspace-history-page',
   templateUrl: './workspace-history-page.component.html',
   styleUrl: './workspace-history-page.component.scss'
 })
-export class WorkspaceHistoryPageComponent {
+export class WorkspaceHistoryPageComponent implements OnInit{
   workspaceName = 'Name fetched from API';
   activeTab: 'files' | 'invitations' = 'files';
+
+  invitations: WorkspaceInvitationHistoryDto[] = [];
+  totalInvitationPages = 1;
+  isLoadingInvitations = false;
+
+  constructor(
+    private route: ActivatedRoute,
+    private workspaceService: WorkspaceService,
+    private messageService: MessageService,
+  ) {}
+
+
+  ngOnInit() {
+    const workspaceId = Number(this.route.snapshot.paramMap.get('id'));
+    this.workspaceId = workspaceId;
+    this.fetchInvitations(); // initial load
+  }
+
+  workspaceId: number = 0;
+
+  fetchInvitations() {
+    this.isLoadingInvitations = true;
+
+    this.workspaceService
+      .getInvitationHistory(this.workspaceId, this.currentPage, this.itemsPerPage)
+      .subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            this.invitations = res.data.items;
+            this.totalInvitationPages = Math.ceil(res.data.totalCount / this.itemsPerPage); // ✅ FIXED
+          }
+          this.isLoadingInvitations = false;
+        },
+        error: () => {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: 'Failed to load invitation history.' });
+          this.isLoadingInvitations = false;
+        }
+      });
+  }
 
   fileHistory = [
     { file: 'notes.txt', action: 'Created', user: 'Alice', date: '2025-03-28' },
@@ -35,6 +77,9 @@ export class WorkspaceHistoryPageComponent {
     this.activeTab = tab;
     this.searchText = '';
     this.currentPage = 1;
+    if (tab === 'invitations') {
+      this.fetchInvitations();
+    }
   }
 
   get filteredItems() {
@@ -63,19 +108,27 @@ export class WorkspaceHistoryPageComponent {
   }
 
   get paginatedInvitationItems() {
+    const filtered = this.invitations.filter(item =>
+      JSON.stringify(item).toLowerCase().includes(this.searchText.toLowerCase())
+    );
+
     const start = (this.currentPage - 1) * this.itemsPerPage;
-    return this.invitationHistory
-      .filter(item =>
-        JSON.stringify(item).toLowerCase().includes(this.searchText.toLowerCase())
-      )
-      .slice(start, start + this.itemsPerPage);
+    return filtered.slice(start, start + this.itemsPerPage);
   }
 
   nextPage() {
-    if (this.currentPage < this.totalPages) this.currentPage++;
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+      if (this.activeTab === 'invitations') this.fetchInvitations();
+    }
   }
 
   prevPage() {
-    if (this.currentPage > 1) this.currentPage--;
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      if (this.activeTab === 'invitations') this.fetchInvitations();
+    }
   }
+
+
 }

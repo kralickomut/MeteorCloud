@@ -14,6 +14,7 @@ export interface Notification {
   isRead: boolean;
   createdAt: string;
   workspaceId?: number;
+  isAccepted?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })

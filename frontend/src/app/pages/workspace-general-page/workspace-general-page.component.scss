@@ -1,3 +1,9 @@
+@import "variables";
+
+html, body {
+  overflow-x: hidden;
+}
+
 .workspace-general-page {
   padding: 2rem;
 
@@ -135,4 +141,61 @@
 .badge-guest {
   background-color: #fef3c7;
   color: #92400e;
+}
+
+.clickable {
+  cursor: pointer;
+  color: black;
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.pi-ellipsis-v {
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  position: relative;
+  z-index: 1;
+
+  &:hover {
+    background-color: #f3f4f6;
+  }
+}
+
+// Global menu styling fix
+::ng-deep .p-menu.p-menu-overlay {
+  padding: 0.25rem 0;
+  min-width: 160px;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
+}
+
+// Remove extra spacing around menu
+::ng-deep .p-menu.p-menu-overlay .p-menuitem {
+  margin: 0;
+  padding: 0;
+}
+
+// Align text and remove underline
+::ng-deep .p-menu.p-menu-overlay .p-menuitem-link {
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none !important;
+  color: #374151;
+  border-radius: 0;
+  transition: background 0.2s ease;
+}
+
+// Hover effect
+::ng-deep .p-menu.p-menu-overlay .p-menuitem-link:hover {
+  background-color: #f3f4f6;
+}
+
+// Optional: Make icon a little lighter
+::ng-deep .p-menu.p-menu-overlay .p-menuitem-icon {
+  color: #6b7280;
 }

@@ -28,20 +28,21 @@
         <div class="notification-message">{{ notification.message }}</div>
         <div class="notification-time">{{ notification.time }}</div>
 
-        <div *ngIf="notification.message?.includes('invited')" class="notification-actions">
-          <ng-container *ngIf="!notification.localAction">
+        <div class="notification-actions">
+          <ng-container *ngIf="notification.token && notification.isAccepted === null">
             <button (click)="acceptInvitation(notification)" class="p-button-sm p-button-success">Accept</button>
             <button (click)="declineInvitation(notification)" class="p-button-sm p-button-secondary">Decline</button>
           </ng-container>
 
-          <ng-container *ngIf="notification.localAction === 'accepted'">
+          <ng-container *ngIf="notification.token && notification.isAccepted === true">
             ✅ Accepted
           </ng-container>
-          <ng-container *ngIf="notification.localAction === 'declined'">
+
+          <ng-container *ngIf="notification.token && notification.isAccepted === false">
             ❌ Declined
           </ng-container>
         </div>
+        </div>
       </div>
     </div>
-  </div>
 </p-sidebar>

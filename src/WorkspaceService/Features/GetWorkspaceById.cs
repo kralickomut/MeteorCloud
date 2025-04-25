@@ -30,7 +30,7 @@ public class GetWorkspaceByIdHandler
     {
         cancellationToken.ThrowIfCancellationRequested();
         
-        var workspace = await _workspaceManager.GetWorkspaceByIdAsync(request.Id);
+        var workspace = await _workspaceManager.GetWorkspaceByIdIncludeUsersAsync(request.Id);
         
         if (workspace == null)
         {

@@ -1,3 +1,41 @@
+<p-dialog
+  header="Change User Role"
+  [(visible)]="changeRoleDialogVisible"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [closable]="false"
+>
+  <div *ngIf="selectedUserForRoleChange">
+    <p class="mb-3">Choose a new role for <strong>{{ selectedUserForRoleChange.name }}</strong>:</p>
+
+    <div class="d-flex flex-column gap-2">
+      <p-radioButton
+        name="role"
+        [value]="1"
+        [(ngModel)]="newSelectedRole"
+        label="Owner"
+      ></p-radioButton>
+      <p-radioButton
+        name="role"
+        [value]="2"
+        [(ngModel)]="newSelectedRole"
+        label="Manager"
+      ></p-radioButton>
+      <p-radioButton
+        name="role"
+        [value]="3"
+        [(ngModel)]="newSelectedRole"
+        label="Guest"
+      ></p-radioButton>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" (click)="cancelRoleChange()" class="p-button-text"></button>
+    <button pButton label="Confirm" (click)="confirmRoleChange()" [disabled]="!newSelectedRole"></button>
+  </ng-template>
+</p-dialog>
+
 <div class="workspace-general-page p-6">
   <!-- Title & Description -->
   <div class="workspace-header mb-4">
@@ -10,7 +48,7 @@
     <ng-template #editBlock>
       <input [(ngModel)]="workspace.name" pInputText class="editable-input mb-2 d-block" />
       <textarea [(ngModel)]="workspace.description" pInputTextarea rows="2" class="editable-input mb-2 d-block"></textarea>
-      <button pButton label="Save" (click)="isEditing = false" class="p-button-sm"></button>
+      <button pButton label="Save" (click)="saveChanges()" class="p-button-sm p-button-secondary w-100"></button>
     </ng-template>
   </div>
 
@@ -18,10 +56,10 @@
     <!-- LEFT SIDE -->
     <div class="left d-flex flex-column gap-3 flex-grow-1">
       <div class="card">
-        <div><strong>Created On:</strong> {{ workspace.createdOn }}</div>
-        <div><strong>Last Updated:</strong> {{ workspace.lastUpdated }}</div>
-        <div><strong>Owner:</strong> {{ workspace.owner }}</div>
-        <div><strong>Collaborators:</strong> {{ workspace.collaborators.length }}</div>
+        <div><strong>Created On:</strong> {{ workspace.createdOn | date }}</div>
+        <div><strong>Last Updated:</strong> {{ workspace.updatedOn | date }}</div>
+        <div><strong>Owner:</strong> {{ workspace.ownerName }}</div>
+        <div><strong>Collaborators:</strong> {{ collaborators.length }}</div>
       </div>
 
       <div class="card">
@@ -53,6 +91,7 @@
             <th>Name</th>
             <th>Role</th>
             <th>Email</th>
+            <th *ngIf="isPrivileged">Actions</th>
           </tr>
           </thead>
           <tbody>
@@ -60,7 +99,12 @@
             <td>
               <div class="d-flex align-items-center gap-2">
                 <div class="avatar">{{ user.name[0] }}</div>
-                <span class="fw-semibold">{{ user.name }}</span>
+                <span
+                  class="fw-semibold clickable"
+                  (click)="goToProfile(user.id)"
+                >
+                {{ user.name }}
+              </span>
               </div>
             </td>
             <td>
@@ -74,6 +118,10 @@
               </span>
             </td>
             <td>{{ user.email }}</td>
+            <td *ngIf="isPrivileged">
+              <p-menu #menu [popup]="true" [model]="getUserActions(user.id, user.workspaceRole)" appendTo="body"></p-menu>
+              <i class="pi pi-ellipsis-v cursor-pointer text-muted" (click)="menu.toggle($event)"></i>
+            </td>
           </tr>
           </tbody>
         </table>

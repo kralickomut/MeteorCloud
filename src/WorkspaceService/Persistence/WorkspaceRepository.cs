@@ -1,5 +1,6 @@
 using System.Data;
 using Dapper;
+using MeteorCloud.Shared.ApiResults;
 using Npgsql;
 using WorkspaceService.Models;
 using WorkspaceService.Persistence.Entities;
@@ -45,33 +46,71 @@ public class WorkspaceRepository
         return workspace;
     }
 
-    public async Task<List<Workspace>> GetUserWorkspacesAsync(int userId, int page, int pageSize, CancellationToken? cancellationToken = null)
+    public async Task<List<Workspace>> GetUserWorkspacesAsync(
+        int userId,
+        int page,
+        int pageSize,
+        double? sizeFrom = null,
+        double? sizeTo = null,
+        string? sortByDate = null,     // "asc" / "desc"
+        string? sortByFiles = null,    // "asc" / "desc"
+        CancellationToken? cancellationToken = null)
     {
         cancellationToken?.ThrowIfCancellationRequested();
 
         await using var connection = await _context.CreateConnectionAsync();
 
-        const string query = @"
+        // Base query
+        var sql = @"
             SELECT *
             FROM Workspaces w
             WHERE EXISTS (
                 SELECT 1 FROM WorkspaceUsers wu
                 WHERE wu.WorkspaceId = w.Id AND wu.UserId = @UserId
             )
-            ORDER BY w.CreatedOn DESC
-            LIMIT @PageSize OFFSET @Offset;
         ";
 
-        var result = await connection.QueryAsync<Workspace>(
-            query,
-            new
-            {
-                UserId = userId,
-                PageSize = pageSize,
-                Offset = (page - 1) * pageSize
-            }
-        );
+        var filters = new List<string>();
+        var parameters = new DynamicParameters();
+        parameters.Add("UserId", userId);
+        parameters.Add("PageSize", pageSize);
+        parameters.Add("Offset", (page - 1) * pageSize);
 
+        // Add size filter
+        if (sizeFrom.HasValue)
+        {
+            filters.Add("w.SizeInGB >= @SizeFrom");
+            parameters.Add("SizeFrom", sizeFrom.Value);
+        }
+
+        if (sizeTo.HasValue)
+        {
+            filters.Add("w.SizeInGB <= @SizeTo");
+            parameters.Add("SizeTo", sizeTo.Value);
+        }
+
+        if (filters.Any())
+        {
+            sql += " AND " + string.Join(" AND ", filters);
+        }
+
+        // Sorting logic (multi-sort supported)
+        var sortClauses = new List<string>();
+
+        if (!string.IsNullOrWhiteSpace(sortByDate) && (sortByDate == "asc" || sortByDate == "desc"))
+            sortClauses.Add($"w.CreatedOn {sortByDate.ToUpper()}");
+
+        if (!string.IsNullOrWhiteSpace(sortByFiles) && (sortByFiles == "asc" || sortByFiles == "desc"))
+            sortClauses.Add($"w.TotalFiles {sortByFiles.ToUpper()}");
+
+        if (sortClauses.Count > 0)
+            sql += " ORDER BY " + string.Join(", ", sortClauses);
+        else
+            sql += " ORDER BY w.CreatedOn DESC"; // Default fallback
+
+        sql += " LIMIT @PageSize OFFSET @Offset;";
+
+        var result = await connection.QueryAsync<Workspace>(sql, parameters);
         return result.ToList();
     }
     
@@ -275,6 +314,40 @@ public class WorkspaceRepository
     }
     
     
+    public async Task<Workspace?> UpdateWorkspaceAsync(Workspace workspace, CancellationToken? ct = null)
+    {
+        ct?.ThrowIfCancellationRequested();
+
+        try
+        {
+            await using var connection = await _context.CreateConnectionAsync();
+
+            const string query = @"
+            UPDATE Workspaces
+            SET Name = @Name,
+                Description = @Description,
+                UpdatedOn = @UpdatedOn,
+                LastUploadOn = @LastUploadOn
+            WHERE Id = @Id;
+        ";
+
+            var rowsAffected = await connection.ExecuteAsync(query, workspace);
+
+            if (rowsAffected == 0)
+                return null;
+
+            // Re-fetch updated entity
+            const string fetchQuery = @"SELECT * FROM Workspaces WHERE Id = @Id;";
+            var updated = await connection.QuerySingleOrDefaultAsync<Workspace>(fetchQuery, new { workspace.Id });
+            return updated;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating workspace {WorkspaceId}", workspace.Id);
+            return null;
+        }
+    }
+    
     public async Task<WorkspaceInvitation?> GetInvitationByEmailAsync(string email, CancellationToken? ct = null)
     {
         ct?.ThrowIfCancellationRequested();
@@ -398,5 +471,136 @@ public class WorkspaceRepository
         }
     }
     
+    
+    public async Task<bool> ChangeUserRoleAsync(int workspaceId, int userId, int role, string? userName = null, CancellationToken? ct = null)
+    {
+        ct?.ThrowIfCancellationRequested();
+
+        await using var connection = await _context.CreateConnectionAsync();
+        using var transaction = await connection.BeginTransactionAsync();
+
+        try
+        {
+            // 1. If promoting to owner, first demote current owner
+            if (role == (int)Role.Owner)
+            {
+                const string demoteOldOwnerQuery = @"
+                    UPDATE WorkspaceUsers
+                    SET Role = @ManagerRole
+                    WHERE WorkspaceId = @WorkspaceId AND Role = @OwnerRole AND UserId != @UserId;
+                ";
+
+                await connection.ExecuteAsync(demoteOldOwnerQuery, new
+                {
+                    WorkspaceId = workspaceId,
+                    ManagerRole = (int)Role.Manager,
+                    OwnerRole = (int)Role.Owner,
+                    UserId = userId // don't demote the new owner
+                }, transaction);
+            }
+
+            // 2. Update the user's role
+            const string updateRoleQuery = @"
+                UPDATE WorkspaceUsers
+                SET Role = @Role
+                WHERE WorkspaceId = @WorkspaceId AND UserId = @UserId;
+            ";
+
+            var rowsAffected = await connection.ExecuteAsync(updateRoleQuery, new
+            {
+                WorkspaceId = workspaceId,
+                UserId = userId,
+                Role = role
+            }, transaction);
+
+            if (rowsAffected == 0)
+            {
+                await transaction.RollbackAsync();
+                return false;
+            }
+
+            // 3. If setting new owner, update the workspace table owner fields
+            if (role == (int)Role.Owner && !string.IsNullOrWhiteSpace(userName))
+            {
+                const string updateWorkspaceQuery = @"
+                    UPDATE Workspaces
+                    SET OwnerId = @UserId,
+                        OwnerName = @UserName
+                    WHERE Id = @WorkspaceId;
+                ";
+
+                await connection.ExecuteAsync(updateWorkspaceQuery, new
+                {
+                    WorkspaceId = workspaceId,
+                    UserId = userId,
+                    UserName = userName
+                }, transaction);
+            }
+
+            await transaction.CommitAsync();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error changing user role for WorkspaceId {WorkspaceId}, UserId {UserId}", workspaceId, userId);
+            await transaction.RollbackAsync();
+            return false;
+        }
+    }
+    
+    public async Task<bool> RemoveUserFromWorkspaceAsync(int workspaceId, int userId, CancellationToken? ct = null)
+    {
+        ct?.ThrowIfCancellationRequested();
+
+        await using var connection = await _context.CreateConnectionAsync();
+        const string query = @"
+            DELETE FROM WorkspaceUsers
+            WHERE WorkspaceId = @WorkspaceId AND UserId = @UserId;
+        ";
+
+        var rowsAffected = await connection.ExecuteAsync(query, new
+        {
+            WorkspaceId = workspaceId,
+            UserId = userId
+        });
+
+        return rowsAffected > 0;
+    }
+    
+    public async Task<PagedResult<WorkspaceInvitation>> GetWorkspaceInvitationsAsync(
+        int workspaceId, int page, int pageSize, CancellationToken ct)
+    {
+        ct.ThrowIfCancellationRequested();
+
+        await using var connection = await _context.CreateConnectionAsync();
+
+        const string dataQuery = @"
+        SELECT * FROM WorkspaceInvitations
+        WHERE WorkspaceId = @WorkspaceId
+        ORDER BY CreatedOn DESC
+        OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
+    ";
+
+        const string countQuery = @"
+        SELECT COUNT(*) FROM WorkspaceInvitations
+        WHERE WorkspaceId = @WorkspaceId;
+    ";
+
+        var parameters = new
+        {
+            WorkspaceId = workspaceId,
+            Offset = (page - 1) * pageSize,
+            PageSize = pageSize
+        };
+
+        var items = (await connection.QueryAsync<WorkspaceInvitation>(dataQuery, parameters)).ToList();
+        var totalCount = await connection.ExecuteScalarAsync<int>(countQuery, new { WorkspaceId = workspaceId });
+
+        return new PagedResult<WorkspaceInvitation>
+        {
+            Items = items,
+            TotalCount = totalCount
+        };
+    }
     
 }

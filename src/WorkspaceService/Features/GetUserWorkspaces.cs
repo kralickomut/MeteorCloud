@@ -5,7 +5,14 @@ using WorkspaceService.Services;
 
 namespace WorkspaceService.Features;
 
-public record GetUserWorkspacesRequest(int UserId, int Page = 1, int PageSize = 10);
+public record GetUserWorkspacesRequest(
+    int UserId,
+    int Page = 1,
+    int PageSize = 10,
+    double? SizeFrom = null,
+    double? SizeTo = null,
+    string? SortByDate = null, // "asc" / "desc"
+    string? SortByFiles = null);   // "asc" / "desc"
 
 public class GetUserWorkspacesValidator : AbstractValidator<GetUserWorkspacesRequest>
 {
@@ -22,6 +29,14 @@ public class GetUserWorkspacesValidator : AbstractValidator<GetUserWorkspacesReq
         RuleFor(x => x.PageSize)
             .GreaterThan(0)
             .WithMessage("Page size must be greater than 0.");
+
+        RuleFor(x => x.SortByDate)
+            .Must(v => v == null || v is "asc" or "desc")
+            .WithMessage("SortByDate must be 'asc' or 'desc'.");
+
+        RuleFor(x => x.SortByFiles)
+            .Must(v => v == null || v is "asc" or "desc")
+            .WithMessage("SortByFiles must be 'asc' or 'desc'.");
     }
 }
 
@@ -37,9 +52,17 @@ public class GetUserWorkspacesHandler
     public async Task<ApiResult<List<Workspace>>> Handle(GetUserWorkspacesRequest request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        
-        var workspaces = await _workspaceManager.GetUserWorkspacesAsync(request.UserId, request.Page, request.PageSize, cancellationToken);
-        
+
+        var workspaces = await _workspaceManager.GetUserWorkspacesAsync(
+            request.UserId,
+            request.Page,
+            request.PageSize,
+            request.SizeFrom,
+            request.SizeTo,
+            request.SortByDate,
+            request.SortByFiles,
+            cancellationToken);
+
         return new ApiResult<List<Workspace>>(workspaces);
     }
 }
@@ -48,21 +71,30 @@ public class GetUserWorkspacesEndpoint
 {
     public static void Register(IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/workspaces/user/{userId}", 
+        app.MapGet("/api/workspaces/user/{userId}",
             async (
                 int userId,
                 int page,
                 int pageSize,
+                double? sizeFrom,
+                double? sizeTo,
+                string? sortByDate,
+                string? sortByFiles,
                 GetUserWorkspacesHandler handler,
                 GetUserWorkspacesValidator validator,
                 CancellationToken cancellationToken) =>
             {
-                var request = new GetUserWorkspacesRequest(userId, page, pageSize);
+                var request = new GetUserWorkspacesRequest(
+                    userId, page, pageSize,
+                    sizeFrom, sizeTo,
+                    sortByDate, sortByFiles
+                );
+
                 var validationResult = await validator.ValidateAsync(request, cancellationToken);
                 if (!validationResult.IsValid)
                 {
-                    var errorMessages = validationResult.Errors.Select(x => x.ErrorMessage);
-                    return Results.BadRequest(new ApiResult<IEnumerable<string>>(errorMessages));
+                    var errors = validationResult.Errors.Select(x => x.ErrorMessage);
+                    return Results.BadRequest(new ApiResult<IEnumerable<string>>(errors));
                 }
 
                 var response = await handler.Handle(request, cancellationToken);

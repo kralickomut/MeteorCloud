@@ -37,6 +37,9 @@ public class MSHttpClient
         try
         {
             var response = await _httpClient.PostAsJsonAsync(url, request, cancellationToken);
+            
+            var content = await response.Content.ReadAsStringAsync();
+            _logger.LogError("Raw response content: {Content}", content);
 
             // Try reading the API response even if it's a failure (e.g., 400 Bad Request)
             var apiResult = await response.Content.ReadFromJsonAsync<ApiResult<TResponse>>(cancellationToken);

@@ -9,7 +9,6 @@ interface DisplayNotification extends Notification {
   time: string;
   localAction?: 'accepted' | 'declined';
   token?: string;
-  invitationStatus?: 'Accepted' | 'Declined' | 'Pending';
 }
 
 
@@ -106,6 +105,7 @@ export class NotificationBarComponent implements OnInit {
       next: (res) => {
         if (res.success) {
           notification.localAction = 'accepted'; // ✅ only after success
+          notification.isAccepted = true; // ✅ add this line
           this.markNotificationAsRead(notification);
           this.messageService.add({
             severity: 'success',
@@ -135,6 +135,7 @@ export class NotificationBarComponent implements OnInit {
       next: (res) => {
         if (res.success) {
           notification.localAction = 'declined'; // ✅ only after success
+          notification.isAccepted = false; // ✅ add this line
           this.markNotificationAsRead(notification);
           this.messageService.add({
             severity: 'success',

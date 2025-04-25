@@ -51,11 +51,22 @@ export class InviteWorkspaceComponent {
       return;
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(this.inviteEmail.trim())) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Invalid Email',
+        detail: 'Please enter a valid email address.',
+      });
+      return;
+    }
+
     const inviteData: InviteToWorkspace = {
-      email: this.inviteEmail,
+      email: this.inviteEmail.trim(),
       workspaceId: this.workspaceId,
-      invitedByUserId: userId, // now it's a number for sure
+      invitedByUserId: userId,
     };
+
     this.workspaceService.inviteToWorkspace(inviteData).subscribe({
       next: (res) => {
         if (res.success) {
@@ -86,5 +97,10 @@ export class InviteWorkspaceComponent {
 
   private resetForm() {
     this.inviteEmail = '';
+  }
+
+  isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
   }
 }

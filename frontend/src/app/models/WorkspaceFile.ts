@@ -22,6 +22,7 @@ export interface Workspace {
     description?: string;
     createdOn: string; // ISO string
     lastUploadOn?: string; // ISO string or null
+    updatedOn?: string; // ISO string or null
     users?: WorkspaceUser[]; // Optional, if included
 }
 

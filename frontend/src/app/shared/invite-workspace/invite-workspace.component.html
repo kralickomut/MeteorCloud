@@ -18,8 +18,12 @@
       [(ngModel)]="inviteEmail"
       placeholder="e.g. michaelz@gmail.com"
       class="form-input mb-3"
+      [ngClass]="{ 'p-invalid': inviteEmail && !isValidEmail(inviteEmail) }"
     />
   </div>
+  <small *ngIf="inviteEmail && !isValidEmail(inviteEmail)" class="p-error">
+    Please enter a valid email.
+  </small>
 
   <ng-template pTemplate="footer">
     <button
@@ -27,7 +31,7 @@
       label="Invite"
       icon="pi pi-check"
       class="p-button-primary"
-      [disabled]="!inviteEmail.trim()"
+      [disabled]="!isValidEmail(inviteEmail)"
       (click)="sendInvite()"
     ></button>
   </ng-template>

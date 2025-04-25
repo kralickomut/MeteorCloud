@@ -21,7 +21,79 @@
 
     <!-- Pagination + buttons -->
     <div class="d-flex align-items-center gap-2">
-      <button pButton icon="pi pi-filter" class="filter-button p-button-outlined">Filter</button>
+      <button pButton icon="pi pi-filter" class="filter-button p-button-outlined"
+              (click)="showFilters($event, filterOverlay)">Filter</button>
+
+      <!-- Filter Chips inline -->
+      <ng-container *ngIf="anyFiltersActive">
+        <button
+          *ngIf="sizeRange[0] > 0 || sizeRange[1] < 5"
+          pButton
+          class="filter-tag"
+          (click)="clearSizeFilter()"
+        >
+          {{ sizeRange[0] }} – {{ sizeRange[1] }} GB
+          <i class="pi pi-times ms-2"></i>
+        </button>
+
+        <button
+          *ngIf="sortOrder.dateCreated"
+          pButton
+          class="filter-tag"
+          (click)="clearDateSort()"
+        >
+          {{ sortOrder.dateCreated === 'asc' ? 'Oldest' : 'Newest' }}
+          <i class="pi pi-times ms-2"></i>
+        </button>
+
+        <button
+          *ngIf="sortOrder.totalFiles"
+          pButton
+          class="filter-tag"
+          (click)="clearFileSort()"
+        >
+          {{ sortOrder.totalFiles === 'asc' ? 'Low → High' : 'High → Low' }}
+          <i class="pi pi-times ms-2"></i>
+        </button>
+      </ng-container>
+
+
+      <p-overlayPanel #filterOverlay [dismissable]="true" [style]="{ width: '280px' }" styleClass="filter-flyout p-3">
+        <div class="mb-3">
+          <label class="fw-semibold d-block mb-2">Size (GB)</label>
+          <p-slider
+            [(ngModel)]="sizeRange"
+            [min]="0"
+            [max]="5"
+            [step]="0.1"
+            [range]="true"
+            styleClass="w-100"
+            (onSlideEnd)="applyFiltersAndSorting()"
+          ></p-slider>
+          <small class="text-muted">From {{ sizeRange[0].toFixed(1) }} to {{ sizeRange[1].toFixed(1) }} GB</small>
+        </div>
+
+        <div class="d-flex gap-3 mb-3">
+          <div>
+            <label class="fw-semibold d-block">Date Created</label>
+            <div class="d-flex gap-1">
+              <button pButton icon="pi pi-arrow-up" class="p-button-sm p-button-text" (click)="sortByDate('asc')"></button>
+              <button pButton icon="pi pi-arrow-down" class="p-button-sm p-button-text" (click)="sortByDate('desc')"></button>
+            </div>
+          </div>
+          <div>
+            <label class="fw-semibold d-block">Total Files</label>
+            <div class="d-flex gap-1">
+              <button pButton icon="pi pi-sort-amount-up" class="p-button-sm p-button-text" (click)="sortByFiles('asc')"></button>
+              <button pButton icon="pi pi-sort-amount-down" class="p-button-sm p-button-text" (click)="sortByFiles('desc')"></button>
+            </div>
+          </div>
+        </div>
+
+        <button pButton label="Clear Filters" class="p-button-text p-button-danger p-button-sm w-100" (click)="clearFilters()"></button>
+      </p-overlayPanel>
+
+
       <button
         pButton
         icon="pi pi-refresh"
@@ -53,7 +125,7 @@
       </tr>
       </thead>
       <tbody>
-      <tr *ngFor="let w of paginatedWorkspaces">
+      <tr *ngFor="let w of workspaces">
         <td>
           <div class="d-flex align-items-center gap-2">
             <div class="avatar">{{ w.name.slice(0, 2).toUpperCase() }}</div>
@@ -90,7 +162,7 @@
       </tr>
       </tbody>
     </table>
-    <div *ngIf="paginatedWorkspaces.length === 0" class="no-workspaces-message text-center p-4">
+    <div *ngIf="workspaces.length === 0" class="no-workspaces-message text-center p-4">
       <p class="fw-semibold mb-2">No workspaces yet</p>
       <p class="text-muted">Start by creating your first workspace above.</p>
     </div>

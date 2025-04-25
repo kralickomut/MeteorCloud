@@ -64,6 +64,7 @@ public class DatabaseInitializer
                     SizeInGB DOUBLE PRECISION DEFAULT 0,
                     TotalFiles INT DEFAULT 0,
                     CreatedOn TIMESTAMP NOT NULL DEFAULT NOW(),
+                    UpdatedOn TIMESTAMP NULL,
                     LastUploadOn TIMESTAMP NULL DEFAULT NOW()
                 );
 

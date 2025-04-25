@@ -98,22 +98,22 @@
 
       <!-- INVITATIONS TAB -->
       <ng-container *ngIf="activeTab === 'invitations'">
-        <tr *ngFor="let invite of paginatedInvitationItems">
-          <td>{{ invite.user }}</td>
-          <td>{{ invite.invitedBy }}</td>
+        <tr *ngFor="let invite of paginatedInvitationItems"> <!-- ✅ With pagination & search -->
+          <td>{{ invite.email }}</td>
+          <td>{{ invite.invitedByName }}</td>
           <td>
-        <span
-          class="badge"
-          [ngClass]="{
-            'badge-success': invite.status === 'Accepted',
-            'badge-info': invite.status === 'Pending',
-            'badge-danger': invite.status === 'Rejected'
-          }"
-        >
-          {{ invite.status }}
-        </span>
+    <span
+      class="badge"
+      [ngClass]="{
+        'badge-success': invite.status === 'Accepted',
+        'badge-info': invite.status === 'Pending',
+        'badge-danger': invite.status === 'Rejected'
+      }"
+    >
+      {{ invite.status }}
+    </span>
           </td>
-          <td>{{ invite.date }}</td>
+          <td>{{ invite.date | date:'short' }}</td>
         </tr>
       </ng-container>
       </tbody>

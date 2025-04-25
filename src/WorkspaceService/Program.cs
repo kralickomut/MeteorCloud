@@ -24,7 +24,6 @@ builder.Services.AddCors(opt =>
     });
 });
 
-
 // Bind for port 5297
 builder.WebHost.ConfigureKestrel(options =>
 {
@@ -60,6 +59,10 @@ app.UseEndpoints(endpoints =>
     GetWorkspaceByIdEndpoint.Register(endpoints);
     RespondToInviteEndpoint.Register(endpoints);
     GetWorkspaceInvitationByTokenEndpoint.Register(endpoints);
+    UpdateWorkspaceEndpoint.Register(endpoints);
+    ChangeUserRoleEndpoint.Register(endpoints);
+    RemoveUserEndpoint.Register(endpoints);
+    GetWorkspaceInvitationsHistoryEndpoint.Register(endpoints);
 });
 
 app.MapHub<WorkspaceHub>("/hub/workspaces");

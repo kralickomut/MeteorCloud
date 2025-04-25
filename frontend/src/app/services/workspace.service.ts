@@ -14,6 +14,27 @@ interface CreateWorkspace {
   ownerName: string;
 }
 
+export interface RemoveUserRequest {
+  userId: number;
+  workspaceId: number;
+}
+
+export interface ChangeUserRoleRequest {
+  userId: number;
+  workspaceId: number;
+  role: number;
+}
+
+export interface WorkspaceInvitationHistoryDto {
+  email: string;
+  invitedByName: string;
+  acceptedByName: string;
+  status: string;
+  date: string;
+  acceptedOn?: string;
+}
+
+
 export interface WorkspaceInvitation {
   token: string;
   workspaceId: number;
@@ -23,6 +44,12 @@ export interface WorkspaceInvitation {
   acceptedByUserId?: number;
   createdOn: string;
   acceptedOn?: string;
+}
+
+export interface UpdateWorkspaceRequest {
+  workspaceId: number;
+  name: string;
+  description: string;
 }
 
 @Injectable({
@@ -66,21 +93,71 @@ export class WorkspaceService {
     return this.http.post<ApiResult<Workspace>>(`${this.apiUrl}/workspace`, data);
   }
 
-  getUserWorkspaces(userId: number, page: number = 1, pageSize: number = 10): Observable<ApiResult<Workspace[]>> {
-    const params = new HttpParams()
+  getUserWorkspaces(
+    userId: number,
+    page: number,
+    pageSize: number,
+    filters: {
+      sizeFrom?: number;
+      sizeTo?: number;
+      sortByDate?: 'asc' | 'desc';
+      sortByFiles?: 'asc' | 'desc';
+    }
+  ) {
+    let params = new HttpParams()
       .set('page', page.toString())
       .set('pageSize', pageSize.toString());
 
-    return this.http.get<ApiResult<Workspace[]>>(`${this.apiUrl}/workspaces/user/${userId}`, { params });
+    if (filters.sizeFrom !== undefined) {
+      params = params.set('sizeFrom', filters.sizeFrom.toString());
+    }
+
+    if (filters.sizeTo !== undefined) {
+      params = params.set('sizeTo', filters.sizeTo.toString());
+    }
+
+    if (filters.sortByDate) {
+      params = params.set('sortByDate', filters.sortByDate);
+    }
+
+    if (filters.sortByFiles) {
+      params = params.set('sortByFiles', filters.sortByFiles);
+    }
+
+    return this.http.get<ApiResult<Workspace[]>>(
+      `${this.apiUrl}/workspaces/user/${userId}`, { params }
+    );
   }
 
   emitWorkspaceCreated(workspace: Workspace) {
     this.workspaceCreatedSubject.next(workspace);
   }
 
+  removeUserFromWorkspace(request: RemoveUserRequest): Observable<ApiResult<boolean>> {
+    return this.http.post<ApiResult<boolean>>(`${this.apiUrl}/workspaces/remove-user`, request);
+  }
+
+  changeUserRole(request: ChangeUserRoleRequest): Observable<ApiResult<boolean>> {
+    return this.http.post<ApiResult<boolean>>(`${this.apiUrl}/workspaces/change-user-role`, request);
+  }
+
+  getInvitationHistory(workspaceId: number, page: number, pageSize: number) {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('pageSize', pageSize.toString());
+
+    return this.http.get<ApiResult<{ items: WorkspaceInvitationHistoryDto[]; totalCount: number }>>(
+      `${this.apiUrl}/workspace/invitations-history/${workspaceId}`,
+      { params }
+    );
+  }
 
   deleteWorkspace(id: number): Observable<ApiResult<boolean>> {
     return this.http.delete<ApiResult<boolean>>(`${this.apiUrl}/workspace/${id}`);
+  }
+
+  updateWorkspace(data: { workspaceId: number, name: string, description: string }): Observable<ApiResult<boolean>> {
+    return this.http.put<ApiResult<boolean>>(`${this.apiUrl}/workspaces/update`, data);
   }
 
   inviteToWorkspace(data: InviteToWorkspace) : Observable<ApiResult<boolean>> {

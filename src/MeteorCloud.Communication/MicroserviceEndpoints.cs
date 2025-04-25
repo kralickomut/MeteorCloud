@@ -10,6 +10,8 @@ public static class MicroserviceEndpoints
         
         public static string GetUserById(int id) => BaseUrl + $"/api/users/{id}";
         public static string GetUserByEmail(string email) => BaseUrl + $"/api/users/email/{email}";
+        
+        public static string GetUsersBulk() => BaseUrl + $"/api/users/bulk";
     }
     
     public class WorkspaceService

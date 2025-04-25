@@ -84,4 +84,29 @@ public class UserService
         return result;
     }
     
+    public async Task<IEnumerable<User>> GetUsersByIdsAsync(IEnumerable<int> userIds, CancellationToken? cancellationToken = null)
+    {
+        var users = new List<User>();
+        
+        foreach (var userId in userIds)
+        {
+            var cachedUser = await _cache.GetAsync(_serviceCacheKey, "user", userId.ToString());
+            if (cachedUser != null)
+            {
+                users.Add(JsonConvert.DeserializeObject<User>(cachedUser));
+            }
+            else
+            {
+                var user = await _userRepository.GetUserByIdAsync(userId, cancellationToken);
+                if (user != null)
+                {
+                    users.Add(user);
+                    await _cache.SetAsync(_serviceCacheKey, "user", userId.ToString(), JsonConvert.SerializeObject(user), TimeSpan.FromMinutes(10));
+                }
+            }
+        }
+        
+        return users;
+    }
+    
 }

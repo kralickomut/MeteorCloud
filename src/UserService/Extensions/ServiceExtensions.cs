@@ -37,7 +37,9 @@ public static class ServiceExtensions
         
         services.AddSingleton<UpdateUserValidator>();
         services.AddScoped<UpdateUserHandler>();
-        
+
+        services.AddSingleton<GetUsersBulkValidator>();
+        services.AddScoped<GetUsersBulkHandler>();
         
         // Get Redis connection details from environment variables
         var redisHost = Environment.GetEnvironmentVariable("REDIS_HOST") ?? "localhost";
@@ -61,7 +63,8 @@ public static class ServiceExtensions
             config.AddConsumer<UserLoggedInConsumer>();
             config.AddConsumer<WorkspaceCreatedConsumer>();
             config.AddConsumer<WorkspaceDeletedConsumer>();
-            config.AddConsumer<WorkspaceInvitationAcceptedConsumer>();
+            config.AddConsumer<WorkspaceInvitationResponseConsumer>();
+            config.AddConsumer<WorkspaceUserRemovedConsumer>();
 
             config.UsingRabbitMq((context, cfg) =>
             {
@@ -113,12 +116,22 @@ public static class ServiceExtensions
                 
                 cfg.ReceiveEndpoint("user-service-workspace-invitation-accepted-queue", e =>
                 {
-                    e.Bind("workspace-invitation-accepted", x =>
+                    e.Bind("workspace-invitation-response", x =>
                     {
                         x.ExchangeType = "fanout";
                     });
 
-                    e.ConfigureConsumer<WorkspaceInvitationAcceptedConsumer>(context);
+                    e.ConfigureConsumer<WorkspaceInvitationResponseConsumer>(context);
+                });
+                
+                cfg.ReceiveEndpoint("user-service-workspace-user-removed-queue", e =>
+                {
+                    e.Bind("workspace-user-removed", x =>
+                    {
+                        x.ExchangeType = "fanout";
+                    });
+
+                    e.ConfigureConsumer<WorkspaceUserRemovedConsumer>(context);
                 });
             });
         });

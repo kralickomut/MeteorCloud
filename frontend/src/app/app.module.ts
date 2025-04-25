@@ -54,6 +54,9 @@ import { MenuModule } from 'primeng/menu';
 import { VerifyComponent } from './pages/verify/verify.component';
 import {AuthInterceptor} from "./interceptors/auth.interceptor";
 import { ProfileUserComponent } from './pages/profile-user/profile-user.component';
+import {SliderModule} from "primeng/slider";
+import {OverlayPanelModule} from "primeng/overlaypanel";
+import {RadioButtonModule} from "primeng/radiobutton";
 
 
 
@@ -130,6 +133,9 @@ import { ProfileUserComponent } from './pages/profile-user/profile-user.componen
     KeyFilterModule,
     ConfirmDialogModule,
     MenuModule,
+    SliderModule,
+    OverlayPanelModule,
+    RadioButtonModule,
   ],
   providers: [MessageService, ConfirmationService,
     {

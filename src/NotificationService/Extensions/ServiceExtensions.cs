@@ -54,6 +54,7 @@ public static class ServiceExtensions
             config.AddConsumer<WorkspaceInviteConsumer>();
             config.AddConsumer<WorkspaceInvitationMatchOnRegisterConsumer>();
             config.AddConsumer<WorkspaceDeletedConsumer>();
+            config.AddConsumer<WorkspaceInvitationResponseConsumer>();
 
             config.UsingRabbitMq((context, cfg) =>
             {
@@ -91,6 +92,12 @@ public static class ServiceExtensions
                 {
                     e.Bind("workspace-deleted", x => x.ExchangeType = "fanout");
                     e.ConfigureConsumer<WorkspaceDeletedConsumer>(context);
+                });
+                
+                cfg.ReceiveEndpoint("email-service-workspace-invitation-response-queue", e =>
+                {
+                    e.Bind("workspace-invitation-response", x => x.ExchangeType = "fanout");
+                    e.ConfigureConsumer<WorkspaceInvitationResponseConsumer>(context);
                 });
             });
         });

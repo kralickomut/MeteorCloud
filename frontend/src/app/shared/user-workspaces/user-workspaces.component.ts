@@ -4,6 +4,7 @@ import { Workspace } from '../../models/WorkspaceFile';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { UserService, User } from '../../services/user.service';
 import { filter, take } from 'rxjs/operators';
+import {OverlayPanel} from "primeng/overlaypanel";
 
 @Component({
   selector: 'app-user-workspaces',
@@ -47,12 +48,16 @@ export class UserWorkspacesComponent implements OnInit {
   fetchWorkspaces(): void {
     if (!this.currentUserId) return;
 
-    this.workspaceService.getUserWorkspaces(this.currentUserId, this.currentPage, this.itemsPerPage)
-      .subscribe(res => {
-        if (res.success) {
-          this.workspaces = res.data ?? [];
-        }
-      });
+    this.workspaceService.getUserWorkspaces(this.currentUserId, this.currentPage, this.itemsPerPage, {
+      sizeFrom: this.sizeRange[0] > 0 ? this.sizeRange[0] : undefined,
+      sizeTo: this.sizeRange[1] < 5 ? this.sizeRange[1] : undefined,
+      sortByDate: this.sortOrder.dateCreated ?? undefined,
+      sortByFiles: this.sortOrder.totalFiles ?? undefined
+    }).subscribe(res => {
+      if (res.success) {
+        this.workspaces = res.data ?? [];
+      }
+    });
   }
 
   refreshWorkspaces(): void {
@@ -88,10 +93,31 @@ export class UserWorkspacesComponent implements OnInit {
       this.fetchWorkspaces();
     }
   }
-
+  /*
   get paginatedWorkspaces(): Workspace[] {
-    return this.filteredWorkspaces;
+    let result = this.filteredWorkspaces;
+
+    // Sort by dateCreated
+    if (this.sortOrder.dateCreated) {
+      result = [...result].sort((a, b) => {
+        const dateA = new Date(a.createdOn || 0).getTime();
+        const dateB = new Date(b.createdOn || 0).getTime();
+        return this.sortOrder.dateCreated === 'asc' ? dateA - dateB : dateB - dateA;
+      });
+    }
+
+    // Then sort by totalFiles
+    if (this.sortOrder.totalFiles) {
+      result = [...result].sort((a, b) => {
+        return this.sortOrder.totalFiles === 'asc'
+          ? a.totalFiles - b.totalFiles
+          : b.totalFiles - a.totalFiles;
+      });
+    }
+
+    return result;
   }
+  */
 
   deleteWorkspace(workspace: Workspace): void {
     this.confirmationService.confirm({
@@ -131,5 +157,56 @@ export class UserWorkspacesComponent implements OnInit {
         });
       }
     });
+  }
+
+  sizeRange: [number, number] = [0, 5];
+  sortOrder = {
+    dateCreated: null as 'asc' | 'desc' | null,
+    totalFiles: null as 'asc' | 'desc' | null
+  };
+
+  showFilters(event: Event, overlayPanel: OverlayPanel) {
+    overlayPanel.toggle(event);
+  }
+
+  sortByDate(order: 'asc' | 'desc') {
+    this.sortOrder.dateCreated = order;
+    this.applyFiltersAndSorting();
+  }
+
+  sortByFiles(order: 'asc' | 'desc') {
+    this.sortOrder.totalFiles = order;
+    this.applyFiltersAndSorting();
+  }
+
+  clearFilters() {
+    this.sizeRange = [0, 5];
+    this.sortOrder = { dateCreated: null, totalFiles: null };
+    this.applyFiltersAndSorting();
+  }
+
+  applyFiltersAndSorting() {
+    this.fetchWorkspaces();
+  }
+
+  clearSizeFilter(): void {
+    this.sizeRange = [0, 5];
+    this.applyFiltersAndSorting();
+  }
+
+  clearDateSort(): void {
+    this.sortOrder.dateCreated = null;
+    this.applyFiltersAndSorting();
+  }
+
+  clearFileSort(): void {
+    this.sortOrder.totalFiles = null;
+    this.applyFiltersAndSorting();
+  }
+
+  get anyFiltersActive(): boolean {
+    return (this.sizeRange[0] > 0 || this.sizeRange[1] < 5) ||
+      !!this.sortOrder.dateCreated ||
+      !!this.sortOrder.totalFiles;
   }
 }

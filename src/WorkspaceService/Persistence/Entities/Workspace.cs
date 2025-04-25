@@ -18,6 +18,8 @@ public class Workspace
     
     public DateTime CreatedOn { get; set; }
     
+    public DateTime? UpdatedOn { get; set; }
+    
     public DateTime? LastUploadOn { get; set; }
     
     

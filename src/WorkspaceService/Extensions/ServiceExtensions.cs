@@ -53,6 +53,18 @@ public static class ServiceExtensions
 
         services.AddSingleton<GetWorkspaceInvitationByTokenValidator>();
         services.AddScoped<GetWorkspaceInvitationByTokenHandler>();
+        
+        services.AddSingleton<UpdateWorkspaceValidator>();
+        services.AddScoped<UpdateWorkspaceHandler>();
+        
+        services.AddSingleton<ChangeUserRoleValidator>();
+        services.AddScoped<ChangeUserRoleHandler>();
+        
+        services.AddSingleton<RemoveUserValidator>();
+        services.AddScoped<RemoveUserHandler>();
+        
+        services.AddSingleton<GetWorkspaceInvitationsHistoryValidator>();
+        services.AddScoped<GetWorkspaceInvitationsHistoryHandler>();
 
         services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
         services.AddSignalR();
@@ -68,7 +80,10 @@ public static class ServiceExtensions
         // Register Redis Cache Service from shared library
         services.AddScoped<ICacheService, RedisCacheService>();
 
-        services.AddHttpClient<MSHttpClient>();
+        services.AddHttpContextAccessor();
+        services.AddTransient<AuthHeaderForwardingHandler>();
+        services.AddHttpClient<MSHttpClient>()
+            .AddHttpMessageHandler<AuthHeaderForwardingHandler>();
         
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>
@@ -92,7 +107,9 @@ public static class ServiceExtensions
                 rabbitCfg.Message<WorkspaceInviteEvent>(x => x.SetEntityName("workspace-invite"));
                 rabbitCfg.Message<WorkspaceDeletedEvent>(x => x.SetEntityName("workspace-deleted"));    
                 rabbitCfg.Message<WorkspaceInvitationMatchOnRegisterEvent>(x => x.SetEntityName("workspace-invitation-match-on-register"));
-                rabbitCfg.Message<WorkspaceInvitationAcceptedEvent>(x => x.SetEntityName("workspace-invitation-accepted"));
+                rabbitCfg.Message<WorkspaceInvitationResponseEvent>(x => x.SetEntityName("workspace-invitation-response"));
+                rabbitCfg.Message<WorkspaceOwnerChangedEvent>(x => x.SetEntityName("workspace-owner-changed"));
+                rabbitCfg.Message<WorkspaceUserRemovedEvent>(x => x.SetEntityName("workspace-user-removed"));
                 
                 rabbitCfg.ReceiveEndpoint("workspace-service-user-registered-queue", e =>
                 {

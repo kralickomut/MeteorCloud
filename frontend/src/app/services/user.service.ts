@@ -45,6 +45,10 @@ export class UserService {
     return this.http.put<ApiResult<UserUpdateResponse>>(`${this.userUrl}/user/`, data);
   }
 
+  getUsersBulk(userIds: number[]): Observable<ApiResult<User[]>> {
+    return this.http.post<ApiResult<User[]>>(`${this.userUrl}/users/bulk`, { userIds });
+  }
+
   setActualLoggedUser(user: User): void {
     this.userSubject.next(user);
   }
