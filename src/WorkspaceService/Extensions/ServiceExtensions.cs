@@ -65,6 +65,9 @@ public static class ServiceExtensions
         
         services.AddSingleton<GetWorkspaceInvitationsHistoryValidator>();
         services.AddScoped<GetWorkspaceInvitationsHistoryHandler>();
+        
+        services.AddSingleton<IsUserInWorkspaceRequestValidator>();
+        services.AddScoped<IsUserInWorkspaceHandler>();
 
         services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
         services.AddSignalR();

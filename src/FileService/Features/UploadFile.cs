@@ -1,22 +1,31 @@
 using FileService.Services;
 using FluentValidation;
+using MassTransit;
+using MeteorCloud.Communication;
+using MeteorCloud.Messaging.Events.File;
 using MeteorCloud.Shared.ApiResults;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FileService.Features;
 
-public record UploadFileRequest(IFormFile File, string Path);
+public record UploadFileRequest(IFormFile File, int WorkspaceId, string FolderPath, int UploadedBy);
 
 public class UploadFileRequestValidator : AbstractValidator<UploadFileRequest>
 {
     public UploadFileRequestValidator()
     {
         RuleFor(x => x.File).NotNull().WithMessage("File is required");
-        RuleFor(x => x.Path)
-            .NotEmpty().WithMessage("Path is required")
-            .MinimumLength(2).WithMessage("Path must be at least 2 characters long");
+        
+        RuleFor(x => x.FolderPath)
+            .NotNull().WithMessage("Folder path is required")
+            .MinimumLength(0); // 0 means root folder is allowed ("") 
 
+        RuleFor(x => x.WorkspaceId)
+            .GreaterThan(0).WithMessage("Workspace ID must be valid.");
+
+        RuleFor(x => x.UploadedBy)
+            .GreaterThan(0).WithMessage("UploadedBy must be valid.");
     }
 }
 
@@ -24,21 +33,64 @@ public class UploadFileRequestValidator : AbstractValidator<UploadFileRequest>
 public class UploadFileHandler
 {
     private readonly BlobStorageService _blobStorageService;
-    
-    public UploadFileHandler(BlobStorageService blobStorageService)
+    private readonly IPublishEndpoint _publishEndpoint;
+    private readonly MSHttpClient _httpClient;
+
+    public UploadFileHandler(
+        BlobStorageService blobStorageService, 
+        IPublishEndpoint publishEndpoint,
+        MSHttpClient httpClient)
     {
         _blobStorageService = blobStorageService;
+        _publishEndpoint = publishEndpoint;
+        _httpClient = httpClient;
     }
-    
-    public async Task<ApiResult<string>> Handle(UploadFileRequest request, CancellationToken cancellationToken)
+
+    public async Task<IResult> Handle(UploadFileRequest request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
+        var url = MicroserviceEndpoints.WorkspaceService.IsUserInWorkspace(request.UploadedBy, request.WorkspaceId);
+        var  response = await _httpClient.GetAsync<bool>(url, cancellationToken);
+        if (!response.Success)
+        {
+            return Results.BadRequest(new ApiResult<object>(response, false, "Failed to check user in workspace."));
+        }
         
-        var fileUrl = await _blobStorageService.UploadFileAsync(request.File, request.Path, cancellationToken);
-        
-        return string.IsNullOrEmpty(fileUrl) 
-            ? new ApiResult<string>(null, false, "Failed to upload file")
-            : new ApiResult<string>(fileUrl);
+        if (!response.Success)
+        {
+            return Results.BadRequest(new ApiResult<object>(null, false, "User is not in workspace."));
+        }
+
+        var fileId = Guid.NewGuid();
+
+        var fileUrl = await _blobStorageService.UploadFileAsync(
+            request.File,
+            request.WorkspaceId,
+            request.FolderPath,
+            fileId,
+            cancellationToken);
+
+        if (string.IsNullOrEmpty(fileUrl))
+        {
+            return Results.BadRequest(new ApiResult<object>(null, false, "Failed to upload file."));
+        }
+
+        var fileUploadedEvent = new FileUploadedEvent
+        {
+            FileId = fileId.ToString(),
+            FileName = request.File.FileName,
+            WorkspaceId = request.WorkspaceId,
+            FolderPath = request.FolderPath,
+            ContentType = request.File.ContentType ?? "application/octet-stream",
+            Size = request.File.Length,
+            UploadedAt = DateTime.UtcNow,
+            UploadedBy = request.UploadedBy
+        };
+
+        await _publishEndpoint.Publish(fileUploadedEvent);
+
+        return Results.Ok(new ApiResult<string>(fileUrl, true, "File uploaded successfully"));
     }
 }
 
@@ -55,16 +107,27 @@ public static class UploadFileEndpoint
                     return Results.BadRequest(new ApiResult<object>(null, false, "No file was uploaded."));
                 }
 
+                var userId = request.HttpContext.User.FindFirst("id")?.Value;
                 var file = request.Form.Files.First();
-                var path = request.Form["path"].ToString(); 
-            
-                if (string.IsNullOrWhiteSpace(path))
+                var workspaceIdStr = request.Form["workspaceId"].ToString();
+                var folderPath = request.Form["folderPath"].ToString();
+
+                Console.WriteLine($"UserId: {userId}");
+                Console.WriteLine($"WorkspaceId: {workspaceIdStr}");
+                
+                if (!int.TryParse(workspaceIdStr, out var workspaceId))
                 {
-                    return Results.BadRequest(new ApiResult<object>(null, false, "Path is required."));
+                    return Results.BadRequest(new ApiResult<object>(null, false, "Invalid WorkspaceId."));
                 }
 
-                var fileRequest = new UploadFileRequest(file, path);
-                var validationResult = await new UploadFileRequestValidator().ValidateAsync(fileRequest, cancellationToken);
+                if (string.IsNullOrWhiteSpace(userId))
+                {
+                    return Results.BadRequest(new ApiResult<object>(null, false, "User ID is required."));
+                }
+                var uploadRequest = new UploadFileRequest(file, workspaceId, folderPath, int.Parse(userId));
+
+                var validator = new UploadFileRequestValidator();
+                var validationResult = await validator.ValidateAsync(uploadRequest, cancellationToken);
 
                 if (!validationResult.IsValid)
                 {
@@ -72,11 +135,7 @@ public static class UploadFileEndpoint
                     return Results.BadRequest(new ApiResult<IEnumerable<string>>(errorMessages, false, "Validation failed"));
                 }
 
-                var result = await handler.Handle(fileRequest, cancellationToken);
-                
-                return result.Success
-                    ? Results.Ok(new ApiResult<string>(result.Data, true, "File uploaded successfully"))
-                    : Results.BadRequest(new ApiResult<object>(null, false, "File upload failed"));
-            });
+                return await handler.Handle(uploadRequest, cancellationToken);
+            }).RequireAuthorization();
     }
 }

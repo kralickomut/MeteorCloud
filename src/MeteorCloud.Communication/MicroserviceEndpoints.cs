@@ -19,6 +19,7 @@ public static class MicroserviceEndpoints
         const string BaseUrl = "http://workspace_service:5297";
         
         public static string GetWorkspaceById(int id) => BaseUrl + $"/api/workspace/{id}";
+        public static string IsUserInWorkspace(int userId, int workspaceId) => BaseUrl + $"/api/workspaces/is-user-in-workspace/{userId}/{workspaceId}";
     }
     
     public const string AuthService = "http://auth_service:5296";

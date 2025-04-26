@@ -16,13 +16,14 @@ public class BlobStorageService
         _logger = logger;
     }
 
-    public async Task<string> UploadFileAsync(IFormFile file, string path, CancellationToken cancellationToken)
+    public async Task<string> UploadFileAsync(IFormFile file, int workspaceId, string folderPath, Guid fileId, CancellationToken cancellationToken)
     {
         var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
         await containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
 
-        var fileName = $"{Guid.NewGuid()}-{file.FileName}"; // Prevent filename collisions
-        var blobPath = $"{path}/{fileName}"; // Ensure workspace structure
+        var blobPath = string.IsNullOrWhiteSpace(folderPath)
+            ? $"{workspaceId}/{fileId}"
+            : $"{workspaceId}/{folderPath}/{fileId}";
 
         var blobClient = containerClient.GetBlobClient(blobPath);
 

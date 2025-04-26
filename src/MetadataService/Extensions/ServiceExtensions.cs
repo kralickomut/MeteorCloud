@@ -1,18 +1,16 @@
-using System.Text;
-using AuthService.Features.Auth;
-using AuthService.Persistence;
-using AuthService.Services;
 using MassTransit;
+using MetadataService.Consumers;
+using MetadataService.Features;
+using MetadataService.Persistence;
+using MetadataService.Services;
 using MeteorCloud.Caching.Abstraction;
 using MeteorCloud.Caching.Services;
-using MeteorCloud.Messaging.Events;
-using MeteorCloud.Messaging.Events.Auth;
-using MeteorCloud.Shared.Jwt;
-using Microsoft.IdentityModel.Tokens;
+using MeteorCloud.Communication;
+using MeteorCloud.Messaging.Events.File;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
 
-namespace AuthService.Extensions;
+namespace MetadataService.Extensions;
 
 public static class ServiceExtensions
 {
@@ -27,23 +25,11 @@ public static class ServiceExtensions
         // Ensure DapperContext receives IConfiguration
         services.AddSingleton<DapperContext>();
 
-        services.AddScoped<CredentialRepository>();
-        services.AddScoped<CredentialService>();
+        services.AddSingleton<CreateFolderRequestValidator>();
+        services.AddScoped<CreateFolderHandler>();
 
-        services.AddSingleton<LoginValidator>();
-        services.AddScoped<LoginHandler>();
-
-        services.AddSingleton<RegisterValidator>();
-        services.AddScoped<RegisterHandler>();
-        
-        services.AddSingleton<VerifyValidator>();
-        services.AddScoped<VerifyHandler>();
-        
-        services.AddSingleton<ResendCodeValidator>();
-        services.AddScoped<ResendCodeHandler>();
-
-        services.AddSingleton<TokenService>();
-        
+        services.AddScoped<IFileMetadataRepository, FileMetadataRepository>();
+        services.AddScoped<IFileMetadataManager, FileMetadataManager>();
         
         
         // Get Redis connection details from environment variables
@@ -55,15 +41,23 @@ public static class ServiceExtensions
 
         // Register Redis Cache Service from shared library
         services.AddScoped<ICacheService, RedisCacheService>();
+
+        services.AddHttpContextAccessor();
+        services.AddTransient<AuthHeaderForwardingHandler>();
+        services.AddHttpClient<MSHttpClient>()
+            .AddHttpMessageHandler<AuthHeaderForwardingHandler>();
         
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Auth Service API", Version = "v1" });
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Workspace Service API", Version = "v1" });
         });
-
+        
         services.AddMassTransit(busConfigurator =>
         {
+            busConfigurator.AddConsumer<FileUploadedConsumer>();
+            busConfigurator.AddConsumer<FileDeletedConsumer>();
+            
             busConfigurator.UsingRabbitMq((context, rabbitCfg) =>
             {
                 rabbitCfg.Host("rabbitmq", h =>
@@ -72,13 +66,30 @@ public static class ServiceExtensions
                     h.Password("guest");
                 });
                 
-                rabbitCfg.Message<UserRegisteredEvent>(x => x.SetEntityName("user-registered"));
-                rabbitCfg.Message<VerificationCodeResentEvent>(x => x.SetEntityName("verification-code-resent"));
+                rabbitCfg.ReceiveEndpoint("metadata-service-file-uploaded-queue", e =>
+                {
+                    e.Bind("file-uploaded", x =>
+                    {
+                        x.ExchangeType = "fanout";
+                    });
+                    
+                    e.ConfigureConsumer<FileUploadedConsumer>(context);
+                });
+                
+                rabbitCfg.ReceiveEndpoint("metadata-service-file-deleted-queue", e =>
+                {
+                    e.Bind("file-deleted", x =>
+                    {
+                        x.ExchangeType = "fanout";
+                    });
+                    
+                    e.ConfigureConsumer<FileDeletedConsumer>(context);
+                });
                 
                 rabbitCfg.ConfigureEndpoints(context);
+                
             });
         });
-        
         
         return services;
     }

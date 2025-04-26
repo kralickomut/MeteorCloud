@@ -24,6 +24,8 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\MeteorCloud.Communication\MeteorCloud.Communication.csproj" />
+      <ProjectReference Include="..\MeteorCloud.Messaging\MeteorCloud.Messaging.csproj" />
       <ProjectReference Include="..\MeteorCloud.Shared\MeteorCloud.Shared.csproj" />
     </ItemGroup>
 

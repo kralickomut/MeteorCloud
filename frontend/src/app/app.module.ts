@@ -78,6 +78,7 @@ import {RadioButtonModule} from "primeng/radiobutton";
 // TODO: When user is invited to a workspace -> show notification
 // TODO: Resend code on verification page
 // TODO: Add a new user to workspace - DONE
+// TODO: Progress bar for file upload
 
 
 @NgModule({

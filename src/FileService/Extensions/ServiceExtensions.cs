@@ -2,6 +2,8 @@ using Azure.Storage.Blobs;
 using FileService.Features;
 using FileService.Services;
 using MassTransit;
+using MeteorCloud.Communication;
+using MeteorCloud.Messaging.Events.File;
 using Microsoft.OpenApi.Models;
 
 namespace FileService.Extensions;
@@ -29,7 +31,7 @@ public static class ServiceExtensions
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "File Service API", Version = "v1" });
         });
-        /*
+        
         services.AddMassTransit(busConfigurator =>
         {
             busConfigurator.UsingRabbitMq((context, rabbitCfg) =>
@@ -40,11 +42,18 @@ public static class ServiceExtensions
                     h.Password("guest");
                 });
                 
-                rabbitCfg.ConfigureEndpoints(context);
+                rabbitCfg.Message<FileUploadedEvent>(x => x.SetEntityName("file-uploaded"));
+                rabbitCfg.Message<FileDeletedEvent>(x => x.SetEntityName("file-deleted"));
                 
+                rabbitCfg.ConfigureEndpoints(context);
             });
         });
-        */
+        
+        services.AddHttpContextAccessor();
+        services.AddTransient<AuthHeaderForwardingHandler>();
+        services.AddHttpClient<MSHttpClient>()
+            .AddHttpMessageHandler<AuthHeaderForwardingHandler>();
+        
         // Register Azure Blob Storage client
         services.AddSingleton(s =>
         {
