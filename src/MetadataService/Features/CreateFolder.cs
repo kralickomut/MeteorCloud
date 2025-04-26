@@ -35,14 +35,15 @@ public class CreateFolderHandler
     {
         var url = MicroserviceEndpoints.WorkspaceService.IsUserInWorkspace(request.UploadedBy, request.WorkspaceId);
         var response = await _httpClient.GetAsync<bool>(url);
-        
+
         if (!response.Success)
         {
-            _logger.LogWarning("User {UserId} is not in workspace {WorkspaceId}", request.UploadedBy, request.WorkspaceId);
+            _logger.LogWarning("User {UserId} is not in workspace {WorkspaceId}", request.UploadedBy,
+                request.WorkspaceId);
             throw new Exception("User is not authorized to create a folder in this workspace.");
         }
-        
-        
+
+
         var folderMetadata = new FileMetadata
         {
             Id = Guid.NewGuid(),
