@@ -1,4 +1,5 @@
 using Azure.Storage.Blobs;
+using FileService.Consumers;
 using FileService.Features;
 using FileService.Services;
 using MassTransit;
@@ -21,6 +22,11 @@ public static class ServiceExtensions
         services.AddSingleton<DeleteFileRequestValidator>();
         services.AddScoped<DeleteFileHandler>();
         
+        services.AddSingleton<DeleteFolderRequestValidator>();
+        services.AddScoped<DeleteFolderHandler>();
+        
+        services.AddScoped<DownloadFileHandler>();
+        
         services.AddSwaggerGen(options =>
         {
             options.MapType<IFormFile>(() => new OpenApiSchema { Type = "string", Format = "binary" });
@@ -34,6 +40,8 @@ public static class ServiceExtensions
         
         services.AddMassTransit(busConfigurator =>
         {
+            busConfigurator.AddConsumer<WorkspaceDeletedConsumer>();
+            
             busConfigurator.UsingRabbitMq((context, rabbitCfg) =>
             {
                 rabbitCfg.Host("rabbitmq", h =>
@@ -44,6 +52,17 @@ public static class ServiceExtensions
                 
                 rabbitCfg.Message<FileUploadedEvent>(x => x.SetEntityName("file-uploaded"));
                 rabbitCfg.Message<FileDeletedEvent>(x => x.SetEntityName("file-deleted"));
+                rabbitCfg.Message<FolderDeletedEvent>(x => x.SetEntityName("folder-deleted"));
+                
+                rabbitCfg.ReceiveEndpoint("file-service-workspace-deleted-queue", e =>
+                {
+                    e.Bind("workspace-deleted", x =>
+                    {
+                        x.ExchangeType = "fanout";
+                    });
+                    
+                    e.ConfigureConsumer<WorkspaceDeletedConsumer>(context);
+                });
                 
                 rabbitCfg.ConfigureEndpoints(context);
             });

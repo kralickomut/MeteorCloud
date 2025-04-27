@@ -23,7 +23,7 @@ public class WorkspaceDeletedConsumer : IConsumer<WorkspaceDeletedEvent>
         
         _logger.LogInformation("Received WorkspaceDeletedEvent: {WorkspaceId}", message.Id);
 
-        await _notificationRepository.DeleteByWorkspaceIdAsync(message.Id);
+        await _notificationRepository.DeleteByWorkspaceIdAsync(message.WorkspaceId);
         
         _logger.LogInformation("Deleted notifications for WorkspaceId: {WorkspaceId}", message.Id);
 

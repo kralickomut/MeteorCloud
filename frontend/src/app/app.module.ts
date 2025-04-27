@@ -57,6 +57,7 @@ import { ProfileUserComponent } from './pages/profile-user/profile-user.componen
 import {SliderModule} from "primeng/slider";
 import {OverlayPanelModule} from "primeng/overlaypanel";
 import {RadioButtonModule} from "primeng/radiobutton";
+import {ProgressBarModule} from "primeng/progressbar";
 
 
 
@@ -79,6 +80,11 @@ import {RadioButtonModule} from "primeng/radiobutton";
 // TODO: Resend code on verification page
 // TODO: Add a new user to workspace - DONE
 // TODO: Progress bar for file upload
+// TODO: Upload size of workspace on file upload
+// TODO: Delete workspace -> metadata and file delete
+// TODO: Transactions across microservices
+// TODO: Profile images for workspaces and users
+// TODO: Define roles restrictions for users in workspace
 
 
 @NgModule({
@@ -137,6 +143,7 @@ import {RadioButtonModule} from "primeng/radiobutton";
     SliderModule,
     OverlayPanelModule,
     RadioButtonModule,
+    ProgressBarModule,
   ],
   providers: [MessageService, ConfirmationService,
     {

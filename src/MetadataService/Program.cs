@@ -52,6 +52,7 @@ app.UseAuthorization();
 app.UseEndpoints(endpoints =>
 {
     CreateFolderEndpoint.Register(endpoints);
+    BuildTreeEndpoint.Register(endpoints);
 });
 
 

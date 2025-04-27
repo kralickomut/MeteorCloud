@@ -38,7 +38,12 @@
           label="Upload File"
           class="custom-upload-button"
           (click)="fileInput.click()"
+          [disabled]="uploading"
         ></button>
+
+        <div class="upload-progress mt-2" *ngIf="uploading">
+          <p-progressBar [value]="uploadProgress"></p-progressBar>
+        </div>
 
         <input type="file" #fileInput (change)="onFileSelected($event)" hidden />
       </div>
@@ -58,86 +63,101 @@
       </div>
     </p-dialog>
 
-    <!-- Table of Contents -->
-    <div
-      class="table-container"
-      (drop)="onDrop($event)"
-      (dragover)="onDragOver($event)"
-      (dragleave)="onDragLeave($event)"
-      [class.drag-active]="isDragOver"
+    <div class="table-container"
+         (drop)="onDrop($event)"
+         (dragover)="onDragOver($event)"
+         (dragleave)="onDragLeave($event)"
+         [class.drag-active]="isDragOver"
     >
+
       <div class="drop-overlay" *ngIf="isDragOver">
         <i class="pi pi-cloud-upload"></i>
         <span>Drop files to upload</span>
       </div>
 
+      <!-- IF EMPTY -->
+      <div *ngIf="currentFolder?.folders.length === 0 && currentFolder?.files.length === 0" class="empty-state">
+        <div class="empty-text">
+          <i class="pi pi-folder-open mb-3" style="font-size: 2rem; color: #e11d48;"></i>
+          <div>No files or folders yet</div>
+          <div class="text-muted mb-3" style="font-size: 0.9rem;">Start by creating a folder or uploading a file.</div>
 
-      <table class="workspace-table">
-      <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Date Added</th>
-        <th>Added By</th>
-        <th>Status</th>
-        <th>Actions</th>
-      </tr>
-      </thead>
-      <tbody>
-      <tr *ngIf="currentFolder.folders.length === 0 && currentFolder.files.length === 0">
-        <td colspan="6" class="empty-folder-text text-center py-4">
-          <div class="text-muted">This folder is empty. Start by uploading a file or creating a new folder.</div>
-        </td>
-      </tr>
-      <!-- Folders -->
-      <tr *ngFor="let folder of currentFolder.folders">
-        <td (click)="navigateToFolder(folder.name)" class="clickable">
-          <i class="pi pi-folder text-primary me-2"></i> {{ folder.name }}
-        </td>
-        <td>Folder</td>
-        <td><span class="badge badge-folder">–</span></td>
-        <td><span class="badge badge-folder">–</span></td>
-        <td><span class="badge badge-folder">–</span></td>
-        <td>
-          <div class="file-actions">
-            <i
-              class="pi pi-trash"
-              pTooltip="Delete Folder"
-              tooltipPosition="top"
-              (click)="deleteFolder(folder)"
-            ></i>
+          <div class="upload-buttons d-flex gap-2 justify-content-center">
+            <button
+              pButton
+              icon="pi pi-folder-plus"
+              label="New Folder"
+              class="custom-upload-button"
+              (click)="showNewFolderDialog = true"
+            ></button>
+
+            <button
+              pButton
+              icon="pi pi-upload"
+              label="Upload File"
+              class="custom-upload-button"
+              (click)="fileInput.click()"
+            ></button>
           </div>
-        </td>
-      </tr>
 
-      <!-- Files -->
-      <!-- File Rows with Actions -->
-      <tr *ngFor="let file of currentFolder.files">
-        <td><i class="pi pi-file me-2"></i> {{ file.name }}</td>
-        <td>File</td>
-        <td>{{ file.date }}</td>
-        <td>{{ file.addedBy }}</td>
-        <td>
-    <span
-      class="badge"
-      [ngClass]="{
-        'badge-success': file.status === 'Active',
-        'badge-danger': file.status === 'Archived',
-        'badge-info': file.status === 'Draft'
-      }"
-    >
-      {{ file.status }}
+          <input type="file" #fileInput (change)="onFileSelected($event)" hidden />
+        </div>
+      </div>
+
+      <!-- IF HAS FILES/FOLDERS -->
+      <table *ngIf="currentFolder?.folders.length > 0 || currentFolder?.files.length > 0" class="workspace-table">
+        <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Date Added</th>
+          <th>Added By</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Folder Rows -->
+        <tr *ngFor="let folder of currentFolder.folders">
+          <td (click)="navigateToFolder(folder.name)" class="clickable">
+            <i class="pi pi-folder text-primary me-2"></i> {{ folder.name }}
+          </td>
+          <td>Folder</td>
+          <td>{{ folder.uploadedAt ? (folder.uploadedAt | date:'dd-MM-yyyy') : '–' }}</td>
+          <td>{{ folder.uploadedByName || '–' }}</td>
+          <td><span class="badge badge-folder">–</span></td>
+          <td>
+            <div class="file-actions">
+              <i class="pi pi-trash" pTooltip="Delete Folder" tooltipPosition="top" (click)="deleteFolder(folder)"></i>
+            </div>
+          </td>
+        </tr>
+
+        <!-- File Rows -->
+        <tr *ngFor="let file of currentFolder.files">
+          <td><i class="pi pi-file me-2"></i> {{ file.name }}</td>
+          <td>
+            <ng-container *ngIf="getDisplayTypeColorAndIcon(file.contentType) as type">
+    <span class="badge badge-type" [ngClass]="'badge-' + type.color">
+      <i [class]="type.icon" style="margin-right: 0.3rem;"></i>
+      {{ type.label }}
     </span>
-        </td>
-        <td>
-          <div class="file-actions">
-            <i class="pi pi-eye" pTooltip="View" tooltipPosition="top" (click)="viewFile(file)"></i>
-            <i class="pi pi-trash" pTooltip="Delete" tooltipPosition="top" (click)="deleteFile(file)"></i>
-          </div>
-        </td>
-      </tr>
-      </tbody>
-    </table>
+            </ng-container>
+          </td>
+          <td>{{ file.uploadedAt | date:'dd-MM-yyyy' }}</td>
+          <td>{{ file.uploadedByName || '–' }}</td>
+          <td><span class="badge badge-success">Active</span></td>
+          <td>
+            <div class="file-actions">
+              <i class="pi pi-info-circle" pTooltip="File Info" tooltipPosition="top" (click)="viewFile(file)"></i>
+              <i class="pi pi-download" pTooltip="Download" tooltipPosition="top" (click)="downloadFile(file)"></i>
+              <i class="pi pi-trash" pTooltip="Delete" tooltipPosition="top" (click)="deleteFile(file)"></i>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+
     </div>
   </div>
 
@@ -150,42 +170,67 @@
     <div class="mb-2">
       <div class="file-info-label">File name</div>
       <div class="file-info-title">{{ selectedFile.name }}</div>
-      <div class="file-info-subtitle">{{ selectedFile.size ?? '–' }}</div>
+      <div class="file-info-subtitle">{{ selectedFile.size ? formatSize(selectedFile.size) : '–' }}</div>
     </div>
 
     <hr />
 
     <!-- Metadata -->
     <div class="file-info-meta">
-      <ng-container *ngIf="selectedFile.addedBy">
-        <div class="file-info-label">Owner</div>
-        <div class="file-info-value mb-3">{{ selectedFile.addedBy }}</div>
-      </ng-container>
+      <div class="file-info-meta">
+        <div class="file-info-label">File ID</div>
+        <div class="file-info-value mb-3">{{ selectedFile.id }}</div>
 
-      <ng-container *ngIf="selectedFile.createdAt">
-        <div class="file-info-label">Date of create</div>
-        <div class="file-info-value mb-3">{{ selectedFile.createdAt | date: 'dd-MM-yyyy  HH:mm' }}</div>
-      </ng-container>
+        <div class="file-info-label">File name</div>
+        <div class="file-info-value mb-3">{{ selectedFile.name }}</div>
 
-      <ng-container *ngIf="selectedFile.editedAt">
-        <div class="file-info-label">Date of edit</div>
-        <div class="file-info-value mb-3">{{ selectedFile.editedAt | date: 'dd-MM-yyyy  HH:mm' }}</div>
-      </ng-container>
+        <div class="file-info-label">Content type</div>
+        <div class="file-info-value mb-3">{{ selectedFile.contentType }}</div>
 
-      <ng-container *ngIf="selectedFile.type">
-        <div class="file-info-label">Type</div>
-        <div class="file-info-value mb-3">{{ selectedFile.type.toUpperCase() }}</div>
-      </ng-container>
+        <div class="file-info-label">Uploaded at</div>
+        <div class="file-info-value mb-3">{{ selectedFile.uploadedAt | date: 'dd-MM-yyyy HH:mm' }}</div>
 
-      <ng-container *ngIf="selectedFile.resolution">
-        <div class="file-info-label">Resolution</div>
-        <div class="file-info-value mb-3">{{ selectedFile.resolution }}</div>
-      </ng-container>
+        <div class="file-info-label">Uploaded by (User ID)</div>
+        <div class="file-info-value">{{ selectedFile.uploadedByName }}</div>
+      </div>
+    </div>
 
-      <ng-container *ngIf="selectedFile.colorSpace">
-        <div class="file-info-label">Color space</div>
-        <div class="file-info-value">{{ selectedFile.colorSpace }}</div>
-      </ng-container>
+    <div class="d-flex justify-content-end mt-4">
+      <button pButton label="Download" icon="pi pi-download" (click)="downloadFile(selectedFile)"></button>
+      <button pButton label="View File" icon="pi pi-eye" class="p-button-secondary" (click)="openFileDialog(selectedFile)"></button>
     </div>
   </div>
+
+
+  <p-dialog
+    header="{{ viewDialogTitle }}"
+    [(visible)]="viewDialogVisible"
+    [modal]="true"
+    [style]="{ width: '80vw', height: '80vh' }"
+    [dismissableMask]="true"
+    [maximizable]="true"
+  >
+    <div class="file-viewer-wrapper" style="position: relative; height: 100%;">
+      <!-- Always render iframe -->
+      <iframe
+        *ngIf="viewDialogUrl"
+        [src]="viewDialogUrl"
+        width="100%"
+        height="100%"
+        frameborder="0"
+        (load)="onIframeLoad()"
+        (error)="onIframeError()"
+        style="border-radius: 0.5rem;"
+      ></iframe>
+
+      <!-- Loading overlay -->
+      <div
+        *ngIf="isFileLoading"
+        class="loading-overlay d-flex justify-content-center align-items-center"
+        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); z-index: 10;"
+      >
+        <i class="pi pi-spin pi-spinner" style="font-size: 3rem; color: #e11d48;"></i>
+      </div>
+    </div>
+  </p-dialog>
 </div>

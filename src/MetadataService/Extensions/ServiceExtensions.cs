@@ -27,6 +27,9 @@ public static class ServiceExtensions
 
         services.AddSingleton<CreateFolderRequestValidator>();
         services.AddScoped<CreateFolderHandler>();
+        
+        services.AddSingleton<BuildTreeRequestValidator>();
+        services.AddScoped<BuildTreeHandler>();
 
         services.AddScoped<IFileMetadataRepository, FileMetadataRepository>();
         services.AddScoped<IFileMetadataManager, FileMetadataManager>();
@@ -57,6 +60,8 @@ public static class ServiceExtensions
         {
             busConfigurator.AddConsumer<FileUploadedConsumer>();
             busConfigurator.AddConsumer<FileDeletedConsumer>();
+            busConfigurator.AddConsumer<WorkspaceDeletedConsumer>();
+            busConfigurator.AddConsumer<FolderDeletedConsumer>();
             
             busConfigurator.UsingRabbitMq((context, rabbitCfg) =>
             {
@@ -84,6 +89,26 @@ public static class ServiceExtensions
                     });
                     
                     e.ConfigureConsumer<FileDeletedConsumer>(context);
+                });
+                
+                rabbitCfg.ReceiveEndpoint("metadata-service-workspace-deleted-queue", e =>
+                {
+                    e.Bind("workspace-deleted", x =>
+                    {
+                        x.ExchangeType = "fanout";
+                    });
+                    
+                    e.ConfigureConsumer<WorkspaceDeletedConsumer>(context);
+                });
+                
+                rabbitCfg.ReceiveEndpoint("metadata-service-folder-deleted-queue", e =>
+                {
+                    e.Bind("folder-deleted", x =>
+                    {
+                        x.ExchangeType = "fanout";
+                    });
+                    
+                    e.ConfigureConsumer<FolderDeletedConsumer>(context);
                 });
                 
                 rabbitCfg.ConfigureEndpoints(context);

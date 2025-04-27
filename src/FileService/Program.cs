@@ -52,6 +52,9 @@ app.UseEndpoints(endpoints =>
 {
     UploadFileEndpoint.Register(endpoints);
     DeleteFileEndpoint.Register(endpoints);
+    DeleteFolderEndpoint.Register(endpoints);
+    DownloadFileEndpoint.Register(endpoints);
+    ViewFileEndpoint.Register(endpoints);
 });
 
 

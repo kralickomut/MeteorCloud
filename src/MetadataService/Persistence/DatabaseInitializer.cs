@@ -63,8 +63,8 @@ public class DatabaseInitializer
                     ContentType VARCHAR(100) NOT NULL,               -- MIME type
                     UploadedAt TIMESTAMP WITHOUT TIME ZONE NOT NULL, -- Upload timestamp
                     LastModifiedAt TIMESTAMP WITHOUT TIME ZONE,      -- Last modified
-                    UploadedBy INTEGER NOT NULL                      -- Uploader user ID
-                    IsFolder BOOLEAN NOT NULL DEFAULT FALSE,       -- Is this a folder?
+                    UploadedBy INTEGER NOT NULL,                      -- Uploader user ID
+                    IsFolder BOOLEAN NOT NULL DEFAULT FALSE       -- Is this a folder?
                 );
             ";
 

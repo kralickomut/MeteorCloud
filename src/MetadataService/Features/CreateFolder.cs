@@ -14,7 +14,7 @@ public class CreateFolderRequestValidator : AbstractValidator<CreateFolderReques
     {
         RuleFor(x => x.WorkspaceId).NotEmpty();
         RuleFor(x => x.Name).NotEmpty().MaximumLength(255);
-        RuleFor(x => x.Path).NotEmpty().MaximumLength(255);
+        RuleFor(x => x.Path).MaximumLength(255);
     }
 }
 
@@ -31,7 +31,7 @@ public class CreateFolderHandler
         _httpClient = httpClient;
     }
 
-    public async Task Handle(CreateFolderRequest request, CancellationToken cancellationToken)
+    public async Task<ApiResult<bool>> Handle(CreateFolderRequest request, CancellationToken cancellationToken)
     {
         var url = MicroserviceEndpoints.WorkspaceService.IsUserInWorkspace(request.UploadedBy, request.WorkspaceId);
         var response = await _httpClient.GetAsync<bool>(url);
@@ -53,11 +53,13 @@ public class CreateFolderHandler
             ContentType = "folder",
             UploadedAt = DateTime.UtcNow,
             FileName = request.Name,
-            IsFolder = false
+            IsFolder = true
         };
 
         await _fileMetadataManager.CreateAsync(folderMetadata, cancellationToken);
         _logger.LogInformation("Created folder with ID {Id} in workspace {WorkspaceId}", folderMetadata.Id, request.WorkspaceId);
+
+        return new ApiResult<bool>(true);
     }
 }
 
@@ -66,10 +68,10 @@ public class CreateFolderEndpoint
 {
     public static void Register(IEndpointRouteBuilder app)
     {
-        app.MapPost("/api/folder", async 
+        app.MapPost("/api/metadata/folder", async 
                 (
                     CreateFolderRequest request, 
-                    IValidator<CreateFolderRequest> validator, 
+                    CreateFolderRequestValidator validator, 
                     CreateFolderHandler handler) =>
         {
             var validationResult = await validator.ValidateAsync(request);
@@ -79,12 +81,12 @@ public class CreateFolderEndpoint
                 return Results.BadRequest(new ApiResult<IEnumerable<string>>(errorMessages));
             }
 
-            await handler.Handle(request, CancellationToken.None);
-            return Results.Created($"/api/folders/{request.Name}", request);
+            var result = await handler.Handle(request, CancellationToken.None);
+            return result.Success
+                ? Results.Ok(result)
+                : Results.BadRequest(result);
         })
         .WithName("CreateFolder")
-        .Produces(201)
-        .ProducesValidationProblem()
         .RequireAuthorization();
     }
 }

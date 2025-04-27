@@ -9,4 +9,8 @@ public interface IFileMetadataRepository
     Task<IEnumerable<FileMetadata>> GetByWorkspaceAsync(int workspaceId, CancellationToken cancellationToken);
     Task DeleteAsync(Guid id, CancellationToken cancellationToken);
     Task UpdateAsync(FileMetadata file, CancellationToken cancellationToken);
+    
+    Task<bool> DeleteByWorkspaceAsync(int workspaceId, CancellationToken cancellationToken);
+    
+    Task<bool> DeleteFolderAsync(string path, CancellationToken cancellationToken);
 }

@@ -1,7 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { ConfirmationService } from 'primeng/api';
+import {ConfirmationService, MessageService} from 'primeng/api';
 import { WorkspaceFile } from '../../models/WorkspaceFile';
+import {MetadataService} from "../../services/metadata.service";
+import {UserService} from "../../services/user.service";
+import {FileService} from "../../services/file.service";
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-workspace-table',
@@ -9,112 +13,56 @@ import { WorkspaceFile } from '../../models/WorkspaceFile';
   styleUrl: './workspace-table.component.scss'
 })
 export class WorkspaceTableComponent implements OnInit {
-  workspaceId: string = '';
-  workspace: any;
-  currentPath: string[] = [];
-  currentFolder: any;
 
-  constructor(private route: ActivatedRoute, private confirmationService: ConfirmationService) {}
+  workspaceId: string = '';
+  workspace: any = null;
+  currentFolder: any = null;
+  currentPath: string[] = [];
+  userId: number = 0;
+  uploadProgress: number = 0;
+  uploading: boolean = false;
+
+  viewUrl: SafeResourceUrl | null = null;
+  viewDialogVisible = false;
+  viewDialogUrl: SafeResourceUrl | null = null;
+  viewDialogTitle = '';
+
+  constructor(
+    private route: ActivatedRoute,
+    private confirmationService: ConfirmationService,
+    private workspaceApi: MetadataService,
+    private userService: UserService,
+    private fileService: FileService,
+    private sanitizer: DomSanitizer,
+    private messageService: MessageService
+  ) {}
 
   ngOnInit(): void {
     this.workspaceId = this.route.snapshot.paramMap.get('id') ?? '';
 
-    const files: WorkspaceFile[] = [
-      {
-        name: 'plan.pdf',
-        addedBy: 'Alice',
-        date: '2025-03-25',
-        createdAt: new Date('2025-03-25T10:00:00'),
-        editedAt: new Date('2025-03-25T12:00:00'),
-        type: 'pdf',
-        size: '2MB',
-        resolution: '582 × 530',
-        colorSpace: 'RGB',
-        status: 'Active'
-      },
-      {
-        name: 'notes.txt',
-        addedBy: 'Bob',
-        date: '2025-03-26',
-        createdAt: new Date('2025-03-26T10:00:00'),
-        editedAt: new Date('2025-03-26T12:00:00'),
-        type: 'txt',
-        size: '500KB',
-        resolution: '582 × 530',
-        colorSpace: 'RGB',
-        status: 'Draft'
-      },
-      {
-        name: 'readme.md',
-        addedBy: 'Charlie',
-        date: '2025-03-27',
-        createdAt: new Date('2025-03-27T10:00:00'),
-        editedAt: new Date('2025-03-27T12:00:00'),
-        type: 'md',
-        size: '800KB',
-        resolution: '582 × 530',
-        colorSpace: 'RGB',
-        status: 'Draft'
-      },
-      {
-        name: 'logo.svg',
-        addedBy: 'Alice',
-        date: '2025-03-28',
-        createdAt: new Date('2025-03-28T10:00:00'),
-        editedAt: new Date('2025-03-28T12:00:00'),
-        type: 'svg',
-        size: '1MB',
-        resolution: '582 × 530',
-        colorSpace: 'RGB',
-        status: 'Active'
-      },
-      {
-        name: 'logo.png',
-        addedBy: 'Bob',
-        date: '2025-03-29',
-        createdAt: new Date('2025-03-29T10:00:00'),
-        editedAt: new Date('2025-03-29T12:00:00'),
-        type: 'png',
-        size: '1MB',
-        resolution: '582 × 530',
-        colorSpace: 'RGB',
-        status: 'Archived'
+    this.userService.user$.subscribe((user) => {
+      if (user) {
+        this.userId = user.id;
       }
-    ];
+    });
 
-    this.workspace = {
-      id: this.workspaceId,
-      name: 'Marketing Campaign',
-      collaborators: [
-        { name: 'Alice', role: 'Owner' },
-        { name: 'Bob', role: 'Editor' },
-        { name: 'Charlie', role: 'Viewer' }
-      ],
-      structure: {
-        name: 'root',
-        folders: [
-          {
-            name: 'Design System',
-            folders: [],
-            files: files
-          },
-          {
-            name: 'Assets',
-            folders: [
-              {
-                name: 'Icons',
-                folders: [],
-                files: files
-              }
-            ],
-            files: files
-          }
-        ],
-        files: files
+    this.fetchWorkspaceTree();
+  }
+
+  fetchWorkspaceTree(): void {
+    this.workspaceApi.getTreeByWorkspaceId(Number(this.workspaceId)).subscribe({
+      next: (res) => {
+        this.workspace = {
+          id: this.workspaceId,
+          structure: res.data
+        };
+        this.currentPath = [];
+        this.updateView();
+      },
+      error: (err) => {
+        console.error('Failed to fetch workspace tree:', err);
       }
-    };
-
-    this.updateView();
+    });
   }
 
   updateView(): void {
@@ -156,7 +104,31 @@ export class WorkspaceTableComponent implements OnInit {
       acceptButtonStyleClass: 'p-button-danger',
       rejectButtonStyleClass: 'p-button-text',
       accept: () => {
-        this.currentFolder.files = this.currentFolder.files.filter((f: any) => f.name !== file.name);
+        let parts: string[] = [];
+
+        parts.push(this.workspaceId);
+
+        if (this.currentPath.length > 0) {
+          parts = parts.concat(this.currentPath);
+        }
+
+        parts.push(file.id); // <-- Use file.id (not file.name!)
+
+        const fullPath = parts.join('/');
+
+        this.fileService.deleteFile(fullPath).subscribe({
+          next: (res) => {
+            if (res.success) {
+              this.currentFolder.files = this.currentFolder.files.filter((f: any) => f.id !== file.id);
+              console.log('✅ File deleted');
+            } else {
+              console.error('❌ Failed to delete file', res.error?.message);
+            }
+          },
+          error: (err) => {
+            console.error('❌ Failed to delete file', err);
+          }
+        });
       }
     });
   }
@@ -165,22 +137,64 @@ export class WorkspaceTableComponent implements OnInit {
     const file: File = event.target.files[0];
     if (!file) return;
 
-    const now = new Date();
+    const fullPath = this.buildFullPath('');
+    this.uploading = true;
+    this.uploadProgress = 0;
 
-    const newFile: WorkspaceFile = {
-      name: file.name,
-      addedBy: 'You',
-      date: now.toISOString().split('T')[0],
-      createdAt: now,
-      editedAt: now,
-      type: file.name.split('.').pop()?.toLowerCase() || 'unknown',
-      size: `${(file.size / 1024 / 1024).toFixed(1)}MB`,
-      resolution: 'Unknown',
-      colorSpace: 'Unknown',
-      status: 'Active'
-    };
+    this.fileService.uploadFile(file, Number(this.workspaceId), fullPath).subscribe({
+      next: (event) => {
+        if (event.type === 1 && event.total) {
+          // Progress event
+          this.uploadProgress = Math.round((100 * event.loaded) / event.total);
+        } else if (event.type === 4) {
+          // Upload completed
+          this.uploadProgress = 100;
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Upload Completed',
+            detail: `${file.name} was uploaded successfully!`,
+            life: 3000
+          });
 
-    this.currentFolder.files.push(newFile);
+          setTimeout(() => {
+            this.uploading = false;
+            this.uploadProgress = 0;
+            this.fetchWorkspaceTree();
+          }, 500); // Small delay so user sees 100%
+        }
+      },
+      error: (err) => {
+        console.error('❌ Upload failed', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Upload Failed',
+          detail: `Failed to upload ${file.name}.`,
+          life: 4000
+        });
+        this.uploading = false;
+        this.uploadProgress = 0;
+      }
+    });
+  }
+
+  private buildFullPath(fileOrFolderName: string = ''): string {
+    let parts: string[] = [];
+
+    // Always start with workspaceId
+    parts.push(this.workspaceId);
+
+    // Add currentPath if user is inside some folder
+    if (this.currentPath.length > 0) {
+      parts = parts.concat(this.currentPath);
+    }
+
+    // If fileOrFolderName is provided (file or folder name), add it
+    if (fileOrFolderName) {
+      parts.push(fileOrFolderName);
+    }
+
+    // Join everything with '/'
+    return parts.join('/');
   }
 
 
@@ -190,15 +204,29 @@ export class WorkspaceTableComponent implements OnInit {
   createFolder(): void {
     if (!this.newFolderName.trim()) return;
 
-    const newFolder = {
+    let fullPath = this.workspaceId; // Always start with workspaceId
+
+    if (this.currentPath.length > 0) {
+      fullPath += '/' + this.currentPath.join('/');
+    }
+
+    const payload = {
+      workspaceId: Number(this.workspaceId),
       name: this.newFolderName.trim(),
-      folders: [],
-      files: []
+      path: fullPath,
+      uploadedBy: this.userId
     };
 
-    this.currentFolder.folders.push(newFolder);
-    this.newFolderName = '';
-    this.showNewFolderDialog = false;
+    this.workspaceApi.createFolder(payload).subscribe({
+      next: () => {
+        this.newFolderName = '';
+        this.showNewFolderDialog = false;
+        this.fetchWorkspaceTree(); // Reload whole tree
+      },
+      error: (err) => {
+        console.error('Failed to create folder:', err);
+      }
+    });
   }
 
   cancelFolderCreation(): void {
@@ -216,7 +244,39 @@ export class WorkspaceTableComponent implements OnInit {
       acceptButtonStyleClass: 'p-button-danger',
       rejectButtonStyleClass: 'p-button-text',
       accept: () => {
-        this.currentFolder.folders = this.currentFolder.folders.filter((f: any) => f !== folder);
+        const fullPath = this.buildFullPath(folder.name); // Build with workspaceId
+        this.fileService.deleteFolder(fullPath).subscribe({
+          next: (res) => {
+            if (res.success) {
+              this.currentFolder.folders = this.currentFolder.folders.filter((f: any) => f.name !== folder.name);
+              console.log('✅ Folder deleted');
+            } else {
+              console.error('❌ Failed to delete folder', res.error?.message);
+            }
+          },
+          error: (err) => {
+            console.error('❌ Failed to delete folder', err);
+          }
+        });
+      }
+    });
+  }
+
+  downloadFile(file: any): void {
+    const fullPath = this.buildFullPath(file.id);
+
+    this.fileService.downloadFile(fullPath).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.name;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        console.log('✅ File download started');
+      },
+      error: (err) => {
+        console.error('❌ Failed to download file', err);
       }
     });
   }
@@ -268,6 +328,76 @@ export class WorkspaceTableComponent implements OnInit {
 
   closeFileDetails(): void {
     this.selectedFile = null;
+  }
+
+  formatSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const size = parseFloat((bytes / Math.pow(k, i)).toFixed(2));
+    return `${size} ${sizes[i]}`;
+  }
+
+  isFileLoading = false; // 🔥 NEW: spinner control
+
+  openFileDialog(file: any): void {
+    const fullPath = this.buildFullPath(file.id);
+    console.log('Full path for view:', fullPath);
+    const fileUrl = `${this.fileService.apiUrl}/view/${encodeURIComponent(fullPath)}`;
+
+    this.viewDialogTitle = file.name;
+    this.isFileLoading = true;
+
+    if (file.contentType.includes('pdf') || file.contentType.startsWith('image/')) {
+      this.viewDialogUrl = this.sanitizer.bypassSecurityTrustResourceUrl(fileUrl);
+
+      // 🚀 Important: open dialog in next microtask!
+      setTimeout(() => {
+        this.viewDialogVisible = true;
+      }, 0);
+
+    } else if (
+      file.contentType.includes('word') ||
+      file.contentType.includes('excel') ||
+      file.contentType.includes('presentation')
+    ) {
+      const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
+      this.viewDialogUrl = this.sanitizer.bypassSecurityTrustResourceUrl(officeViewerUrl);
+
+      setTimeout(() => {
+        this.viewDialogVisible = true;
+      }, 0);
+    } else {
+      this.downloadFile(file);
+    }
+  }
+
+  onIframeLoad(): void {
+    console.log('✅ File loaded successfully in iframe');
+    this.isFileLoading = false;
+  }
+
+  onIframeError(): void {
+    console.error('❌ Iframe failed to load the file, fallback to download');
+    this.isFileLoading = false;
+    if (this.selectedFile) {
+      this.downloadFile(this.selectedFile);
+    }
+  }
+
+  getDisplayTypeColorAndIcon(contentType: string): { label: string, color: string, icon: string } {
+    if (!contentType) return { label: 'Unknown', color: 'gray', icon: 'pi pi-file' };
+
+    if (contentType.includes('pdf')) return { label: 'PDF', color: 'red', icon: 'pi pi-file-pdf' };
+    if (contentType.includes('presentation')) return { label: 'PPTX', color: 'orange', icon: 'pi pi-file-ppt' };
+    if (contentType.includes('spreadsheet') || contentType.includes('excel')) return { label: 'XLSX', color: 'green', icon: 'pi pi-file-excel' };
+    if (contentType.includes('word')) return { label: 'DOCX', color: 'blue', icon: 'pi pi-file-word' };
+    if (contentType.startsWith('image/')) return { label: 'Image', color: 'purple', icon: 'pi pi-image' };
+    if (contentType.startsWith('video/')) return { label: 'Video', color: 'teal', icon: 'pi pi-video' };
+    if (contentType.startsWith('audio/')) return { label: 'Audio', color: 'pink', icon: 'pi pi-volume-up' };
+
+    return { label: 'File', color: 'gray', icon: 'pi pi-file' };
   }
 
 }

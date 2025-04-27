@@ -63,4 +63,78 @@ public class FileMetadataRepository : IFileMetadataRepository
         await using var connection = await _context.CreateConnectionAsync();
         await connection.ExecuteAsync(new CommandDefinition(sql, file, cancellationToken: cancellationToken));
     }
+
+    public async Task<bool> DeleteByWorkspaceAsync(int workspaceId, CancellationToken cancellationToken)
+    {
+        const string sql = "DELETE FROM FileMetadata WHERE WorkspaceId = @WorkspaceId";
+
+        await using var connection = await _context.CreateConnectionAsync();
+        var rowsAffected = await connection.ExecuteAsync(new CommandDefinition(sql, new { WorkspaceId = workspaceId }, cancellationToken: cancellationToken));
+        
+        return rowsAffected > 0;
+    }
+    
+    public async Task<bool> DeleteFolderAsync(string folderPath, CancellationToken cancellationToken = default)
+{
+    if (string.IsNullOrWhiteSpace(folderPath))
+    {
+        Console.WriteLine("❌ Folder path is empty.");
+        return false;
+    }
+
+    var segments = folderPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+    if (segments.Length == 0 || !int.TryParse(segments[0], out int workspaceId))
+    {
+        Console.WriteLine($"❌ Cannot extract workspaceId from path '{folderPath}'");
+        return false;
+    }
+
+    var folderName = segments.Last(); // The folder we are deleting
+    var parentPath = segments.Length > 1 
+        ? string.Join('/', segments.Take(segments.Length - 1)) // Take everything except last
+        : ""; // If only workspaceId is there, root
+
+    const string sql = @"
+        DELETE FROM FileMetadata
+        WHERE WorkspaceId = @WorkspaceId
+          AND (
+              Path = @FolderPath
+              OR Path LIKE @FolderPathPrefix
+              OR (Path = @ParentPath AND FileName = @FolderName AND ContentType = 'folder')
+          );
+    ";
+
+    await using var connection = await _context.CreateConnectionAsync();
+    await using var transaction = await connection.BeginTransactionAsync(cancellationToken);
+
+    try
+    {
+        int affectedRows = await connection.ExecuteAsync(new CommandDefinition(
+            sql,
+            new
+            {
+                WorkspaceId = workspaceId,
+                FolderPath = string.Join('/', segments),                // '1/ASd'
+                FolderPathPrefix = string.Join('/', segments) + "/%",   // '1/ASd/%'
+                ParentPath = parentPath,                                // '1'
+                FolderName = folderName                                 // 'ASd'
+            },
+            transaction: transaction,
+            cancellationToken: cancellationToken
+        ));
+
+        await transaction.CommitAsync(cancellationToken);
+
+        Console.WriteLine($"✅ Deleted {affectedRows} item(s) related to folder '{folderPath}' (WorkspaceId: {workspaceId})");
+
+        return affectedRows > 0;
+    }
+    catch (Exception ex)
+    {
+        await transaction.RollbackAsync(cancellationToken);
+        Console.WriteLine($"❌ Failed to delete folder '{folderPath}' in workspace {workspaceId}: {ex.Message}");
+        return false;
+    }
+}
+   
 }

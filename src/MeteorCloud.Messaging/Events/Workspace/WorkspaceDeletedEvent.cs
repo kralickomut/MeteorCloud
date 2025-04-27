@@ -1,13 +1,13 @@
 namespace MeteorCloud.Messaging.Events.Workspace;
 
-public class WorkspaceDeletedEvent
+public class WorkspaceDeletedEvent : BaseEvent
 {
-    public int Id { get; }
+    public int WorkspaceId { get; }
     public IEnumerable<int> UserIds { get; }
     
-    public WorkspaceDeletedEvent(int id, IEnumerable<int> userIds)
+    public WorkspaceDeletedEvent(int workspaceId, IEnumerable<int> userIds)
     {
-        Id = id;
+        WorkspaceId = workspaceId;
         UserIds = userIds;
     }
 }

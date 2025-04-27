@@ -239,8 +239,8 @@ public class WorkspaceManager
         if (updatedWorkspace != null)
         {
             await _cache.RemoveByPrefixAsync(_serviceCacheKey, "user-workspaces", $"{workspace.OwnerId}-page-");
-            await _cache.SetAsync(_serviceCacheKey, "workspace", workspace.Id.ToString(),
-                JsonConvert.SerializeObject(updatedWorkspace), TimeSpan.FromMinutes(10));
+            await _cache.RemoveAsync(_serviceCacheKey, "workspace", workspace.Id.ToString());
+            await _cache.RemoveAsync(_serviceCacheKey, "workspace-users", workspace.Id.ToString());
         }
 
         return updatedWorkspace != null;

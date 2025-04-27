@@ -1,6 +1,8 @@
 using System.ComponentModel.DataAnnotations;
 using FileService.Services;
 using FluentValidation;
+using MassTransit;
+using MeteorCloud.Messaging.Events.File;
 using MeteorCloud.Shared.ApiResults;
 
 namespace FileService.Features;
@@ -20,21 +22,35 @@ public class DeleteFileRequestValidator : AbstractValidator<DeleteFileRequest>
 public class DeleteFileHandler
 {
     private readonly BlobStorageService _blobStorageService;
+    private readonly ILogger<DeleteFileHandler> _logger;
+    private readonly IPublishEndpoint _publishEndpoint;
 
-    public DeleteFileHandler(BlobStorageService blobStorageService)
+    public DeleteFileHandler(BlobStorageService blobStorageService, ILogger<DeleteFileHandler> logger,
+        IPublishEndpoint publishEndpoint)
     {
+        _logger = logger;
+        _publishEndpoint = publishEndpoint;
         _blobStorageService = blobStorageService;
     }
+    
 
-    public async Task<ApiResult<object>> Handle(DeleteFileRequest request, CancellationToken cancellationToken)
+    public async Task<ApiResult<bool>> Handle(DeleteFileRequest request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
         var result = await _blobStorageService.DeleteFileAsync(request.Path, cancellationToken);
+
+        if (result)
+        {
+            await _publishEndpoint.Publish(new FileDeletedEvent()
+            {
+                FileId = request.Path.Split("/").Last(),
+            });
+        }
         
         return result
-            ? new ApiResult<object>(null)
-            : new ApiResult<object>(null, false, "Failed to delete file");
+            ? new ApiResult<bool>(true)
+            : new ApiResult<bool>(false, false, "Failed to delete file");
     }
 }
 

@@ -66,7 +66,6 @@ public class UploadFileHandler
 
         var fileUrl = await _blobStorageService.UploadFileAsync(
             request.File,
-            request.WorkspaceId,
             request.FolderPath,
             fileId,
             cancellationToken);
