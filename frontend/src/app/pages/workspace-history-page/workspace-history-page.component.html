@@ -78,21 +78,20 @@
       <!-- FILE HISTORY TAB -->
       <ng-container *ngIf="activeTab === 'files'">
         <tr *ngFor="let file of paginatedFileItems">
-          <td>{{ file.file }}</td>
+          <td>{{ file.fileName }}</td>
           <td>
             <span
               class="badge"
               [ngClass]="{
-                'badge-success': file.action === 'Created',
                 'badge-danger': file.action === 'Deleted',
-                'badge-info': file.action === 'Updated'
+                'badge-info': file.action === 'Uploaded'
               }"
             >
               {{ file.action }}
             </span>
           </td>
-          <td>{{ file.user }}</td>
-          <td>{{ file.date }}</td>
+          <td>{{ file.actionByName }}</td>
+          <td>{{ file.createdOn | date: 'short'}}</td>
         </tr>
       </ng-container>
 

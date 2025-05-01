@@ -6,46 +6,57 @@
     <!-- Breadcrumbs + Upload Button Row -->
     <div class="d-flex justify-content-between align-items-center mb-3">
       <!-- Breadcrumbs (left) -->
-      <div class="breadcrumbs breadcrumb-nav">
-        <ng-container *ngFor="let folder of breadcrumbPath; let i = index">
-          <a
-            href="#"
-            class="breadcrumb-item"
-            (click)="navigateToBreadcrumb(i - 1); $event.preventDefault()"
-            [class.active]="i === breadcrumbPath.length - 1"
-          >
-            {{ folder }}
-          </a>
-          <span *ngIf="i < breadcrumbPath.length - 1">></span>
-        </ng-container>
+      <div class="flex-grow-1">
+        <div class="breadcrumbs breadcrumb-nav">
+          <ng-container *ngFor="let folder of breadcrumbPath; let i = index">
+            <a
+              href="#"
+              class="breadcrumb-item"
+              (click)="navigateToBreadcrumb(i - 1); $event.preventDefault()"
+              [class.active]="i === breadcrumbPath.length - 1"
+            >
+              {{ folder }}
+            </a>
+            <span *ngIf="i < breadcrumbPath.length - 1">></span>
+          </ng-container>
+        </div>
       </div>
 
-      <!-- Upload Button (right) -->
-      <div class="upload-section">
-        <!-- New Folder Button -->
-        <button
-          pButton
-          icon="pi pi-folder-plus"
-          label="New Folder"
-          class="custom-upload-button"
-          (click)="showNewFolderDialog = true"
-        ></button>
+      <!-- Upload Section: Buttons + Progress Bar (visually stacked) -->
+      <div class="upload-section-wrapper d-flex flex-column align-items-end w-100">
+        <div class="upload-section d-flex gap-2">
+          <button
+            pButton
+            icon="pi pi-folder-plus"
+            label="New Folder"
+            class="custom-upload-button"
+            (click)="showNewFolderDialog = true"
+          ></button>
 
-        <!-- Upload File Button -->
-        <button
-          pButton
-          icon="pi pi-upload"
-          label="Upload File"
-          class="custom-upload-button"
-          (click)="fileInput.click()"
-          [disabled]="uploading"
-        ></button>
+          <button
+            pButton
+            icon="pi pi-upload"
+            label="Upload File"
+            class="custom-upload-button"
+            (click)="fileInput.click()"
+            [disabled]="uploading"
+          ></button>
 
-        <div class="upload-progress mt-2" *ngIf="uploading">
-          <p-progressBar [value]="uploadProgress"></p-progressBar>
+          <input type="file" #fileInput (change)="onFileSelected($event)" hidden />
         </div>
 
-        <input type="file" #fileInput (change)="onFileSelected($event)" hidden />
+        <!-- Upload Progress Bar Below Buttons -->
+        <div class="upload-progress-wrapper mt-2 w-100" *ngIf="uploading">
+          <div class="d-flex justify-content-between mb-1 text-sm text-muted">
+            <span>Uploading...</span>
+            <span>{{ uploadProgress }}%</span>
+          </div>
+          <p-progressBar
+            [value]="uploadProgress"
+            [style]="{ height: '0.7rem', borderRadius: '0.5rem' }"
+            styleClass="custom-progress-bar"
+          ></p-progressBar>
+        </div>
       </div>
     </div>
 
@@ -162,7 +173,7 @@
   </div>
 
   <!-- File Info Card (Right side) -->
-  <div class="file-info-card bg-white shadow-sm p-4 rounded" *ngIf="selectedFile">
+  <div class="file-info-card bg-white shadow-sm p-4" *ngIf="selectedFile">
     <!-- Close Icon -->
     <i class="pi pi-times file-close-icon" (click)="closeFileDetails()"></i>
 
@@ -196,8 +207,21 @@
     </div>
 
     <div class="d-flex justify-content-end mt-4">
-      <button pButton label="Download" icon="pi pi-download" (click)="downloadFile(selectedFile)"></button>
-      <button pButton label="View File" icon="pi pi-eye" class="p-button-secondary" (click)="openFileDialog(selectedFile)"></button>
+      <button
+        pButton
+        label="Download"
+        icon="pi pi-download"
+        style="margin-right: 10px;"
+        (click)="downloadFile(selectedFile, selectedFilePath)"
+      ></button>
+
+      <button
+        pButton
+        label="View File"
+        icon="pi pi-eye"
+        class="p-button-secondary"
+        (click)="openFileDialog(selectedFile, selectedFilePath)"
+      ></button>
     </div>
   </div>
 
@@ -210,10 +234,36 @@
     [dismissableMask]="true"
     [maximizable]="true"
   >
+    <!-- Dialog Content -->
     <div class="file-viewer-wrapper" style="position: relative; height: 100%;">
-      <!-- Always render iframe -->
+
+      <!-- Video -->
+      <video
+        *ngIf="selectedFile?.contentType.startsWith('video/') && viewDialogUrl"
+        [src]="viewDialogUrl"
+        controls
+        autoplay
+        style="width: 100%; height: 100%; border-radius: 0.5rem;"
+      ></video>
+
+      <!-- Audio -->
+      <audio
+        *ngIf="selectedFile?.contentType.startsWith('audio/') && viewDialogUrl"
+        [src]="viewDialogUrl"
+        controls
+        style="width: 100%; margin-top: 1rem;"
+      ></audio>
+
+      <!-- Plain Text Viewer -->
+      <div *ngIf="plainTextContent" class="plain-text-preview" style="height: 100%; overflow: auto;">
+        <pre style="white-space: pre-wrap; font-family: monospace; font-size: 0.9rem;">{{ plainTextContent }}</pre>
+      </div>
+
+      <!-- Office or PDF/Image fallback via iframe -->
       <iframe
-        *ngIf="viewDialogUrl"
+        *ngIf="!selectedFile?.contentType.startsWith('video/') &&
+           !selectedFile?.contentType.startsWith('audio/') &&
+           !plainTextContent && viewDialogUrl"
         [src]="viewDialogUrl"
         width="100%"
         height="100%"
@@ -223,7 +273,7 @@
         style="border-radius: 0.5rem;"
       ></iframe>
 
-      <!-- Loading overlay -->
+      <!-- Spinner -->
       <div
         *ngIf="isFileLoading"
         class="loading-overlay d-flex justify-content-center align-items-center"

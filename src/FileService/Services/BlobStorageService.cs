@@ -1,3 +1,4 @@
+using System.Text;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using FileService.Models;
@@ -27,10 +28,13 @@ public class BlobStorageService
             : $"{folderPath}/{fileId}";
 
         var blobClient = containerClient.GetBlobClient(blobPath);
+        
+        // Make sure the blob name is safe for Azure Storage
+        var safeName = SanitizeFileName(file.FileName);
 
         var metadata = new Dictionary<string, string>
         {
-            { "originalfilename", file.FileName } //  Save original filename into metadata
+            { "originalfilename", safeName } //  Save original filename into metadata
         };
 
         await using var stream = file.OpenReadStream();
@@ -47,50 +51,41 @@ public class BlobStorageService
         return blobClient.Uri.ToString();
     }
     
-    public async Task<bool> DeleteFileAsync(string path, CancellationToken cancellationToken = default)
+    public async Task<(bool Success, long? FileSizeBytes, string? FileName)> DeleteFileAsync(string path, CancellationToken cancellationToken = default)
     {
         try
         {
             _logger.LogInformation($"Attempting to delete file at path: {path}");
 
             var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
-            if (containerClient == null)
-            {
-                _logger.LogError("Blob container client is null. Check if the connection string is correct.");
-                return false;
-            }
-
             var blobClient = containerClient.GetBlobClient(path);
-            _logger.LogInformation($"BlobClient created with URI: {blobClient.Uri}");
 
             if (!await blobClient.ExistsAsync(cancellationToken))
             {
                 _logger.LogWarning($"Blob does not exist: {blobClient.Uri}");
-                return false;
+                return (false, null, null);
             }
 
-            var response = await blobClient.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots, cancellationToken: cancellationToken);
-        
-            if (response)
-            {
-                _logger.LogInformation($"File successfully deleted: {blobClient.Uri}");
-            }
-            else
-            {
-                _logger.LogWarning($"File deletion returned false for: {blobClient.Uri}");
-            }
+            var properties = await blobClient.GetPropertiesAsync(cancellationToken: cancellationToken);
+            var size = properties.Value.ContentLength;
 
-            return response;
-        }
-        catch (Azure.RequestFailedException ex)
-        {
-            _logger.LogError($"Azure Storage request failed: {ex.Message} | Error Code: {ex.ErrorCode}");
-            return false;
+            // Extract original file name from metadata
+            properties.Value.Metadata.TryGetValue("originalfilename", out var originalFileName);
+
+            var response = await blobClient.DeleteIfExistsAsync(
+                DeleteSnapshotsOption.IncludeSnapshots,
+                cancellationToken: cancellationToken);
+
+            _logger.LogInformation(response
+                ? $"File successfully deleted: {blobClient.Uri}"
+                : $"File deletion returned false for: {blobClient.Uri}");
+
+            return (response, size, originalFileName);
         }
         catch (Exception ex)
         {
-            _logger.LogError($"Unexpected error while deleting file: {ex.Message}");
-            return false;
+            _logger.LogError($"Error deleting blob: {ex.Message}");
+            return (false, null, null);
         }
     }
     
@@ -165,5 +160,12 @@ public class BlobStorageService
             FileName = fileName,
             Stream = response.Value.Content
         };
+    }
+    
+    private string SanitizeFileName(string name)
+    {
+        return string.Concat(name.Normalize(NormalizationForm.FormD)
+                .Where(c => char.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark))
+            .Replace(" ", "_");
     }
 }

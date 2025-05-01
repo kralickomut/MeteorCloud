@@ -1,4 +1,5 @@
 using AuditService.Extensions;
+using AuditService.Features.File;
 using MeteorCloud.Shared.Jwt;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -51,7 +52,7 @@ app.UseAuthorization();
 
 app.UseEndpoints(endpoints =>
 {
-
+    GetFileHistoryByWorkspaceIdEndpoint.Register(endpoints);
 });
 
 

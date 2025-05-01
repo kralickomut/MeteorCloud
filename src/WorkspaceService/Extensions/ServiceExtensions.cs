@@ -2,6 +2,7 @@ using MassTransit;
 using MeteorCloud.Caching.Abstraction;
 using MeteorCloud.Caching.Services;
 using MeteorCloud.Communication;
+using MeteorCloud.Messaging.Events.File;
 using MeteorCloud.Messaging.Events.Workspace;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.OpenApi.Models;
@@ -97,6 +98,8 @@ public static class ServiceExtensions
         services.AddMassTransit(busConfigurator =>
         {
             busConfigurator.AddConsumer<UserRegisteredConsumer>();
+            busConfigurator.AddConsumer<FileUploadedConsumer>();
+            busConfigurator.AddConsumer<FileDeletedConsumer>();
             
             busConfigurator.UsingRabbitMq((context, rabbitCfg) =>
             {
@@ -122,6 +125,26 @@ public static class ServiceExtensions
                     });
                     
                     e.ConfigureConsumer<UserRegisteredConsumer>(context);
+                });
+                
+                rabbitCfg.ReceiveEndpoint("workspace-service-file-uploaded-queue", e =>
+                {
+                    e.Bind("file-uploaded", x =>
+                    {
+                        x.ExchangeType = "fanout";
+                    });
+                    
+                    e.ConfigureConsumer<FileUploadedConsumer>(context);
+                });
+                
+                rabbitCfg.ReceiveEndpoint("workspace-service-file-deleted-queue", e =>
+                {
+                    e.Bind("file-deleted", x =>
+                    {
+                        x.ExchangeType = "fanout";
+                    });
+                    
+                    e.ConfigureConsumer<FileDeletedConsumer>(context);
                 });
                 
                 

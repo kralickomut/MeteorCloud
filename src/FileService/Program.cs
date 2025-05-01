@@ -1,6 +1,7 @@
 using FileService.Extensions;
 using FileService.Features;
 using MeteorCloud.Shared.Jwt;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +28,14 @@ builder.Services.RegisterServices(configuration);
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.ListenAnyIP(5298);
+    options.Limits.MaxRequestBodySize = 500_000_000; // 500 MB
 });
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 500_000_000; // 500 MB
+});
+
 
 var app = builder.Build();
 

@@ -57,6 +57,7 @@ public class DatabaseInitializer
                     Id SERIAL PRIMARY KEY,
                     EntityType TEXT,
                     EntityId TEXT,
+                    WorkspaceId INT NULL,
                     Action TEXT,
                     PerformedByUserId TEXT,
                     PerformedByUserName TEXT,

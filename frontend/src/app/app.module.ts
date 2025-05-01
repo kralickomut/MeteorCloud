@@ -85,6 +85,8 @@ import {ProgressBarModule} from "primeng/progressbar";
 // TODO: Transactions across microservices
 // TODO: Profile images for workspaces and users
 // TODO: Define roles restrictions for users in workspace
+// TODO: Fast link
+// TODO: When upload to workspace -> show notification
 
 
 @NgModule({

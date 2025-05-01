@@ -5,5 +5,6 @@ export const enviroment = {
     userUrl: 'http://localhost:5295',
     notificationUrl: 'http://localhost:5160',
     metadataUrl: 'http://localhost:5299',
-    fileUrl: 'http://localhost:5298'
+    fileUrl: 'http://localhost:5298',
+    auditUrl: 'http://localhost:5300'
 }

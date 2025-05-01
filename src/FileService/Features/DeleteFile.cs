@@ -7,7 +7,7 @@ using MeteorCloud.Shared.ApiResults;
 
 namespace FileService.Features;
 
-public record DeleteFileRequest(string Path);
+public record DeleteFileRequest(string Path, int DeletedBy);
 
 public class DeleteFileRequestValidator : AbstractValidator<DeleteFileRequest>
 {
@@ -37,17 +37,29 @@ public class DeleteFileHandler
     public async Task<ApiResult<bool>> Handle(DeleteFileRequest request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        
+        var segments = request.Path.Split('/');
 
-        var result = await _blobStorageService.DeleteFileAsync(request.Path, cancellationToken);
+        if (segments.Length < 2 || !int.TryParse(segments[0], out var workspaceId))
+        {
+            _logger.LogWarning("Invalid path format, cannot extract WorkspaceId from: {Path}", request.Path);
+            return new ApiResult<bool>(false, false, "Invalid path format");
+        }
+
+        var (result, fileSizeBytes, fileName) = await _blobStorageService.DeleteFileAsync(request.Path, cancellationToken);
 
         if (result)
         {
-            await _publishEndpoint.Publish(new FileDeletedEvent()
+            await _publishEndpoint.Publish(new FileDeletedEvent
             {
                 FileId = request.Path.Split("/").Last(),
+                WorkspaceId = workspaceId,
+                Size = fileSizeBytes ?? 0, 
+                DeletedBy = request.DeletedBy,
+                FileName = fileName ?? "Unknown"
             });
         }
-        
+
         return result
             ? new ApiResult<bool>(true)
             : new ApiResult<bool>(false, false, "Failed to delete file");
@@ -59,9 +71,21 @@ public static class DeleteFileEndpoint
     public static void Register(IEndpointRouteBuilder app)
     {
         app.MapDelete("/api/file/delete/{**path}",
-            async (string path, DeleteFileHandler handler, DeleteFileRequestValidator validator, CancellationToken cancellationToken) =>
+            async (string path,
+                HttpContext httpContext,
+                DeleteFileHandler handler, 
+                DeleteFileRequestValidator validator, 
+                CancellationToken cancellationToken) =>
             {
-                var request = new DeleteFileRequest(path);
+
+                var userIdClaim = httpContext.User.FindFirst("id");
+
+                if (userIdClaim is null || !int.TryParse(userIdClaim.Value, out var userId))
+                {
+                    return Results.Unauthorized(); 
+                }
+                
+                var request = new DeleteFileRequest(path, userId);
                 var validationResult = await validator.ValidateAsync(request, cancellationToken);
 
                 if (!validationResult.IsValid)
@@ -75,6 +99,6 @@ public static class DeleteFileEndpoint
                 return result.Success
                     ? Results.Ok(result)
                     : Results.BadRequest(result);
-            });
+            }).RequireAuthorization();
     }
 }

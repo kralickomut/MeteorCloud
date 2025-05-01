@@ -327,7 +327,9 @@ public class WorkspaceRepository
             SET Name = @Name,
                 Description = @Description,
                 UpdatedOn = @UpdatedOn,
-                LastUploadOn = @LastUploadOn
+                LastUploadOn = @LastUploadOn,
+                SizeInGB = @SizeInGB,
+                TotalFiles = @TotalFiles
             WHERE Id = @Id;
         ";
 

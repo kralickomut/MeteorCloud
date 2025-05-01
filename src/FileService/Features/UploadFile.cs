@@ -49,6 +49,12 @@ public class UploadFileHandler
     public async Task<IResult> Handle(UploadFileRequest request, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        
+        // Check file size
+        if (request.File.Length > 500 * 1024 * 1024) // 500 MB limit
+        {
+            return Results.BadRequest(new ApiResult<object>(null, false, "File size exceeds the limit of 10 MB."));
+        }
 
         var url = MicroserviceEndpoints.WorkspaceService.IsUserInWorkspace(request.UploadedBy, request.WorkspaceId);
         var  response = await _httpClient.GetAsync<bool>(url, cancellationToken);
@@ -135,6 +141,7 @@ public static class UploadFileEndpoint
                 }
 
                 return await handler.Handle(uploadRequest, cancellationToken);
-            }).RequireAuthorization();
+            }).RequireAuthorization()
+            ;
     }
 }
