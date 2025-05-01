@@ -172,6 +172,12 @@ export class WorkspaceService {
     return this.http.get<WorkspaceInvitation>(`${this.apiUrl}/workspace/invitations/${token}`);
   }
 
+  getRecentWorkspaces(userId: number, limit: number = 3): Observable<ApiResult<Workspace[]>> {
+    return this.http.get<ApiResult<Workspace[]>>(
+      `${this.apiUrl}/workspaces/recent/${userId}?limit=${limit}`
+    );
+  }
+
   respondToInvitation(token: string, accept: boolean): Observable<ApiResult<boolean>> {
     return this.http.post<ApiResult<boolean>>(`${this.apiUrl}/workspace/invite/respond`, {
       token,

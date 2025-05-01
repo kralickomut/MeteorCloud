@@ -19,7 +19,16 @@
   <!-- Recent Work Section -->
   <div *ngIf="showRecents" @fadeInCards class="recent-work-wrapper">
     <h2 class="recent-title">Recent workspaces</h2>
-    <div class="recent-card-row d-flex justify-content-center gap-4 flex-wrap">
+
+    <div *ngIf="loadingRecents" class="text-muted mt-4">
+      <i class="pi pi-spin pi-spinner"></i> Loading recent activity...
+    </div>
+
+    <div *ngIf="!loadingRecents && recentWorkspaces?.length === 0" class="text-muted mt-4">
+      No recent activity yet.
+    </div>
+
+    <div *ngIf="recentWorkspaces && recentWorkspaces.length > 0" class="recent-card-row d-flex justify-content-center gap-4 flex-wrap">
       <div
         class="workspace-card"
         *ngFor="let workspace of recentWorkspaces"
@@ -27,13 +36,15 @@
         (click)="navigateToWorkspace(workspace.id)"
       >
         <div class="workspace-card-header d-flex justify-content-between align-items-start">
-          <div class="workspace-avatar"></div>
-          <span class="workspace-size">{{ workspace.size }}</span>
+          <div class="workspace-avatar d-flex align-items-center justify-content-center">
+            {{ getInitials(workspace.name) }}
+          </div>
+          <span class="workspace-size">{{ workspace.sizeInGB || '–' }}</span>
         </div>
         <div class="workspace-name">{{ workspace.name }}</div>
-        <div class="workspace-files text-danger">{{ workspace.fileCount }} files</div>
-        <div class="workspace-owner">{{ workspace.owner }}</div>
-        <div class="workspace-time">{{ workspace.date }} {{ workspace.time }}</div>
+        <div class="workspace-files text-danger">{{ workspace.totalFiles }} files</div>
+        <div class="workspace-owner">{{ workspace.ownerName }}</div>
+        <div class="workspace-time">{{ workspace.updatedOn | date:'dd/MM/yyyy HH:mm' }}</div>
       </div>
     </div>
   </div>

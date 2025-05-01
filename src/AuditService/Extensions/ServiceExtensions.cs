@@ -1,6 +1,7 @@
 using AuditService.Consumers.File;
 using AuditService.Consumers.Workspace;
 using AuditService.Features.File;
+using AuditService.Features.Workspace;
 using AuditService.Persistence;
 using MassTransit;
 using MeteorCloud.Communication;
@@ -22,6 +23,9 @@ public static class ServiceExtensions
 
         services.AddSingleton<GetFileHistoryByWorkspaceIdValidator>();
         services.AddScoped<GetFileHistoryByWorkspaceIdHandler>();
+        
+        services.AddSingleton<GetRecentWorkspaceIdsValidator>();
+        services.AddScoped<GetRecentWorkspaceIdsHandler>();
         
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>

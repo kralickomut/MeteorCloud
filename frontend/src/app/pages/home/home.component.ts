@@ -1,6 +1,9 @@
-import { Component } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import { Router } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
+import {Workspace} from "../../models/WorkspaceFile";
+import {UserService} from "../../services/user.service";
+import {WorkspaceService} from "../../services/workspace.service";
 
 @Component({
   selector: 'app-home',
@@ -30,11 +33,50 @@ import { trigger, transition, style, animate } from '@angular/animations';
     ])
   ]
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit{
+  constructor(
+    private router: Router,
+    private workspaceService: WorkspaceService,
+    private userService: UserService
+  ) {}
 
-  constructor(private router: Router) {}
+  showRecents = false;
+  recentWorkspaces: Workspace[] | undefined = [];
+  loadingRecents = false;
 
-  navigateToWorkspace(id: string) {
+  ngOnInit() {
+    this.startTyping();
+    this.userService.user$.subscribe(user => {
+      if (user) {
+        this.fetchRecentWorkspaces(user.id);
+      }
+    });
+  }
+
+  fetchRecentWorkspaces(userId: number): void {
+    this.loadingRecents = true;
+    this.workspaceService.getRecentWorkspaces(userId).subscribe({
+      next: (res) => {
+        this.recentWorkspaces = res.data;
+        this.loadingRecents = false;
+      },
+      error: (err) => {
+        console.error('Failed to fetch recent workspaces', err);
+        this.loadingRecents = false;
+      }
+    });
+  }
+
+  getInitials(name: string): string {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
+  }
+
+  navigateToWorkspace(id: number) {
     this.router.navigate(['/workspaces', id]);
   }
 
@@ -47,41 +89,6 @@ export class HomeComponent {
   typingSpeed = 100;
   pauseBetween = 1500;
 
-  showRecents = false;
-
-  recentWorkspaces = [
-    {
-      id: '1',
-      name: 'Workspace',
-      size: '13MB',
-      fileCount: 87,
-      owner: 'František Hromek',
-      date: '21/03/2025',
-      time: '16:09'
-    },
-    {
-      id: '2',
-      name: 'Workspace',
-      size: '13MB',
-      fileCount: 87,
-      owner: 'František Hromek',
-      date: '21/03/2025',
-      time: '16:09'
-    },
-    {
-      id: '3',
-      name: 'Workspace',
-      size: '13MB',
-      fileCount: 87,
-      owner: 'František Hromek',
-      date: '21/03/2025',
-      time: '16:09'
-    }
-  ];
-
-  ngOnInit() {
-    this.startTyping();
-  }
 
   toggleRecents() {
     this.showRecents = !this.showRecents;

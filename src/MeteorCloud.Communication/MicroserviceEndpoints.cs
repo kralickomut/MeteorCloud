@@ -22,6 +22,14 @@ public static class MicroserviceEndpoints
         public static string IsUserInWorkspace(int userId, int workspaceId) => BaseUrl + $"/api/workspaces/is-user-in-workspace/{userId}/{workspaceId}";
     }
     
+    public class AuditService
+    {
+        const string BaseUrl = "http://audit_service:5300";
+        
+        public static string GetFileHistoryByWorkspaceId(int workspaceId) => BaseUrl + $"/api/audit/file-history/{workspaceId}";
+        public static string GetRecentWorkspaceIds(int userId) => BaseUrl + $"/api/audit/recent-workspaces/{userId}";
+    }
+    
     public const string AuthService = "http://auth_service:5296";
     public const string FileService = "http://file_service:5298";
 }

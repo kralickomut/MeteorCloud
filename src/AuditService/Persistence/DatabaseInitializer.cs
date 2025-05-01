@@ -59,7 +59,7 @@ public class DatabaseInitializer
                     EntityId TEXT,
                     WorkspaceId INT NULL,
                     Action TEXT,
-                    PerformedByUserId TEXT,
+                    PerformedByUserId INT,
                     PerformedByUserName TEXT,
                     Timestamp TIMESTAMP,
                     Metadata JSONB

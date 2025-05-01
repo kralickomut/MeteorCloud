@@ -12,7 +12,7 @@ using WorkspaceService.Persistence.Entities;
 
 namespace WorkspaceService.Services;
 
-public class WorkspaceManager
+public class  WorkspaceManager
 {
     private readonly WorkspaceRepository _workspaceRepository;
     private readonly ICacheService _cache;
@@ -316,6 +316,32 @@ public class WorkspaceManager
             cancellationToken);
         
         return invitations;
+    }
+    
+    public async Task<IEnumerable<Workspace>> GetRecentsAsync(int userId, CancellationToken cancellationToken = default)
+    {
+        var url = MicroserviceEndpoints.AuditService.GetRecentWorkspaceIds(userId);
+        var response = await _httpClient.GetAsync<List<int>>(url);
+        Console.WriteLine(response);
+        
+        if (!response.Success)
+        {
+            return Enumerable.Empty<Workspace>();
+        }
+        
+        var workspaceIds = response.Data;
+        
+        var workspaces = new List<Workspace>();
+        foreach (var workspaceId in workspaceIds)
+        {
+            var workspace = await GetWorkspaceByIdAsync(workspaceId);
+            if (workspace != null)
+            {
+                workspaces.Add(workspace);
+            }
+        }
+        
+        return workspaces;
     }
 }
     

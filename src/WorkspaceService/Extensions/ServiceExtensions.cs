@@ -70,6 +70,9 @@ public static class ServiceExtensions
         services.AddSingleton<IsUserInWorkspaceRequestValidator>();
         services.AddScoped<IsUserInWorkspaceHandler>();
 
+        services.AddSingleton<GetRecentsValidator>();
+        services.AddScoped<GetRecentsHandler>();
+
         services.AddSingleton<IUserIdProvider, CustomUserIdProvider>();
         services.AddSignalR();
         

@@ -1,3 +1,5 @@
+@import "variables";
+
 .dashboard-container {
   padding: 3rem 1rem;
   min-height: 700px;
@@ -106,10 +108,18 @@
       margin-bottom: 0.75rem;
 
       .workspace-avatar {
-        width: 34px;
-        height: 34px;
+        width: 36px;
+        height: 36px;
         border-radius: 50%;
-        background-color: #e11d48;
+        background-color: $primaryColorLight;
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: #e11d48;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-transform: uppercase;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       }
 
       .workspace-size {

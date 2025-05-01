@@ -112,6 +112,29 @@ public class AuditRepository
         };
     }
 
+    public async Task<List<int>> GetRecentWorkspaceIdsByUserAsync(int userId, int limit = 3)
+    {
+        const string query = @"
+            SELECT DISTINCT ON (WorkspaceId) WorkspaceId, Timestamp
+            FROM AuditEvents
+            WHERE PerformedByUserId = @UserId
+              AND WorkspaceId IS NOT NULL
+            ORDER BY WorkspaceId, Timestamp DESC;";
+
+        await using var connection = await _context.CreateConnectionAsync();
+        var allEvents = await connection.QueryAsync<(int WorkspaceId, DateTime Timestamp)>(query, new { UserId = userId });
+
+        var recentWorkspaceIds = allEvents
+            .GroupBy(e => e.WorkspaceId)
+            .Select(g => g.OrderByDescending(e => e.Timestamp).First())
+            .OrderByDescending(e => e.Timestamp)
+            .Take(limit)
+            .Select(e => e.WorkspaceId)
+            .ToList();
+
+        return recentWorkspaceIds;
+    }
+
     private record AuditEventDto
     {
         public string EntityType { get; init; }
