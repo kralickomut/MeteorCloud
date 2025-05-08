@@ -17,7 +17,6 @@ export class AppComponent implements OnInit {
 
     // Not logged in, redirect
     if (!userId || !token) {
-      this.router.navigate(['/login']);
       return;
     }
 

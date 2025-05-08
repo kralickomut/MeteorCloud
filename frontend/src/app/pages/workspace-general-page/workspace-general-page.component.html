@@ -41,7 +41,11 @@
   <div class="workspace-header mb-4">
     <div *ngIf="!isEditing; else editBlock">
       <h2 class="title m-0 d-inline">{{ workspace.name }}</h2>
-      <i class="pi pi-pencil cursor-pointer text-muted ms-2" (click)="isEditing = true"></i>
+      <i
+        *ngIf="isPrivileged"
+        class="pi pi-pencil cursor-pointer text-muted ms-2"
+        (click)="isEditing = true"
+      ></i>
       <div class="text-muted mt-1">{{ workspace.description }}</div>
     </div>
 
@@ -91,7 +95,7 @@
             <th>Name</th>
             <th>Role</th>
             <th>Email</th>
-            <th *ngIf="isPrivileged">Actions</th>
+            <th>Actions</th>
           </tr>
           </thead>
           <tbody>
@@ -118,7 +122,7 @@
               </span>
             </td>
             <td>{{ user.email }}</td>
-            <td *ngIf="isPrivileged">
+            <td *ngIf="canSeeActions(user.id)">
               <p-menu #menu [popup]="true" [model]="getUserActions(user.id, user.workspaceRole)" appendTo="body"></p-menu>
               <i class="pi pi-ellipsis-v cursor-pointer text-muted" (click)="menu.toggle($event)"></i>
             </td>

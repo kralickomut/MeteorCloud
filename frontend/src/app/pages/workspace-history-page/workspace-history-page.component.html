@@ -117,5 +117,14 @@
       </ng-container>
       </tbody>
     </table>
+    <div *ngIf="paginatedFileItems.length === 0 && activeTab === 'files'" class="no-history-message text-center p-4">
+      <p class="fw-semibold mb-2">No file history yet</p>
+      <p class="text-muted">This workspace doesn't have any file changes recorded.</p>
+    </div>
+
+    <div *ngIf="paginatedInvitationItems.length === 0 && activeTab === 'invitations'" class="no-history-message text-center p-4">
+      <p class="fw-semibold mb-2">No invitations yet</p>
+      <p class="text-muted">Nobody has been invited to this workspace yet.</p>
+    </div>
   </div>
 </div>

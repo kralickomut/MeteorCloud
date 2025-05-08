@@ -12,3 +12,8 @@ public class UserModel
     public DateTime RegistrationDate { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; } 
 }
+
+public class UserResponse
+{
+    public UserModel User { get; set; }
+}

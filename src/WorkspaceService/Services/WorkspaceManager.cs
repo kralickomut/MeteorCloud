@@ -277,7 +277,7 @@ public class  WorkspaceManager
             role,
             (int)Role.Owner == role ? user.Name : null,
             cancellationToken);
-
+        
         if (result)
         {
             await _cache.RemoveByPrefixAsync(_serviceCacheKey, "user-workspaces", $"{userId}-page-");

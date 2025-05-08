@@ -58,36 +58,17 @@ import {SliderModule} from "primeng/slider";
 import {OverlayPanelModule} from "primeng/overlaypanel";
 import {RadioButtonModule} from "primeng/radiobutton";
 import {ProgressBarModule} from "primeng/progressbar";
+import { PublicLayoutComponent } from './layouts/public-layout/public-layout.component';
+import { SharedFilePageComponent } from './pages/shared-file-page/shared-file-page.component';
+import { SharedLayoutRouterComponent } from './pages/shared-layout-router/shared-layout-router.component';
+import {AutoCompleteModule} from "primeng/autocomplete";
 
 
-
-// TODO: Logout button at sidebar - DONE
-// TODO: Add a new user to workspace - DONE
-// TODO: Page for viewing files from a link or downloading
-// TODO: Page for workspace history - DONE
-// TODO: Drag and drop files to upload - DONE
-// TODO: Recent work on main page
-// TODO: Color of workspace list names / links - DONE
-// TODO: General workspace page info - DONE
-// TODO: Settings page
-// TODO: Workspace detail page blank space at bottom fix
+// TODO: Recent work on workspace detail
 // TODO: RESPONSIVENESS ACROSS WHOLE APP !IMPORTANT
-// TODO: Filters at tables
-// TODO: Click on whole row to open file tab
-// TODO: Add verified animation to verify page
-// TODO: When user removed from a workspace -> show notification + if he is in the workspace cancel the view immediately
-// TODO: When user is invited to a workspace -> show notification
-// TODO: Resend code on verification page
-// TODO: Add a new user to workspace - DONE
-// TODO: Progress bar for file upload
-// TODO: Upload size of workspace on file upload
-// TODO: Delete workspace -> metadata and file delete
-// TODO: Transactions across microservices
-// TODO: Profile images for workspaces and users
-// TODO: Define roles restrictions for users in workspace
-// TODO: Fast link
-// TODO: When upload to workspace -> show notification
-
+// TODO: Profile images for users
+// TODO: Kubernetes
+// TODO: Sometimes a lot of notificaiton on refresh workspace list
 
 @NgModule({
   declarations: [
@@ -115,6 +96,9 @@ import {ProgressBarModule} from "primeng/progressbar";
     WorkspaceGeneralPageComponent,
     VerifyComponent,
     ProfileUserComponent,
+    PublicLayoutComponent,
+    SharedFilePageComponent,
+    SharedLayoutRouterComponent,
   ],
   imports: [
     BrowserModule,
@@ -146,6 +130,7 @@ import {ProgressBarModule} from "primeng/progressbar";
     OverlayPanelModule,
     RadioButtonModule,
     ProgressBarModule,
+    AutoCompleteModule
   ],
   providers: [MessageService, ConfirmationService,
     {

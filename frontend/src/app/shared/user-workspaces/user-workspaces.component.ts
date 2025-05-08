@@ -18,7 +18,7 @@ export class UserWorkspacesComponent implements OnInit {
   itemsPerPage = 10;
   searchText = '';
 
-  private currentUserId: number | null = null;
+  protected currentUserId: number | null = null;
 
   constructor(
     private workspaceService: WorkspaceService,

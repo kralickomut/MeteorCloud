@@ -4,6 +4,7 @@ using FileService.Features;
 using FileService.Services;
 using MassTransit;
 using MeteorCloud.Communication;
+using MeteorCloud.Messaging.Events.FastLink;
 using MeteorCloud.Messaging.Events.File;
 using Microsoft.OpenApi.Models;
 
@@ -24,6 +25,15 @@ public static class ServiceExtensions
         
         services.AddSingleton<DeleteFolderRequestValidator>();
         services.AddScoped<DeleteFolderHandler>();
+
+        services.AddSingleton<UploadFastLinkFileValidator>();
+        services.AddScoped<UploadFastLinkFileHandler>();
+        
+        services.AddSingleton<DeleteFastLinkFileValidator>();
+        services.AddScoped<DeleteFastLinkFileHandler>();
+
+        services.AddSingleton<MoveFileRequestValidator>();
+        services.AddScoped<MoveFileHandler>();
         
         services.AddScoped<DownloadFileHandler>();
         
@@ -53,6 +63,9 @@ public static class ServiceExtensions
                 rabbitCfg.Message<FileUploadedEvent>(x => x.SetEntityName("file-uploaded"));
                 rabbitCfg.Message<FileDeletedEvent>(x => x.SetEntityName("file-deleted"));
                 rabbitCfg.Message<FolderDeletedEvent>(x => x.SetEntityName("folder-deleted"));
+                rabbitCfg.Message<FastLinkFileUploadedEvent>(x => x.SetEntityName("fastlink-file-uploaded"));
+                rabbitCfg.Message<FastLinkFileDeletedEvent>(x => x.SetEntityName("fastlink-file-deleted"));
+                rabbitCfg.Message<FileMovedEvent>(x => x.SetEntityName("file-moved"));
                 
                 rabbitCfg.ReceiveEndpoint("file-service-workspace-deleted-queue", e =>
                 {

@@ -52,7 +52,7 @@ public static class DownloadFileEndpoint
                 fileStream: result.Stream,
                 contentType: result.ContentType,
                 fileDownloadName: result.FileName,
-                enableRangeProcessing: true // 📂 optional but better for big files (allows resume)
+                enableRangeProcessing: true // optional but better for big files (allows resume)
             );
         });
     }

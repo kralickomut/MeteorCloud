@@ -151,13 +151,15 @@
         </span>
         </td>
         <td>
-          <div class="file-actions">
+          <div class="file-actions" *ngIf="w.ownerId === currentUserId; else noPermission">
             <i
               class="pi pi-trash"
+              tooltip="Delete workspace"
               tooltipPosition="top"
               (click)="deleteWorkspace(w)"
             ></i>
           </div>
+          <ng-template #noPermission>–</ng-template>
         </td>
       </tr>
       </tbody>

@@ -62,6 +62,7 @@ public static class ServiceExtensions
             busConfigurator.AddConsumer<FileDeletedConsumer>();
             busConfigurator.AddConsumer<WorkspaceDeletedConsumer>();
             busConfigurator.AddConsumer<FolderDeletedConsumer>();
+            busConfigurator.AddConsumer<FileMovedConsumer>();
             
             busConfigurator.UsingRabbitMq((context, rabbitCfg) =>
             {
@@ -109,6 +110,16 @@ public static class ServiceExtensions
                     });
                     
                     e.ConfigureConsumer<FolderDeletedConsumer>(context);
+                });
+                
+                rabbitCfg.ReceiveEndpoint("metadata-service-file-moved-queue", e =>
+                {
+                    e.Bind("file-moved", x =>
+                    {
+                        x.ExchangeType = "fanout";
+                    });
+                    
+                    e.ConfigureConsumer<FileMovedConsumer>(context);
                 });
                 
                 rabbitCfg.ConfigureEndpoints(context);

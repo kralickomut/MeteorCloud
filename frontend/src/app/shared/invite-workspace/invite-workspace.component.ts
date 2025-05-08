@@ -88,7 +88,7 @@ export class InviteWorkspaceComponent {
       error: (err) => {
         this.messageService.add({
           severity: 'error',
-          summary: 'Server Error',
+          summary: 'Error',
           detail: err?.error?.message || 'Something went wrong.',
         });
       },

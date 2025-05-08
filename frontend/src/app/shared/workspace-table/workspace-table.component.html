@@ -42,7 +42,7 @@
             [disabled]="uploading"
           ></button>
 
-          <input type="file" #fileInput (change)="onFileSelected($event)" hidden />
+          <input type="file" #fileInput multiple (change)="onFilesSelected($event)" hidden/>
         </div>
 
         <!-- Upload Progress Bar Below Buttons -->
@@ -87,7 +87,7 @@
       </div>
 
       <!-- IF EMPTY -->
-      <div *ngIf="currentFolder?.folders.length === 0 && currentFolder?.files.length === 0" class="empty-state">
+      <div *ngIf="(currentFolder?.folders?.length || 0) === 0 && (currentFolder?.files?.length || 0) === 0" class="empty-state">
         <div class="empty-text">
           <i class="pi pi-folder-open mb-3" style="font-size: 2rem; color: #e11d48;"></i>
           <div>No files or folders yet</div>
@@ -129,7 +129,11 @@
         </thead>
         <tbody>
         <!-- Folder Rows -->
-        <tr *ngFor="let folder of currentFolder.folders">
+        <tr *ngFor="let folder of currentFolder.folders"
+            [class.drop-hover]="hoveredDropTarget === folder.name"
+            (dragover)="allowDrop($event, folder.name)"
+            (dragleave)="hoveredDropTarget = null"
+            (drop)="onFileDrop($event, folder.name)">
           <td (click)="navigateToFolder(folder.name)" class="clickable">
             <i class="pi pi-folder text-primary me-2"></i> {{ folder.name }}
           </td>
@@ -145,7 +149,9 @@
         </tr>
 
         <!-- File Rows -->
-        <tr *ngFor="let file of currentFolder.files">
+        <tr *ngFor="let file of currentFolder.files"
+            draggable="true"
+            (dragstart)="onFileDragStart($event, file)">
           <td><i class="pi pi-file me-2"></i> {{ file.name }}</td>
           <td>
             <ng-container *ngIf="getDisplayTypeColorAndIcon(file.contentType) as type">

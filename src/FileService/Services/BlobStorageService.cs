@@ -18,23 +18,23 @@ public class BlobStorageService
         _logger = logger;
     }
 
-    public async Task<string> UploadFileAsync(IFormFile file, string folderPath, Guid fileId, CancellationToken cancellationToken)
+    public async Task<(string url, string fileName)> UploadFileAsync(IFormFile file, string folderPath, Guid fileId, CancellationToken cancellationToken)
     {
         var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
         await containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
+
+        var safeName = SanitizeFileName(file.FileName);
+        var finalDisplayName = await GetUniqueFilenameAsync(containerClient, folderPath, safeName, cancellationToken);
 
         var blobPath = string.IsNullOrWhiteSpace(folderPath)
             ? fileId.ToString()
             : $"{folderPath}/{fileId}";
 
         var blobClient = containerClient.GetBlobClient(blobPath);
-        
-        // Make sure the blob name is safe for Azure Storage
-        var safeName = SanitizeFileName(file.FileName);
 
         var metadata = new Dictionary<string, string>
         {
-            { "originalfilename", safeName } //  Save original filename into metadata
+            { "originalfilename", finalDisplayName }
         };
 
         await using var stream = file.OpenReadStream();
@@ -48,7 +48,7 @@ public class BlobStorageService
             cancellationToken: cancellationToken
         );
 
-        return blobClient.Uri.ToString();
+        return (blobClient.Uri.ToString(), finalDisplayName);
     }
     
     public async Task<(bool Success, long? FileSizeBytes, string? FileName)> DeleteFileAsync(string path, CancellationToken cancellationToken = default)
@@ -161,6 +161,113 @@ public class BlobStorageService
             Stream = response.Value.Content
         };
     }
+    
+    public async Task<string> UploadFastLinkFileAsync(IFormFile file, int userId, Guid fileId, CancellationToken cancellationToken)
+    {
+        var folderPath = $"fast-link-files/{userId}";
+
+        var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+        await containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
+
+        var blobPath = $"{folderPath}/{fileId}";
+        var blobClient = containerClient.GetBlobClient(blobPath);
+
+        var safeName = SanitizeFileName(file.FileName);
+
+        var metadata = new Dictionary<string, string>
+        {
+            { "originalfilename", safeName } // Just store the original name without suffixing
+        };
+
+        await using var stream = file.OpenReadStream();
+        await blobClient.UploadAsync(
+            stream,
+            new BlobUploadOptions
+            {
+                HttpHeaders = new BlobHttpHeaders { ContentType = file.ContentType },
+                Metadata = metadata
+            },
+            cancellationToken: cancellationToken
+        );
+
+        return blobClient.Uri.ToString();
+    }
+    
+    
+    public async Task<string> MoveFileAsync(string sourcePath, string destinationFolder, CancellationToken cancellationToken = default)
+{
+    var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+
+    var sourceBlob = containerClient.GetBlobClient(sourcePath);
+
+    if (!await sourceBlob.ExistsAsync(cancellationToken))
+    {
+        _logger.LogWarning($"Source blob not found: {sourcePath}");
+        throw new FileNotFoundException("Source file does not exist.");
+    }
+
+    var sourceProperties = await sourceBlob.GetPropertiesAsync(cancellationToken: cancellationToken);
+
+    sourceProperties.Value.Metadata.TryGetValue("originalfilename", out var originalName);
+    originalName ??= Path.GetFileName(sourcePath); // fallback
+
+    // Step 1: Resolve name collision
+    var finalName = await GetUniqueFilenameAsync(containerClient, destinationFolder, originalName, cancellationToken);
+
+    // Step 2: Compose destination path
+    var fileGuid = Path.GetFileName(sourcePath); // We keep the same GUID-based blob name
+    var newPath = string.IsNullOrWhiteSpace(destinationFolder)
+        ? fileGuid
+        : $"{destinationFolder}/{fileGuid}";
+
+    var destBlob = containerClient.GetBlobClient(newPath);
+
+    // Step 3: Copy and update metadata
+    await destBlob.StartCopyFromUriAsync(sourceBlob.Uri, cancellationToken: cancellationToken);
+    await destBlob.SetMetadataAsync(new Dictionary<string, string> {
+        { "originalfilename", finalName }
+    }, cancellationToken: cancellationToken);
+
+    // Step 4: Delete the old blob
+    await sourceBlob.DeleteIfExistsAsync(DeleteSnapshotsOption.IncludeSnapshots);
+
+    _logger.LogInformation($"Moved blob from {sourcePath} to {newPath} with name {finalName}");
+
+    return newPath;
+}
+
+private async Task<string> GetUniqueFilenameAsync(BlobContainerClient containerClient, string folderPath, string originalName, CancellationToken cancellationToken)
+{
+    string prefix = string.IsNullOrWhiteSpace(folderPath) ? "" : $"{folderPath}/";
+    var existingNames = new List<string>();
+
+    await foreach (var blob in containerClient.GetBlobsAsync(BlobTraits.Metadata, prefix: prefix, cancellationToken: cancellationToken))
+    {
+        if (blob.Metadata != null && blob.Metadata.TryGetValue("originalfilename", out var name))
+        {
+            existingNames.Add(name);
+        }
+    }
+
+    return ResolveFilenameConflict(existingNames, originalName);
+}
+
+private string ResolveFilenameConflict(IEnumerable<string> existingNames, string originalName)
+{
+    var nameSet = new HashSet<string>(existingNames, StringComparer.OrdinalIgnoreCase);
+    var baseName = Path.GetFileNameWithoutExtension(originalName);
+    var extension = Path.GetExtension(originalName);
+    var candidate = originalName;
+    int counter = 1;
+
+    while (nameSet.Contains(candidate))
+    {
+        candidate = $"{baseName} ({counter}){extension}";
+        counter++;
+    }
+
+    return candidate;
+}
     
     private string SanitizeFileName(string name)
     {

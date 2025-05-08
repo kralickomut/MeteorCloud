@@ -605,4 +605,18 @@ public class WorkspaceRepository
         };
     }
     
+    public async Task<List<Workspace>> SearchUserWorkspacesAsync(int userId, string query, int limit, CancellationToken ct)
+    {
+        const string sql = @"
+        SELECT *
+        FROM Workspaces
+        WHERE OwnerId = @UserId AND LOWER(Name) LIKE '%' || LOWER(@Query) || '%'
+        ORDER BY UpdatedOn DESC
+        LIMIT @Limit;
+    ";
+
+        await using var connection = await _context.CreateConnectionAsync();
+        return (await connection.QueryAsync<Workspace>(sql, new { UserId = userId, Query = query, Limit = limit })).ToList();
+    }
+    
 }

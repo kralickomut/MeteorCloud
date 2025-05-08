@@ -122,6 +122,12 @@
       border-collapse: collapse;
       font-size: 0.9rem;
 
+      tr.drop-hover {
+        background-color: #fef2f2; // light red background
+        border: 2px dashed #e11d48;
+        transition: background-color 0.2s ease, border 0.2s ease;
+      }
+
 
       th {
         text-align: left;

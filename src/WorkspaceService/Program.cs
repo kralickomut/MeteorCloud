@@ -65,6 +65,7 @@ app.UseEndpoints(endpoints =>
     GetWorkspaceInvitationsHistoryEndpoint.Register(endpoints);
     IsUserInWorkspaceEndpoint.Register(endpoints);
     GetRecentsEndpoint.Register(endpoints);
+    SearchWorkspacesEndpoint.Register(endpoints);
 });
 
 app.MapHub<WorkspaceHub>("/hub/workspaces");

@@ -20,7 +20,7 @@ export class FileService {
 
     return this.http.post<any>(`${this.apiUrl}/upload`, formData, {
       reportProgress: true,
-      observe: 'events' // Useful if you want to track upload progress
+      observe: 'events'
     });
   }
 
@@ -37,4 +37,16 @@ export class FileService {
       responseType: 'blob'
     });
   }
+
+  moveFile(sourcePath: string, targetFolder: string, workspaceId: number, requestedBy: number): Observable<ApiResult<boolean>> {
+    const payload = {
+      sourcePath,
+      targetFolder,
+      workspaceId,
+      requestedBy
+    };
+
+    return this.http.post<ApiResult<boolean>>(`${this.apiUrl}/move`, payload);
+  }
+
 }

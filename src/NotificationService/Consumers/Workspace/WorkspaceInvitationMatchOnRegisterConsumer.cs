@@ -20,6 +20,9 @@ public class WorkspaceInvitationMatchOnRegisterConsumer : IConsumer<WorkspaceInv
     public async Task Consume(ConsumeContext<WorkspaceInvitationMatchOnRegisterEvent> context)
     {
         var message = context.Message;
+        
+        _logger.LogInformation("Received WorkspaceInvitationMatchOnRegisterEvent: {UserId}, {WorkspaceName}, {Token}, {WorkspaceId}", 
+            message.UserId, message.WorkspaceName, message.Token, message.WorkspaceId);
 
         var notification = await _notificationRepository.CreateAsync(new Notification
         {

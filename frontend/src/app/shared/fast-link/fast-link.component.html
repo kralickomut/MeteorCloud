@@ -1,8 +1,8 @@
-<button class="workspace-button" (click)="openCreateWorkspace()">
+<button class="workspace-button" (click)="openCreateDialog()">
   <i class="pi pi-link"></i> {{ buttonText }}
 </button>
 
-<!-- 👇 Create Workspace Dialog -->
+<!-- 👇 Create FastLink Dialog -->
 <p-dialog
   [(visible)]="showCreateDialog"
   modal="true"
@@ -12,26 +12,30 @@
   [dismissableMask]="true"
 >
   <div class="form-group">
-    <!-- Label and Input -->
-    <label for="workspaceName" class="form-label">FastLink Name</label>
+    <!-- Link Name Input -->
+    <label for="linkName" class="form-label">Link Name</label>
     <input
-      id="workspaceName"
+      id="linkName"
       pInputText
-      [(ngModel)]="newWorkspaceName"
+      [(ngModel)]="linkName"
       placeholder="e.g. Marketing Brief"
       class="form-input mb-3"
     />
 
-    <!-- Label and Textarea -->
-    <label for="expiration" class="form-label">Expiration (max 24h)</label>
+    <!-- Expiration Input -->
+    <label for="expiration" class="form-label">Expiration (in hours, max 24)</label>
     <input
       id="expiration"
+      type="number"
       pInputText
-      [(ngModel)]="expirationInHours"
+      [(ngModel)]="expirationHours"
       placeholder="12"
       class="form-input mb-3"
+      min="1"
+      max="24"
     />
 
+    <!-- File Upload -->
     <div class="form-upload mb-3">
       <label class="form-label">Upload File</label>
       <p-fileUpload
@@ -44,15 +48,22 @@
         class="mb-2 custom-upload-button"
       />
 
-      <!-- Display selected file name if available -->
       <div *ngIf="selectedFileName" class="selected-file-name">
         {{ selectedFileName }}
       </div>
     </div>
-
   </div>
 
+  <!-- Footer -->
   <ng-template pTemplate="footer">
-    <button pButton label="Create" icon="pi pi-check" class="p-button-primary" (click)="createWorkspace()"></button>
+    <button
+      pButton
+      label="Create"
+      icon="pi pi-check"
+      class="p-button-primary"
+      (click)="createFastLink()"
+      [disabled]="!linkName || !expirationHours || !selectedFile || uploading"
+    ></button>
   </ng-template>
+  <p-progressBar *ngIf="uploading" mode="indeterminate" styleClass="mb-2"></p-progressBar>
 </p-dialog>

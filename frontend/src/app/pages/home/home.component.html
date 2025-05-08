@@ -4,15 +4,37 @@
     <img src="assets/img/hero.png" class="dashboard-hero mb-3" alt="Hero" />
     <h1 class="dashboard-title">Welcome to <span>MeteorCloud!</span></h1>
 
-    <div class="dashboard-search mt-4 mb-4 d-flex justify-content-center align-items-center">
-      <input type="text" class="form-control dashboard-input" [placeholder]="placeholderText" />
-      <button class="btn dashboard-search-icon"><i class="pi pi-search"></i></button>
-    </div>
+      <div class="dashboard-search mt-4 mb-4">
+        <p-autoComplete
+          [(ngModel)]="selectedWorkspace"
+          [suggestions]="filteredWorkspaces"
+          (completeMethod)="filterWorkspaces($event)"
+          field="name"
+          placeholder="{{ placeholderText }}"
+          [minLength]="1"
+          (onSelect)="selectedWorkspace && navigateToWorkspace(selectedWorkspace.id)"
+          class="dashboard-search-autocomplete"
+          [inputStyle]="{ 'background-color': '#f1f5f9' }"
+          [style]="{ width: '100%' }"
+          styleClass="dashboard-search-autocomplete"
+        >
+          <ng-template let-workspace pTemplate="item">
+            <div>
+              <span class="workspace-initials">{{ getInitials(workspace.name) }}</span>
+              <span>{{ workspace.name }}</span>
+            </div>
+          </ng-template>
+
+          <ng-template let-empty pTemplate="empty">
+            <div class="px-3 py-2 text-muted">No workspaces found</div>
+          </ng-template>
+        </p-autoComplete>
+      </div>
 
     <div class="dashboard-actions d-flex justify-content-center gap-3 flex-wrap">
       <app-workspace-create></app-workspace-create>
       <app-fast-link></app-fast-link>
-      <button class="btn dashboard-action"><i class="pi pi-upload me-2"></i> upload</button>
+
     </div>
   </div>
 

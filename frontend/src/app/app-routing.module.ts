@@ -13,30 +13,41 @@ import {WorkspaceGeneralPageComponent} from "./pages/workspace-general-page/work
 import {VerifyComponent} from "./pages/verify/verify.component";
 import {AuthGuard} from "./guards/auth.guard";
 import {ProfileUserComponent} from "./pages/profile-user/profile-user.component";
+import {SharedFilePageComponent} from "./pages/shared-file-page/shared-file-page.component";
+import {PublicLayoutComponent} from "./layouts/public-layout/public-layout.component";
+import {SharedLayoutRouterComponent} from "./pages/shared-layout-router/shared-layout-router.component";
 
 const routes: Routes = [
+  {
+    path: 'shared/:token',
+    component: SharedLayoutRouterComponent,
+    children: [
+      { path: '', component: SharedFilePageComponent }
+    ]
+  },
+
+  { path: 'login', component: LoginComponent },
+  { path: 'register', component: RegisterComponent },
+  { path: 'verify', component: VerifyComponent },
+
   {
     path: '',
     component: MainLayoutComponent,
     canActivate: [AuthGuard],
     children: [
+      { path: '', redirectTo: 'home', pathMatch: 'full' },
       { path: 'home', component: HomeComponent },
       { path: 'workspaces', component: WorkspacesComponent },
-      { path: '', redirectTo: '/home', pathMatch: 'full' },
       { path: 'workspaces/:id', component: WorkspaceDetailComponent },
       { path: 'workspaces/:id/history', component: WorkspaceHistoryPageComponent },
       { path: 'workspaces/:id/general', component: WorkspaceGeneralPageComponent },
       { path: 'profile', component: ProfileComponent },
       { path: 'profile/:id', component: ProfileUserComponent },
       { path: 'links', component: LinksComponent }
-      //{ path: 'upload', component: UploadComponent },
-      // other logged-in routes
     ]
   },
-  { path: 'login', component: LoginComponent },
-  { path: 'register', component: RegisterComponent },
-  { path: 'verify', component: VerifyComponent },
-  { path: '**', redirectTo: '/home' }
+
+  { path: '**', redirectTo: '/login' }
 ];
 
 @NgModule({

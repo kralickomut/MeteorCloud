@@ -6,5 +6,6 @@ export const enviroment = {
     notificationUrl: 'http://localhost:5160',
     metadataUrl: 'http://localhost:5299',
     fileUrl: 'http://localhost:5298',
-    auditUrl: 'http://localhost:5300'
+    auditUrl: 'http://localhost:5300',
+    linkUrl: 'http://localhost:5301'
 }

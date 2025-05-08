@@ -1,6 +1,10 @@
 import { Component, Input } from '@angular/core';
 import { MessageService } from 'primeng/api';
 import { FileUpload } from 'primeng/fileupload';
+import {HttpClient, HttpEventType} from "@angular/common/http";
+import {AuthService} from "../../services/auth.service";
+import {FileService} from "../../services/file.service";
+import {LinkService} from "../../services/link.service";
 
 @Component({
   selector: 'app-fast-link',
@@ -8,17 +12,19 @@ import { FileUpload } from 'primeng/fileupload';
   styleUrl: './fast-link.component.scss'
 })
 export class FastLinkComponent {
+  @Input() buttonText: string = 'create fast link'; // default button text
 
-  @Input() buttonText: string = 'fast link'; // default text
+  constructor(
+    private messageService: MessageService,
+    private http: HttpClient,
+    private linkService: LinkService
+  ) {}
 
-  constructor(private messageService: MessageService) {
-
-  }
-
-  // Dialog
+  // Dialog state
   showCreateDialog = false;
-  newWorkspaceName = '';
-  expirationInHours = '';
+  linkName = '';
+  expirationHours = '';
+  uploading = false;
 
   selectedFile: File | null = null;
   selectedFileName: string = '';
@@ -29,12 +35,12 @@ export class FastLinkComponent {
       this.selectedFile = file;
       this.selectedFileName = file.name;
 
-      // ✅ Clear the internal state so the same file can be reselected
+      // Clear internal state so the same file can be reselected
       fileUpload.clear();
     }
   }
 
-  openCreateWorkspace() {
+  openCreateDialog() {
     this.showCreateDialog = true;
   }
 
@@ -43,24 +49,50 @@ export class FastLinkComponent {
     this.resetForm();
   }
 
-  createWorkspace() {
-    console.log('Creating workspace:', this.newWorkspaceName, this.expirationInHours);
-    this.showCreateDialog = false;
+  createFastLink() {
+    const hours = Number(this.expirationHours);
+    const name = this.linkName; // store name before reset
 
-    // Show success message
-    this.messageService.add({
-      severity: 'info',
-      summary: 'FastLink Created',
-      detail: 'Your new FastLink ' + this.newWorkspaceName + ' has been successfully created!',
-      life: 3000, // optional: auto close duration in ms
+    if (!this.selectedFile || !name || !hours || hours < 1 || hours > 24) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Validation failed',
+        detail: 'All fields are required and expiration must be between 1 and 24 hours.'
+      });
+      return;
+    }
+
+    this.uploading = true;
+
+    this.linkService.uploadFastLink(this.selectedFile, name, hours).subscribe({
+      next: (event) => {
+        if (event.type === HttpEventType.Response) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Fast Link Created',
+            detail: `Fast Link "${name}" was created successfully!`
+          });
+          this.linkService.notifyFastLinkCreated();
+          this.closeDialog();
+        }
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Upload failed',
+          detail: 'There was a problem uploading the file.'
+        });
+      },
+      complete: () => {
+        this.uploading = false;
+      }
     });
-
-    this.resetForm();
   }
 
   private resetForm() {
-    this.newWorkspaceName = '';
-    this.expirationInHours = '';
+    this.linkName = '';
+    this.expirationHours = '';
     this.selectedFile = null;
+    this.selectedFileName = '';
   }
 }

@@ -185,5 +185,11 @@ export class WorkspaceService {
     });
   }
 
+  searchWorkspaces(userId: number, query: string): Observable<ApiResult<Workspace[]>> {
+    return this.http.get<ApiResult<Workspace[]>>(
+      `${this.apiUrl}/workspaces/search?userId=${userId}&query=${encodeURIComponent(query)}`
+    );
+  }
+
 
 }

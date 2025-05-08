@@ -45,6 +45,16 @@ export class NotificationBarComponent implements OnInit {
           });
 
           this.unreadCount = res.data.filter(n => !n.isRead).length;
+
+          const unreadInvites = this.notifications.filter(n => !n.isRead && n.token);
+          if (unreadInvites.length > 0) {
+            this.messageService.add({
+              severity: 'info',
+              summary: 'New Invitations',
+              detail: `You have ${unreadInvites.length} new workspace invitation(s).`,
+              life: 4000
+            });
+          }
         }
       }
     });
@@ -57,15 +67,26 @@ export class NotificationBarComponent implements OnInit {
       const token = this.extractToken(incoming.message);
       const cleanMessage = incoming.message.replace(/^([0-9a-fA-F-]+)-/, '');
 
-      this.notifications.unshift({
+      const displayNotification: DisplayNotification = {
         ...incoming,
         message: cleanMessage,
         icon: 'pi-bell',
         time: this.timeSince(new Date(incoming.createdAt)),
         token: token
-      });
+      };
 
+      this.notifications.unshift(displayNotification);
       this.unreadCount++;
+
+      // 🎉 Show in-app toast if it's an invitation
+      if (token) {
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Workspace Invitation',
+          detail: cleanMessage,
+          life: 4000
+        });
+      }
     });
   }
 

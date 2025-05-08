@@ -23,6 +23,8 @@ export class WorkspaceTableComponent implements OnInit {
   selectedFilePath: string[] = [];
   selectedFile: any = null;
   plainTextContent: string | null = null;
+  internalDrag: boolean = false;
+  hoveredDropTarget: string | null = null;
 
   viewDialogVisible = false;
   viewDialogUrl: SafeResourceUrl | null = null;
@@ -68,6 +70,9 @@ export class WorkspaceTableComponent implements OnInit {
   }
 
   private attachPaths(folder: any, path: string[]): void {
+    folder.files = folder.files || [];    // ✅ ensure arrays
+    folder.folders = folder.folders || [];
+
     folder.files.forEach((file: any) => {
       file._path = [...path];
     });
@@ -78,12 +83,19 @@ export class WorkspaceTableComponent implements OnInit {
 
   updateView(): void {
     let folder = this.workspace.structure;
+
     for (const segment of this.currentPath) {
-      const found = folder.folders.find((f: any) => f.name === segment);
+      const found = folder.folders?.find((f: any) => f.name === segment);
       if (!found) break;
       folder = found;
     }
+
+    // ✅ Defensive fix for potential undefined
+    folder.files = folder.files || [];
+    folder.folders = folder.folders || [];
+
     this.currentFolder = folder;
+    console.log('Current folder view:', this.currentFolder);
   }
 
   navigateToFolder(folderName: string): void {
@@ -292,11 +304,37 @@ export class WorkspaceTableComponent implements OnInit {
     });
   }
 
+  onFilesSelected(event: any): void {
+    const files: FileList = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const fullPath = this.buildFullPath('');
+    const uploadQueue: File[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const original = files[i];
+      if (!this.checkFileSize(original)) continue;
+
+      const sanitizedName = this.sanitizeFileName(original.name);
+      const sanitized = new File([original], sanitizedName, {
+        type: original.type,
+        lastModified: original.lastModified
+      });
+
+      uploadQueue.push(sanitized);
+    }
+
+    uploadQueue.forEach(file => this.uploadFile(file, fullPath));
+  }
+
 
   isDragOver = false;
 
   onDragOver(event: DragEvent): void {
     event.preventDefault();
+
+    if (this.internalDrag) return;
+
     this.isDragOver = true;
   }
 
@@ -305,8 +343,46 @@ export class WorkspaceTableComponent implements OnInit {
     this.isDragOver = false;
   }
 
+  uploadFile(file: File, fullPath: string): void {
+    this.uploading = true;
+    this.uploadProgress = 0;
+
+    this.fileService.uploadFile(file, Number(this.workspaceId), fullPath).subscribe({
+      next: (event) => {
+        if (event.type === 1 && event.total) {
+          this.uploadProgress = Math.round((100 * event.loaded) / event.total);
+        } else if (event.type === 4) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Uploaded',
+            detail: `${file.name} uploaded successfully!`
+          });
+          setTimeout(() => this.fetchWorkspaceTree(), 300);
+        }
+      },
+      error: (err) => {
+        console.error('❌ Upload failed', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Upload Failed',
+          detail: `Failed to upload ${file.name}`
+        });
+      },
+      complete: () => {
+        this.uploading = false;
+        this.uploadProgress = 0;
+      }
+    });
+  }
+
   onDrop(event: DragEvent): void {
     event.preventDefault();
+
+    if (this.internalDrag) {
+      this.internalDrag = false;
+      return;
+    }
+
     this.isDragOver = false;
 
     if (this.uploading) return;
@@ -484,6 +560,65 @@ export class WorkspaceTableComponent implements OnInit {
     }
 
     return true;
+  }
+
+
+  draggedFile: any = null;
+
+  onFileDragStart(event: DragEvent, file: any): void {
+    this.draggedFile = file;
+    this.internalDrag = true; // Set internal drag flag
+    event.dataTransfer?.setData('text/plain', JSON.stringify(file));
+  }
+
+  allowDrop(event: DragEvent, folderName: string): void {
+    event.preventDefault();
+    this.hoveredDropTarget = folderName;
+  }
+
+  onFileDrop(event: DragEvent, targetFolderName: string): void {
+    event.preventDefault();
+
+    if (!this.draggedFile) return;
+
+    const sourcePath = this.buildFullPath(this.draggedFile.id, this.draggedFile._path);
+    const targetFolder = this.buildFullPath('', [...this.currentPath, targetFolderName]);
+
+    this.fileService.moveFile(sourcePath, targetFolder, Number(this.workspaceId), this.userId).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.fetchWorkspaceTree();
+
+          setTimeout(() => {
+            this.messageService.add({
+              severity: 'success',
+              summary: 'File Moved',
+              detail: `"${this.draggedFile.name}" moved to "${targetFolderName}" successfully.`,
+              life: 3000
+            });
+          }, 300);
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Move Failed',
+            detail: res.error?.message || 'Unknown error.'
+          });
+        }
+
+        this.hoveredDropTarget = null; //
+      },
+      error: (err) => {
+        console.error(' Failed to move file', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Move Failed',
+          detail: 'An error occurred while moving the file.'
+        });
+        this.hoveredDropTarget = null; //
+      }
+    });
+
+    this.draggedFile = null;
   }
 
 }

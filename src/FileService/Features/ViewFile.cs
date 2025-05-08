@@ -30,7 +30,7 @@ public static class ViewFileEndpoint
                 return;
             }
 
-            // 🛠️ Important fix: reset the stream position
+            // Important fix: reset the stream position
             if (result.Stream.CanSeek)
             {
                 result.Stream.Position = 0;

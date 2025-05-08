@@ -40,6 +40,10 @@ export class HomeComponent implements OnInit{
     private userService: UserService
   ) {}
 
+  allWorkspaces: Workspace[] = [];
+  filteredWorkspaces: Workspace[] = [];
+  selectedWorkspace: Workspace | null = null;
+
   showRecents = false;
   recentWorkspaces: Workspace[] | undefined = [];
   loadingRecents = false;
@@ -64,6 +68,28 @@ export class HomeComponent implements OnInit{
         console.error('Failed to fetch recent workspaces', err);
         this.loadingRecents = false;
       }
+    });
+  }
+
+  filterWorkspaces(event: any): void {
+    const query = event.query?.trim();
+    if (!query) {
+      this.filteredWorkspaces = [];
+      return;
+    }
+
+    this.userService.user$.pipe().subscribe(user => {
+      if (!user) return;
+
+      this.workspaceService.searchWorkspaces(user.id, query).subscribe({
+        next: (res) => {
+          this.filteredWorkspaces = res.data ?? [];
+        },
+        error: (err) => {
+          console.error('❌ Failed to search workspaces', err);
+          this.filteredWorkspaces = [];
+        }
+      });
     });
   }
 

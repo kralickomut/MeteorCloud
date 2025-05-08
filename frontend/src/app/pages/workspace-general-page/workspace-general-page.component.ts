@@ -95,6 +95,8 @@ export class WorkspaceGeneralPageComponent implements OnInit {
   }
 
   saveChanges(): void {
+    if (!this.isPrivileged) return;
+
     this.workspaceService.updateWorkspace({
       workspaceId: this.workspace.id,
       name: this.workspace.name,
@@ -206,8 +208,20 @@ export class WorkspaceGeneralPageComponent implements OnInit {
 
     const currentRole = currentUser.role;
 
-    // Can't act on yourself
-    if (userId === currentUser.userId) return [];
+    if (userId === currentUser.userId) {
+      const isLastOwner = currentUser.role === Role.Owner &&
+        this.workspace.users.filter(u => u.role === Role.Owner).length === 1;
+
+      if (!isLastOwner) {
+        return [{
+          label: 'Leave Workspace',
+          icon: 'pi pi-sign-out',
+          command: () => this.leaveWorkspace()
+        }];
+      }
+
+      return [];
+    }
 
     const actions = [];
 
@@ -282,5 +296,32 @@ export class WorkspaceGeneralPageComponent implements OnInit {
         this.cancelRoleChange();
       }
     });
+  }
+
+
+  leaveWorkspace() {
+    if (!this.currentUser) return;
+
+    this.workspaceService.removeUserFromWorkspace({
+      userId: this.currentUser.id,
+      workspaceId: this.workspace.id
+    }).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.messageService.add({ severity: 'success', summary: 'Left Workspace', detail: 'You have left the workspace.' });
+          this.router.navigate(['/']); // Or redirect to dashboard
+        } else {
+          this.messageService.add({ severity: 'error', summary: 'Error', detail: res.error?.message || 'Failed to leave workspace.' });
+        }
+      },
+      error: () => {
+        this.messageService.add({ severity: 'error', summary: 'Error', detail: 'An unexpected error occurred.' });
+      }
+    });
+  }
+
+  canSeeActions(userId: number): boolean {
+    if (!this.currentUser) return false;
+    return this.isPrivileged || this.currentUser.id === userId;
   }
 }

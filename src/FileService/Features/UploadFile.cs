@@ -70,13 +70,13 @@ public class UploadFileHandler
 
         var fileId = Guid.NewGuid();
 
-        var fileUrl = await _blobStorageService.UploadFileAsync(
+        var result = await _blobStorageService.UploadFileAsync(
             request.File,
             request.FolderPath,
             fileId,
             cancellationToken);
 
-        if (string.IsNullOrEmpty(fileUrl))
+        if (string.IsNullOrEmpty(result.url))
         {
             return Results.BadRequest(new ApiResult<object>(null, false, "Failed to upload file."));
         }
@@ -84,7 +84,7 @@ public class UploadFileHandler
         var fileUploadedEvent = new FileUploadedEvent
         {
             FileId = fileId.ToString(),
-            FileName = request.File.FileName,
+            FileName = result.fileName,
             WorkspaceId = request.WorkspaceId,
             FolderPath = request.FolderPath,
             ContentType = request.File.ContentType ?? "application/octet-stream",
@@ -95,7 +95,7 @@ public class UploadFileHandler
 
         await _publishEndpoint.Publish(fileUploadedEvent);
 
-        return Results.Ok(new ApiResult<string>(fileUrl, true, "File uploaded successfully"));
+        return Results.Ok(new ApiResult<string>(result.url, true, "File uploaded successfully"));
     }
 }
 
