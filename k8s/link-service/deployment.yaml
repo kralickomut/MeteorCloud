@@ -12,11 +12,18 @@ spec:
       labels:
         app: link-service
     spec:
+      initContainers:
+        - name: wait-for-deps
+          image: busybox
+          command: [ 'sh', '-c', '
+            until nc -z postgres 5432 && nc -z rabbitmq 5672 && nc -z redis 6379;
+            do echo waiting for dependencies; sleep 2; done;
+          ' ]
       containers:
         - name: link-service
           image: link-service:dev
           ports:
-            - containerPort: 5301
+            - containerPort: 80
           env:
             - name: ConnectionStrings__Default
               value: "Host=postgres;Port=5432;Database=link_service_db;Username=meteorcloud;Password=secretpassword"
@@ -24,3 +31,14 @@ spec:
               value: redis
             - name: REDIS_PORT
               value: "6379"
+            - name: USER_SERVICE_URL
+              value: http://user-service
+            - name: WORKSPACE_SERVICE_URL
+              value: http://workspace-service
+            - name: AUDIT_SERVICE_URL
+              value: http://audit-service
+          resources:
+            requests:
+              cpu: 100m
+            limits:
+              cpu: 500m

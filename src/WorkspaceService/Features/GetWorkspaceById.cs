@@ -45,7 +45,7 @@ public class GetWorkspaceByIdEndpoint
 {
     public static void Register(IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/workspace/{id}", 
+        app.MapGet("/api/workspaces/{id}", 
             async (
                 int id,
                 GetWorkspaceByIdHandler handler,

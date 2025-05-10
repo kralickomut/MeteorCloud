@@ -43,7 +43,7 @@ export class UserService {
   }
 
   updateUser(data: UserUpdateRequest) : Observable<ApiResult<UserUpdateResponse>> {
-    return this.http.put<ApiResult<UserUpdateResponse>>(`${this.userUrl}/user/`, data);
+    return this.http.put<ApiResult<UserUpdateResponse>>(`${this.userUrl}/users/`, data);
   }
 
   getUsersBulk(userIds: number[]): Observable<ApiResult<User[]>> {

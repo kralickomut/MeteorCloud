@@ -6,5 +6,5 @@ spec:
   selector:
     app: audit-service
   ports:
-    - port: 5300
-      targetPort: 5300
+    - port: 80
+      targetPort: 80

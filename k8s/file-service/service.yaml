@@ -6,5 +6,5 @@ spec:
   selector:
     app: file-service
   ports:
-    - port: 5298
-      targetPort: 5298
+    - port: 80
+      targetPort: 80

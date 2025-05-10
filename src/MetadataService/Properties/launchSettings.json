@@ -16,7 +16,8 @@
       "launchUrl": "swagger",
       "applicationUrl": "http://localhost:5299",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "PORT": "5299"
       }
     },
     "https": {
@@ -26,7 +27,8 @@
       "launchUrl": "swagger",
       "applicationUrl": "https://localhost:7157;http://localhost:5299",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development"
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "PORT": "5299"
       }
     },
     "IIS Express": {

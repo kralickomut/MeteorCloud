@@ -91,7 +91,7 @@ export class WorkspaceService {
   createWorkspace(data: CreateWorkspace): Observable<ApiResult<Workspace>> {
     data.ownerId = localStorage.getItem('user_id') || '';
     data.ownerName = this.userService.currentUser?.name || '';
-    return this.http.post<ApiResult<Workspace>>(`${this.apiUrl}/workspace`, data);
+    return this.http.post<ApiResult<Workspace>>(`${this.apiUrl}/workspaces`, data);
   }
 
   getUserWorkspaces(
@@ -148,13 +148,13 @@ export class WorkspaceService {
       .set('pageSize', pageSize.toString());
 
     return this.http.get<ApiResult<{ items: WorkspaceInvitationHistoryDto[]; totalCount: number }>>(
-      `${this.apiUrl}/workspace/invitations-history/${workspaceId}`,
+      `${this.apiUrl}/workspaces/invitations-history/${workspaceId}`,
       { params }
     );
   }
 
   deleteWorkspace(id: number): Observable<ApiResult<boolean>> {
-    return this.http.delete<ApiResult<boolean>>(`${this.apiUrl}/workspace/${id}`);
+    return this.http.delete<ApiResult<boolean>>(`${this.apiUrl}/workspaces/${id}`);
   }
 
   updateWorkspace(data: { workspaceId: number, name: string, description: string }): Observable<ApiResult<boolean>> {
@@ -162,15 +162,15 @@ export class WorkspaceService {
   }
 
   inviteToWorkspace(data: InviteToWorkspace) : Observable<ApiResult<boolean>> {
-    return this.http.post<ApiResult<boolean>>(`${this.apiUrl}/workspace/invite`, data);
+    return this.http.post<ApiResult<boolean>>(`${this.apiUrl}/workspaces/invite`, data);
   }
 
   getWorkspaceById(id: number): Observable<ApiResult<Workspace>> {
-    return this.http.get<ApiResult<Workspace>>(`${this.apiUrl}/workspace/${id}`);
+    return this.http.get<ApiResult<Workspace>>(`${this.apiUrl}/workspaces/${id}`);
   }
 
   getWorkspaceInvitation(token: string) : Observable<WorkspaceInvitation> {
-    return this.http.get<WorkspaceInvitation>(`${this.apiUrl}/workspace/invitations/${token}`);
+    return this.http.get<WorkspaceInvitation>(`${this.apiUrl}/workspaces/invitations/${token}`);
   }
 
   getRecentWorkspaces(userId: number, limit: number = 3): Observable<ApiResult<Workspace[]>> {
@@ -180,7 +180,7 @@ export class WorkspaceService {
   }
 
   respondToInvitation(token: string, accept: boolean): Observable<ApiResult<boolean>> {
-    return this.http.post<ApiResult<boolean>>(`${this.apiUrl}/workspace/invite/respond`, {
+    return this.http.post<ApiResult<boolean>>(`${this.apiUrl}/workspaces/invite/respond`, {
       token,
       accept
     });

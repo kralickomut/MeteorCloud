@@ -118,7 +118,7 @@ public class InviteToWorkspaceEndpoint
 {
     public static void Register(IEndpointRouteBuilder app)
     {
-        app.MapPost("/api/workspace/invite", 
+        app.MapPost("/api/workspaces/invite", 
             async (InviteToWorkspaceRequest request, InviteToWorkspaceHandler handler, InviteToWorkspaceValidator validator, CancellationToken cancellationToken) =>
             {
                 var validationResult = await validator.ValidateAsync(request, cancellationToken);

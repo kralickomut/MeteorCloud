@@ -12,11 +12,18 @@ spec:
       labels:
         app: notification-service
     spec:
+      initContainers:
+        - name: wait-for-deps
+          image: busybox
+          command: [ 'sh', '-c', '
+            until nc -z postgres 5432 && nc -z rabbitmq 5672 && nc -z redis 6379;
+            do echo waiting for dependencies; sleep 2; done;
+          ' ]
       containers:
         - name: notification-service
           image: notification-service:dev
           ports:
-            - containerPort: 5160
+            - containerPort: 80
           env:
             - name: ConnectionStrings__Default
               value: "Host=postgres;Port=5432;Database=notification_service_db;Username=meteorcloud;Password=secretpassword"
@@ -32,3 +39,12 @@ spec:
               value: "no-reply@meteorcloud.com"
             - name: SMTP_ENABLE_SSL
               value: "false"
+            - name: USER_SERVICE_URL
+              value: http://user-service
+            - name: WORKSPACE_SERVICE_URL
+              value: http://workspace-service
+          resources:
+            requests:
+              cpu: 100m
+            limits:
+              cpu: 500m

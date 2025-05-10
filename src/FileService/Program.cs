@@ -25,9 +25,11 @@ builder.Services.AddCors(opt =>
 builder.Services.RegisterServices(configuration);
 
 // Bind for port 5298
+var port = Environment.GetEnvironmentVariable("PORT") ?? "80";
+
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.ListenAnyIP(5298);
+    options.ListenAnyIP(int.Parse(port));
     options.Limits.MaxRequestBodySize = 500_000_000; // 500 MB
 });
 

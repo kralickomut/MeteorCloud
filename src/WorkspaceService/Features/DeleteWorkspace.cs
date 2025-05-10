@@ -76,7 +76,7 @@ public static class DeleteWorkspaceEndpoint
 {
     public static void Register(IEndpointRouteBuilder app)
     {
-        app.MapDelete("/api/workspace/{id:int}", 
+        app.MapDelete("/api/workspaces/{id:int}", 
             async (int id, HttpContext context, DeleteWorkspaceHandler handler, DeleteWorkspaceValidator validator, CancellationToken cancellationToken) =>
         {
             // For future
@@ -96,6 +96,6 @@ public static class DeleteWorkspaceEndpoint
             return response.Success
                 ? Results.Ok(response)
                 : Results.NotFound(response);
-        });
+        }).RequireAuthorization();
     }
 }

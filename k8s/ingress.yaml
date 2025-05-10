@@ -3,65 +3,82 @@ kind: Ingress
 metadata:
   name: meteorcloud-ingress
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: "500m"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
   rules:
     - host: localhost
       http:
         paths:
-          - path: /api/user(/|$)(.*)
+          - path: /api/users
             pathType: Prefix
             backend:
               service:
                 name: user-service
                 port:
                   number: 80
-          - path: /api/auth(/|$)(.*)
+          - path: /api/auth
             pathType: Prefix
             backend:
               service:
                 name: auth-service
                 port:
                   number: 80
-          - path: /api/file(/|$)(.*)
+          - path: /api/file
             pathType: Prefix
             backend:
               service:
                 name: file-service
                 port:
                   number: 80
-          - path: /api/workspace(/|$)(.*)
+          - path: /api/workspaces
             pathType: Prefix
             backend:
               service:
                 name: workspace-service
                 port:
                   number: 80
-          - path: /api/notification(/|$)(.*)
+          - path: /api/notifications
             pathType: Prefix
             backend:
               service:
                 name: notification-service
                 port:
                   number: 80
-          - path: /api/metadata(/|$)(.*)
+          - path: /api/metadata
             pathType: Prefix
             backend:
               service:
                 name: metadata-service
                 port:
                   number: 80
-          - path: /api/link(/|$)(.*)
+          - path: /api/links
             pathType: Prefix
             backend:
               service:
                 name: link-service
                 port:
                   number: 80
-          - path: /api/audit(/|$)(.*)
+          - path: /api/audit
             pathType: Prefix
             backend:
               service:
                 name: audit-service
+                port:
+                  number: 80
+          - path: /hub/workspaces
+            pathType: Prefix
+            backend:
+              service:
+                name: workspace-service
+                port:
+                  number: 80
+          - path: /hub/notifications
+            pathType: Prefix
+            backend:
+              service:
+                name: notification-service
                 port:
                   number: 80

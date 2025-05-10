@@ -24,9 +24,11 @@ builder.Services.AddCors(opt =>
 });
 
 // Bind for port 5301
+var port = Environment.GetEnvironmentVariable("PORT") ?? "80";
+
 builder.WebHost.ConfigureKestrel(options =>
 {
-    options.ListenAnyIP(5301);
+    options.ListenAnyIP(int.Parse(port));
 });
 
 var app = builder.Build();

@@ -6,5 +6,5 @@ spec:
   selector:
     app: link-service
   ports:
-    - port: 5301
-      targetPort: 5301
+    - port: 80
+      targetPort: 80

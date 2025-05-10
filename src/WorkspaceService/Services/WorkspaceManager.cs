@@ -120,6 +120,16 @@ public class  WorkspaceManager
 
     public async Task<Workspace?> CreateWorkspaceAsync(Workspace workspace, CancellationToken? cancellationToken = null)
     {
+        var url = MicroserviceEndpoints.UserService.GetUserById(workspace.OwnerId);
+        var response = await _httpClient.GetAsync<object>(url);
+        
+        if (!response.Success)
+        {
+            _logger.LogError("Failed to create workspace. User with id {UserId} not found.", workspace.OwnerId);
+            return null;
+        }
+        
+        
         var newWorkspace = await _workspaceRepository.CreateWorkspaceAsync(workspace, cancellationToken);
 
         if (newWorkspace != null)

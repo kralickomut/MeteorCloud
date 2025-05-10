@@ -50,7 +50,7 @@ public class GetWorkspaceInvitationByTokenEndpoint
 {
     public static void Register(IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/workspace/invitations/{token}",
+        app.MapGet("/api/workspaces/invitations/{token}",
             async (string token, GetWorkspaceInvitationByTokenValidator validator, GetWorkspaceInvitationByTokenHandler handler, CancellationToken cancellationToken) =>
             {
                 var request = new GetWorkspaceInvitationByTokenRequest(token);

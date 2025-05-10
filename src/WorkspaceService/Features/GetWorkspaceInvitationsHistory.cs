@@ -111,7 +111,7 @@ public class GetWorkspaceInvitationsHistoryEndpoint
 {
     public static void Register(IEndpointRouteBuilder app)
     {
-        app.MapGet("/api/workspace/invitations-history/{id}", 
+        app.MapGet("/api/workspaces/invitations-history/{id}", 
             async (
                 int id,
                 int page, 

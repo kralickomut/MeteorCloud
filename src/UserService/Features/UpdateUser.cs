@@ -54,7 +54,7 @@ public class UpdateUserEndpoint
 {
     public static void Register(IEndpointRouteBuilder app)
     {
-        app.MapPut("/api/user",
+        app.MapPut("/api/users",
                 async (HttpContext context,UpdateUserRequest request, UpdateUserValidator validator, UpdateUserHandler handler, CancellationToken cancellationToken) =>
                 {
                     var userId = int.Parse(context.User.FindFirst("id")?.Value ?? "0");

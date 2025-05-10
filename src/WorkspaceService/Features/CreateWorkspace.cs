@@ -1,5 +1,6 @@
 using System.Runtime.InteropServices.JavaScript;
 using FluentValidation;
+using MeteorCloud.Communication;
 using MeteorCloud.Messaging.Events.Workspace;
 using MeteorCloud.Shared.ApiResults;
 using Microsoft.AspNetCore.SignalR;
@@ -77,9 +78,22 @@ public class CreateWorkspaceEndpoint
 {
     public static void Register(IEndpointRouteBuilder app)
     {
-        app.MapPost("/api/workspace", 
-            async (CreateWorkspaceRequest request, CreateWorkspaceHandler handler, CreateWorkspaceValidator validator, CancellationToken cancellationToken) =>
+        app.MapPost("/api/workspaces", 
+            async (HttpContext context, CreateWorkspaceRequest request, CreateWorkspaceHandler handler, CreateWorkspaceValidator validator, CancellationToken cancellationToken) =>
         {
+            
+            var userId = context.User.FindFirst("id")?.Value;
+            
+            if (!int.TryParse(userId, out var ownerId))
+            {
+                return Results.Unauthorized();
+            }
+            
+            if (request.OwnerId != ownerId)
+            {
+                return Results.Unauthorized();
+            }
+            
             var validationResult = await validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid)
             {
@@ -92,6 +106,6 @@ public class CreateWorkspaceEndpoint
             return response.Success
                 ? Results.Ok(response)
                 : Results.NotFound(response);
-        });
+        }).RequireAuthorization();
     }
 }

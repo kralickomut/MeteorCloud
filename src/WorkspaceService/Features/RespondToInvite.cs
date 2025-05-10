@@ -77,7 +77,7 @@ public static class RespondToInviteEndpoint
 {
     public static void Register(IEndpointRouteBuilder app)
     {
-        app.MapPost("/api/workspace/invite/respond",
+        app.MapPost("/api/workspaces/invite/respond",
             async (RespondToInviteRequest request, 
                 RespondToInviteValidator validator, 
                 RespondToInviteHandler handler, 
