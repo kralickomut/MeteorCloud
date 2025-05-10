@@ -62,13 +62,15 @@ import { PublicLayoutComponent } from './layouts/public-layout/public-layout.com
 import { SharedFilePageComponent } from './pages/shared-file-page/shared-file-page.component';
 import { SharedLayoutRouterComponent } from './pages/shared-layout-router/shared-layout-router.component';
 import {AutoCompleteModule} from "primeng/autocomplete";
+import { ChangePasswordComponent } from './shared/change-password/change-password.component';
+import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
+import { ResetPasswordComponent } from './pages/reset-password/reset-password.component';
+import { ToLocalDatePipe } from './pipes/to-local-date.pipe';
+import { RefreshLinkComponent } from './shared/refresh-link/refresh-link.component';
 
 
-// TODO: Recent work on workspace detail
 // TODO: RESPONSIVENESS ACROSS WHOLE APP !IMPORTANT
-// TODO: Profile images for users
 // TODO: Kubernetes
-// TODO: Sometimes a lot of notificaiton on refresh workspace list
 
 @NgModule({
   declarations: [
@@ -99,6 +101,11 @@ import {AutoCompleteModule} from "primeng/autocomplete";
     PublicLayoutComponent,
     SharedFilePageComponent,
     SharedLayoutRouterComponent,
+    ChangePasswordComponent,
+    ForgotPasswordComponent,
+    ResetPasswordComponent,
+    ToLocalDatePipe,
+    RefreshLinkComponent,
   ],
   imports: [
     BrowserModule,

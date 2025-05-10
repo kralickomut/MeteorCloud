@@ -65,7 +65,8 @@ public class UserRepository
                 Description = @Description,
                 InTotalWorkspaces = @InTotalWorkspaces,
                 LastLogin = @LastLogin,
-                UpdatedAt = @UpdatedAt
+                UpdatedAt = @UpdatedAt,
+                ProfilePictureUrl = @ProfilePictureUrl
             WHERE Id = @Id;
         ";
 

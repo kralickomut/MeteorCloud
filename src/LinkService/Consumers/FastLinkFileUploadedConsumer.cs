@@ -35,7 +35,7 @@ public class FastLinkFileUploadedConsumer : IConsumer<FastLinkFileUploadedEvent>
                 CreatedByUserId = message.UserId,
                 FileName = message.FileName,
                 FileSize = message.FileSize,
-                Token = Guid.NewGuid().ToString()  // Generate a unique token for the link
+                Token = Guid.NewGuid()  // Generate a unique token for the link
             };
             
             var newLink = await _fastLinkManager.CreateLinkAsync(link);

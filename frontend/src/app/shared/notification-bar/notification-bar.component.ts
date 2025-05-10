@@ -78,7 +78,7 @@ export class NotificationBarComponent implements OnInit {
       this.notifications.unshift(displayNotification);
       this.unreadCount++;
 
-      // 🎉 Show in-app toast if it's an invitation
+      //  Show in-app toast if it's an invitation
       if (token) {
         this.messageService.add({
           severity: 'info',
@@ -121,7 +121,7 @@ export class NotificationBarComponent implements OnInit {
       console.warn('No token found for this invitation.');
       return;
     }
-
+    this.workspaceService.suppressNextRefreshToast = true;
     this.workspaceService.respondToInvitation(notification.token, true).subscribe({
       next: (res) => {
         if (res.success) {

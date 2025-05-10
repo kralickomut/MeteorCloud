@@ -36,7 +36,13 @@
     <!-- Avatar -->
     <div class="user-avatar">
       <a routerLink="/profile" routerLinkActive="active" class="nav-icon" pTooltip="Profile" tooltipPosition="right">
-        <img src="https://i.pravatar.cc/150?img=12" class="rounded-circle user-img" alt="User avatar" />
+        <img
+          class="avatar mb-3"
+          style="width: 58px;"
+          [src]="profileImageUrl"
+          alt="User Avatar"
+          (error)="onImageError($event)"
+        />
       </a>
     </div>
   </div>

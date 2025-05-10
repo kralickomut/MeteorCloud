@@ -5,6 +5,17 @@
   max-width: 600px;
   margin: 0 auto;
 
+  .workspace-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .workspace-name {
+      font-size: 0.95rem;
+      color: #374151;
+    }
+  }
+
   .p-inputtext {
     padding: 0.85rem 1.25rem;
     border-radius: 0.75rem;

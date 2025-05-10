@@ -42,6 +42,7 @@
         <th>Expires At</th>
         <th>Time Left</th>
         <th>Status</th>
+        <th>Accesses</th>
         <th>Actions</th>
       </tr>
       </thead>
@@ -63,8 +64,8 @@
             </i>
           </div>
         </td>
-        <td>{{ link.expiresAt | date: 'short' }}</td>
-        <td>{{ calculateHoursLeft(link.expiresAt) }} hrs</td>
+        <td>{{ link.expiresAt | toLocalDate:formatOptions }}</td>
+        <td>{{ calculateTimeLeft(link.expiresAt) }}</td>
         <td>
             <span
               class="badge"
@@ -77,7 +78,23 @@
             </span>
         </td>
         <td>
+          <span
+            class="badge"
+            [ngClass]="'badge-info'"
+          >
+            {{ link.accessCount }}
+          </span>
+        </td>
+        <td>
           <i class="pi pi-trash text-danger" (click)="deleteLink(link)"></i>
+          <i
+            *ngIf="isExpired(link.expiresAt)"
+            class="pi pi-refresh text-primary ms-2"
+            (click)="openRefreshDialog(link.token)"
+            style="cursor: pointer;"
+            pTooltip="Refresh Expiration"
+            tooltipPosition="top"
+          ></i>
         </td>
       </tr>
       </tbody>
@@ -90,3 +107,43 @@
 </div>
 
 <p-confirmDialog header="Confirm Deletion" icon="pi pi-exclamation-triangle"></p-confirmDialog>
+
+<p-dialog
+  header="Extend Link Expiration"
+  [(visible)]="refreshDialogVisible"
+  [modal]="true"
+  [style]="{ width: '300px' }"
+  [closable]="true"
+  [dismissableMask]="true"
+>
+  <div class="p-fluid">
+    <label for="hours">Enter new expiration (in hours):</label>
+    <input
+      type="number"
+      id="hours"
+      pInputText
+      [(ngModel)]="refreshHours"
+      min="1"
+      max="24"
+      placeholder="12"
+    />
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button
+      pButton
+      label="Cancel"
+      icon="pi pi-times"
+      class="p-button-text"
+      (click)="refreshDialogVisible = false"
+    ></button>
+
+    <button
+      pButton
+      label="Refresh"
+      icon="pi pi-check"
+      [disabled]="refreshHours < 1 || refreshHours > 24"
+      (click)="submitRefresh()"
+    ></button>
+  </ng-template>
+</p-dialog>

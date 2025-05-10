@@ -3,6 +3,7 @@ import { UserService, User, UserUpdateRequest } from '../../services/user.servic
 import { MessageService } from 'primeng/api';
 import { ActivatedRoute } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import {FileService} from "../../services/file.service";
 
 @Component({
   selector: 'app-profile-detail',
@@ -18,6 +19,7 @@ export class ProfileDetailComponent implements OnInit {
 
   constructor(
     private userService: UserService,
+    private fileService: FileService,
     private messageService: MessageService,
     private route: ActivatedRoute
   ) {}
@@ -88,6 +90,57 @@ export class ProfileDetailComponent implements OnInit {
     });
   }
 
+  get profileImageUrl(): string {
+    return this.userService.getProfileImageUrl(this.user?.id ?? 0);
+  }
+
+  onProfileImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input?.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Invalid file',
+        detail: 'Please upload an image file.'
+      });
+      return;
+    }
+
+    this.fileService.uploadProfileImage(file).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          if (this.user) {
+            this.user.profileImageUrl = res.data;
+          }
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Profile Image Updated',
+            detail: 'Your profile image was updated successfully.'
+          });
+
+          // Refresh page
+          window.location.reload();
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Upload failed',
+            detail: res.error?.message ?? 'Something went wrong.'
+          });
+        }
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Upload error',
+          detail: 'Failed to upload profile image.'
+        });
+      }
+    });
+  }
+
   cancelChanges(): void {
     if (!this.user?.id) return;
 
@@ -99,5 +152,10 @@ export class ProfileDetailComponent implements OnInit {
         }
       }
     });
+  }
+
+  onImageError(event: Event): void {
+    const imgElement = event.target as HTMLImageElement;
+    imgElement.src = '/assets/img/default-profile.jpg';
   }
 }

@@ -17,7 +17,10 @@ export class UserWorkspacesComponent implements OnInit {
   currentPage = 1;
   itemsPerPage = 10;
   searchText = '';
-
+  formatOptions: Intl.DateTimeFormatOptions = {
+    dateStyle: 'short',
+    timeStyle: 'short'
+  };
   protected currentUserId: number | null = null;
 
   constructor(
@@ -28,7 +31,6 @@ export class UserWorkspacesComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Wait until user is available
     this.userService.user$
       .pipe(
         filter((u): u is User => !!u),
@@ -40,9 +42,35 @@ export class UserWorkspacesComponent implements OnInit {
         this.fetchWorkspaces();
       });
 
-    // Handle real-time workspace events
-    this.workspaceService.workspaceCreated$.subscribe(() => this.refreshWorkspaces());
-    this.workspaceService.workspaceJoined$.subscribe(() => this.refreshWorkspaces());
+    this.workspaceService.workspaceCreated$.subscribe(() => {
+      this.fetchWorkspaces();
+
+      if (this.workspaceService.suppressNextRefreshToast) {
+        this.workspaceService.suppressNextRefreshToast = false;
+      } else {
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Refreshed',
+          detail: 'Workspaces list updated.',
+          life: 2000
+        });
+      }
+    });
+
+    this.workspaceService.workspaceJoined$.subscribe(() => {
+      this.fetchWorkspaces();
+
+      if (this.workspaceService.suppressNextRefreshToast) {
+        this.workspaceService.suppressNextRefreshToast = false;
+      } else {
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Refreshed',
+          detail: 'Workspaces list updated.',
+          life: 2000
+        });
+      }
+    });
   }
 
   fetchWorkspaces(): void {
@@ -62,6 +90,12 @@ export class UserWorkspacesComponent implements OnInit {
 
   refreshWorkspaces(): void {
     this.fetchWorkspaces();
+
+    if (this.workspaceService.suppressNextRefreshToast) {
+      this.workspaceService.suppressNextRefreshToast = false;
+      return;
+    }
+
     this.messageService.add({
       severity: 'info',
       summary: 'Refreshed',

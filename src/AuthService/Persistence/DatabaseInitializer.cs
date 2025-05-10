@@ -59,16 +59,17 @@ public class DatabaseInitializer
                     PasswordHash TEXT NOT NULL,
                     IsVerified BOOLEAN NOT NULL DEFAULT FALSE,
                     VerificationCode TEXT, 
+                    ResetPasswordToken UUID,
                     VerificationExpiry TIMESTAMPTZ, 
                     CreatedAt TIMESTAMPTZ NOT NULL DEFAULT NOW()
                 );";
 
             await connection.ExecuteAsync(createTableQuery);
-            _logger.LogInformation("✅ Tables initialized successfully.");
+            _logger.LogInformation(" Tables initialized successfully.");
         }
         catch (Exception ex)
         {
-            _logger.LogError("❌ Error initializing database: {Message}", ex.Message);
+            _logger.LogError(" Error initializing database: {Message}", ex.Message);
         }
     }
 }

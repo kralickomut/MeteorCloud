@@ -19,9 +19,9 @@
           styleClass="dashboard-search-autocomplete"
         >
           <ng-template let-workspace pTemplate="item">
-            <div>
+            <div class="workspace-item d-flex align-items-center gap-2">
               <span class="workspace-initials">{{ getInitials(workspace.name) }}</span>
-              <span>{{ workspace.name }}</span>
+              <span class="workspace-name">{{ workspace.name }}</span>
             </div>
           </ng-template>
 

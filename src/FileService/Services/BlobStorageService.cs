@@ -133,6 +133,39 @@ public class BlobStorageService
         }
     }
     
+    
+    public async Task<string> UploadProfileImageAsync(IFormFile file, int userId, CancellationToken cancellationToken = default)
+    {
+        var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
+        await containerClient.CreateIfNotExistsAsync(cancellationToken: cancellationToken);
+
+        var safeFileName = SanitizeFileName(file.FileName);
+        var blobPath = $"profile-images/{userId}/profile.jpg";
+        var blobClient = containerClient.GetBlobClient(blobPath);
+
+        var metadata = new Dictionary<string, string>
+        {
+            { "originalfilename", safeFileName }
+        };
+
+        await using var stream = file.OpenReadStream();
+
+        await blobClient.UploadAsync(
+            stream,
+            new BlobUploadOptions
+            {
+                HttpHeaders = new BlobHttpHeaders { ContentType = file.ContentType ?? "image/jpeg" },
+                Metadata = metadata,
+                Conditions = null
+            },
+            cancellationToken: cancellationToken
+        );
+
+        _logger.LogInformation("📸 Uploaded profile image for user {UserId} to {BlobPath}", userId, blobPath);
+
+        return blobClient.Uri.ToString();
+    }
+    
     public async Task<DownloadResult?> DownloadFileAsync(string path, CancellationToken cancellationToken = default)
     {
         var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
@@ -235,6 +268,9 @@ public class BlobStorageService
 
     return newPath;
 }
+    
+    
+    
 
 private async Task<string> GetUniqueFilenameAsync(BlobContainerClient containerClient, string folderPath, string originalName, CancellationToken cancellationToken)
 {

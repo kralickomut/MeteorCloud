@@ -1,7 +1,20 @@
 <div class="profile-page p-4" *ngIf="user">
   <div class="profile-container">
-    <div class="profile-card card text-center p-4">
-      <img class="avatar mb-3" src="https://i.pravatar.cc/150?img=12" alt="User Avatar" />
+    <div class="profile-card card text-center p-4 position-relative">
+      <img
+        class="avatar mb-3"
+        style="width: 58px;"
+        [src]="profileImageUrl"
+        alt="User Avatar"
+        (error)="onImageError($event)"
+      />
+
+      <!-- Upload icon appears only in edit mode -->
+      <label *ngIf="editMode && !viewOnly" class="upload-icon">
+        <i class="pi pi-pencil"></i>
+        <input type="file" accept="image/*" hidden (change)="onProfileImageSelected($event)" />
+      </label>
+
       <h5 class="mb-0">{{ user.name }}</h5>
       <small class="text-muted mt-1">Workspaces: {{ user.inTotalWorkspaces }}</small>
     </div>
@@ -9,9 +22,12 @@
     <div class="info-card">
       <div class="info-header d-flex justify-content-between align-items-center mb-3">
         <h5>Personal Information</h5>
-        <button *ngIf="!viewOnly" class="edit-btn" (click)="editMode = !editMode">
-          <i class="pi pi-pencil me-1"></i> {{ editMode ? 'Cancel' : 'Edit' }}
-        </button>
+        <div class="d-inline-flex">
+          <app-change-password *ngIf="!viewOnly"></app-change-password>
+          <button *ngIf="!viewOnly" class="edit-btn ms-3" (click)="editMode = !editMode">
+            <i class="pi pi-pencil me-1"></i> {{ editMode ? 'Cancel' : 'Edit' }}
+          </button>
+        </div>
       </div>
 
       <form class="info-form">

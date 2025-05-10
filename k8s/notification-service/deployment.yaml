@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+        - name: notification-service
+          image: notification-service:dev
+          ports:
+            - containerPort: 5160
+          env:
+            - name: ConnectionStrings__Default
+              value: "Host=postgres;Port=5432;Database=notification_service_db;Username=meteorcloud;Password=secretpassword"
+            - name: SMTP_HOST
+              value: "mailhog"
+            - name: SMTP_PORT
+              value: "1025"
+            - name: SMTP_USERNAME
+              value: ""
+            - name: SMTP_PASSWORD
+              value: ""
+            - name: SMTP_FROM
+              value: "no-reply@meteorcloud.com"
+            - name: SMTP_ENABLE_SSL
+              value: "false"

@@ -21,6 +21,15 @@ export class LinksTableComponent implements OnInit {
   links: FastLink[] = [];
   totalCount = 0;
 
+  refreshDialogVisible = false;
+  refreshTargetToken: string = '';
+  refreshHours: number = 12; // default value
+
+  formatOptions: Intl.DateTimeFormatOptions = {
+    dateStyle: 'short',
+    timeStyle: 'short'
+  };
+
   constructor(
     private linkService: LinkService,
     private userService: UserService,
@@ -34,10 +43,13 @@ export class LinksTableComponent implements OnInit {
       if (user) {
         this.userId = user.id;
         this.loadLinks(user.id);
+      }
+    });
 
-        this.linkService.fastLinkCreated$.subscribe(() => {
-          this.loadLinks(user.id);
-        });
+    // listen for new links
+    this.linkService.fastLinkCreated$.subscribe(() => {
+      if (this.userId) {
+        this.loadLinks(this.userId);
       }
     });
   }
@@ -84,14 +96,28 @@ export class LinksTableComponent implements OnInit {
     }
   }
 
-  calculateHoursLeft(date: string): number {
+  calculateTimeLeft(date: string): string {
     const now = new Date().getTime();
-    const target = new Date(date + 'Z').getTime(); // Force parse as UTC
-    return Math.max(0, Math.floor((target - now) / (1000 * 60 * 60)));
+    const target = new Date(date + 'Z').getTime(); // 👈 force UTC
+    const diff = target - now;
+
+    if (diff <= 0) return '0 mins';
+
+    const totalMinutes = Math.floor(diff / (1000 * 60));
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+
+    if (hours > 0 && minutes > 0) {
+      return `${hours} hr${hours > 1 ? 's' : ''} ${minutes} min${minutes > 1 ? 's' : ''}`;
+    }
+    if (hours > 0) return `${hours} hr${hours > 1 ? 's' : ''}`;
+    return `${minutes} min${minutes > 1 ? 's' : ''}`;
   }
 
   isExpired(date: string): boolean {
-    return new Date(date).getTime() <= new Date().getTime();
+    const now = new Date().getTime();
+    const target = new Date(date + 'Z').getTime(); // 👈 force UTC
+    return target <= now;
   }
 
   copyToClipboard(token: string): void {
@@ -116,6 +142,41 @@ export class LinksTableComponent implements OnInit {
       rejectButtonStyleClass: 'p-button-text',
       accept: () => this.executeDelete(linkToDelete)
     });
+  }
+
+  submitRefresh(): void {
+    this.linkService.refreshLink(this.refreshTargetToken, this.refreshHours).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Link Refreshed',
+            detail: `Link was extended by ${this.refreshHours} hours.`
+          });
+          this.refreshDialogVisible = false;
+          this.refreshLinks(); // reload list
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Failed',
+            detail: res.error?.message || 'Could not refresh link.'
+          });
+        }
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Something went wrong.'
+        });
+      }
+    });
+  }
+
+  openRefreshDialog(token: string): void {
+    this.refreshTargetToken = token;
+    this.refreshHours = 12;
+    this.refreshDialogVisible = true;
   }
 
   private executeDelete(linkToDelete: FastLink): void {
@@ -160,6 +221,36 @@ export class LinksTableComponent implements OnInit {
         life: 2000
       });
     }
+  }
+
+  refreshLink(link: FastLink): void {
+    const hours = 12; // or prompt user for value
+
+    this.linkService.refreshLink(link.token, hours).subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Link Refreshed',
+            detail: `Link "${link.name}" was extended by ${hours} hours.`
+          });
+          this.refreshLinks(); // reload the list
+        } else {
+          this.messageService.add({
+            severity: 'error',
+            summary: 'Refresh Failed',
+            detail: res.error?.message || 'Link could not be refreshed.'
+          });
+        }
+      },
+      error: () => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Error',
+          detail: 'Something went wrong while refreshing the link.'
+        });
+      }
+    });
   }
 
   protected readonly window = window;

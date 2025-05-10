@@ -6,6 +6,7 @@ using MassTransit;
 using MeteorCloud.Caching.Abstraction;
 using MeteorCloud.Caching.Services;
 using MeteorCloud.Communication;
+using MeteorCloud.Messaging.Events.FastLink;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
 
@@ -32,6 +33,11 @@ public static class ServiceExtensions
         
         services.AddSingleton<GetLinkByTokenValidator>();
         services.AddScoped<GetLinkByTokenHandler>();
+        
+        services.AddSingleton<RefreshLinkValidator>();
+        services.AddScoped<RefreshLinkHandler>();
+        
+        services.AddHostedService<ExpiredLinkCleanupService>();
         
         
         // Get Redis connection details from environment variables
@@ -68,6 +74,8 @@ public static class ServiceExtensions
                     h.Username("guest");
                     h.Password("guest");
                 });
+                
+                rabbitCfg.Message<FastLinkExpireCleanupEvent>(x => x.SetEntityName("fastlink-expired-link-cleanup"));
                 
                 rabbitCfg.ReceiveEndpoint("link-service-fastlink-file-uploaded", e =>
                 {

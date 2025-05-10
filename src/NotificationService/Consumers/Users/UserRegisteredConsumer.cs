@@ -27,7 +27,7 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
     {
         var message = context.Message;
         
-        await _emailSender.SendEmailAsync(message.Email, "Welcome!", "Ahoj");
+        await _emailSender.SendEmailAsync(message.Email, "Welcome!", "Welcome to MeteorCloud!");
         await _emailSender.SendEmailAsync(message.Email, "Verify Your Account", $"This is a verification code: {message.VerificationCode}");
 
         var userId = message.UserId;

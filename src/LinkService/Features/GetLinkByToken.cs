@@ -6,7 +6,7 @@ using MeteorCloud.Shared.SharedDto.Users;
 
 namespace LinkService.Features;
 
-public record GetLinkByTokenRequest(string Token);
+public record GetLinkByTokenRequest(Guid Token);
 
 public record GetLinkByTokenResponse(string Name, Guid FileId, string FileName, long FileSize, DateTime CreatedAt, DateTime ExpiresAt, int AccessCount, string CreatedByUser, int OwnerId);
 
@@ -43,6 +43,11 @@ public class GetLinkByTokenHandler
         {
             return new ApiResult<GetLinkByTokenResponse>(null, false, "Link not found");
         }
+        
+        if (link.ExpiresAt < DateTime.UtcNow)
+        {
+            return new ApiResult<GetLinkByTokenResponse>(null, false, "Link expired");
+        }
 
         var url = MicroserviceEndpoints.UserService.GetUserById(link.CreatedByUserId);
         var response = await _httpClient.GetAsync<UserResponse>(url);
@@ -51,7 +56,7 @@ public class GetLinkByTokenHandler
         if (!response.Success || response.Data is null)
         {
             _logger.LogInformation("Failed to get user info for link {Token}", request.Token);
-            userName = "Unknown User";
+            userName = "Someone";
         }
         else
         {
@@ -85,7 +90,12 @@ public class GetLinkByTokenEndpoint
                 GetLinkByTokenValidator validator,
                 CancellationToken cancellationToken) =>
             {
-                var request = new GetLinkByTokenRequest(token);
+                if (!Guid.TryParse(token, out var guid))
+                {
+                    return Results.BadRequest(new ApiResult<IEnumerable<string>>(null, false, "Invalid token format"));
+                }
+                
+                var request = new GetLinkByTokenRequest(guid);
                 
                 var validationResult = await validator.ValidateAsync(request, cancellationToken);
                 if (!validationResult.IsValid)

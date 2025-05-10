@@ -7,6 +7,7 @@ public class Credential
     public string PasswordHash { get; set; } = string.Empty;
     public bool IsVerified { get; set; }
     public string? VerificationCode { get; set; }
+    public Guid? ResetPasswordToken { get; set; }
     public DateTime? VerificationExpiry { get; set; }
-    public DateTime CreatedAt { get; set; }
+    public DateTime CreatedAt { get; init; }
 }

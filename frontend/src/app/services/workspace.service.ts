@@ -57,6 +57,7 @@ export interface UpdateWorkspaceRequest {
 })
 export class WorkspaceService {
   private apiUrl: string = `${enviroment.workspaceUrl}/api`;
+  public suppressNextRefreshToast = false;
 
   private workspaceCreatedSubject = new Subject<Workspace>();
   workspaceCreated$ = this.workspaceCreatedSubject.asObservable();

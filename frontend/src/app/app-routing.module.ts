@@ -16,6 +16,8 @@ import {ProfileUserComponent} from "./pages/profile-user/profile-user.component"
 import {SharedFilePageComponent} from "./pages/shared-file-page/shared-file-page.component";
 import {PublicLayoutComponent} from "./layouts/public-layout/public-layout.component";
 import {SharedLayoutRouterComponent} from "./pages/shared-layout-router/shared-layout-router.component";
+import {ForgotPasswordComponent} from "./pages/forgot-password/forgot-password.component";
+import {ResetPasswordComponent} from "./pages/reset-password/reset-password.component";
 
 const routes: Routes = [
   {
@@ -29,6 +31,8 @@ const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'register', component: RegisterComponent },
   { path: 'verify', component: VerifyComponent },
+  { path: 'forgot-password', component: ForgotPasswordComponent },
+  { path: 'reset-password/:token', component: ResetPasswordComponent },
 
   {
     path: '',

@@ -3,7 +3,7 @@ namespace LinkService.Persistence.Entities;
 public class FastLink
 {
     public int Id { get; set; }
-    public string Token { get; set; } = null!; // Prevent nullability warning 
+    public Guid Token { get; set; } 
     public Guid FileId { get; set; }
     public int CreatedByUserId { get; set; }
     public DateTime CreatedAt { get; set; }

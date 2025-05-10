@@ -55,6 +55,7 @@ public static class ServiceExtensions
             config.AddConsumer<WorkspaceInvitationMatchOnRegisterConsumer>();
             config.AddConsumer<WorkspaceDeletedConsumer>();
             config.AddConsumer<WorkspaceInvitationResponseConsumer>();
+            config.AddConsumer<PasswordResetRequiredConsumer>();
 
             config.UsingRabbitMq((context, cfg) =>
             {
@@ -98,6 +99,12 @@ public static class ServiceExtensions
                 {
                     e.Bind("workspace-invitation-response", x => x.ExchangeType = "fanout");
                     e.ConfigureConsumer<WorkspaceInvitationResponseConsumer>(context);
+                });
+                
+                cfg.ReceiveEndpoint("email-service-password-reset-required-queue", e =>
+                {
+                    e.Bind("password-reset-required", x => x.ExchangeType = "fanout");
+                    e.ConfigureConsumer<PasswordResetRequiredConsumer>(context);
                 });
             });
         });

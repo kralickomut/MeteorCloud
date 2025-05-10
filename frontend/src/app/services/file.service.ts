@@ -49,4 +49,11 @@ export class FileService {
     return this.http.post<ApiResult<boolean>>(`${this.apiUrl}/move`, payload);
   }
 
+  uploadProfileImage(file: File): Observable<ApiResult<string>> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return this.http.post<ApiResult<string>>(`${this.apiUrl}/profile-image`, formData);
+  }
+
 }

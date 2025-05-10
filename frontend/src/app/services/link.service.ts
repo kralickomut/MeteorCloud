@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import {enviroment} from "../../../enviroment";
 import {HttpClient} from "@angular/common/http";
-import {Observable, Subject} from "rxjs";
+import {Observable, ReplaySubject, Subject} from "rxjs";
 import {PagedResult} from "./audit.service";
 import {ApiResult} from "../models/api-result";
 
@@ -37,7 +37,7 @@ export class LinkService {
 
   constructor(private http: HttpClient) {}
 
-  private fastLinkCreated = new Subject<void>();
+  private fastLinkCreated = new ReplaySubject<void>(1); // replays the last emission to new subscribers
   fastLinkCreated$ = this.fastLinkCreated.asObservable();
 
 
@@ -58,6 +58,13 @@ export class LinkService {
     return this.http.post(`${this.fileUrl}/fast-link/upload`, formData, {
       reportProgress: true,
       observe: 'events'
+    });
+  }
+
+  refreshLink(token: string, hours: number): Observable<ApiResult<boolean>> {
+    return this.http.post<ApiResult<boolean>>(`${this.apiUrl}/refresh`, {
+      token,
+      hours
     });
   }
 

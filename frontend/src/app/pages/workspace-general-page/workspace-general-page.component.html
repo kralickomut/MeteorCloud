@@ -56,33 +56,49 @@
     </ng-template>
   </div>
 
-  <div class="content d-flex gap-4">
-    <!-- LEFT SIDE -->
-    <div class="left d-flex flex-column gap-3 flex-grow-1">
-      <div class="card">
-        <div><strong>Created On:</strong> {{ workspace.createdOn | date }}</div>
-        <div><strong>Last Updated:</strong> {{ workspace.updatedOn | date }}</div>
-        <div><strong>Owner:</strong> {{ workspace.ownerName }}</div>
-        <div><strong>Collaborators:</strong> {{ collaborators.length }}</div>
-      </div>
+  <div class="content gap-4 d-flex">
+    <!-- General Info Card -->
+    <div class="card flex-fill workspace-info-card">
+      <h5 class="card-title">Workspace Info</h5>
 
-      <div class="card">
-        <div class="card-title"><i class="pi pi-clock me-2 text-muted"></i>Recent Activity</div>
-        <ul>
-          <li *ngFor="let activity of recentActivity">{{ activity }}</li>
-        </ul>
-      </div>
+      <div class="info-section">
+        <div class="info-row">
+          <span class="label">Created On</span>
+          <span class="value">{{ workspace.createdOn | date:'longDate' }}</span>
+        </div>
+        <div class="divider"></div>
 
-      <div class="card">
-        <div class="card-title"><i class="pi pi-file me-2 text-muted"></i>Active Files</div>
-        <ul>
-          <li *ngFor="let file of activeFiles">{{ file }}</li>
-        </ul>
+        <div class="info-row">
+          <span class="label">Last Updated</span>
+          <span class="value">
+        {{ workspace.updatedOn ? (workspace.updatedOn | date:'longDate') : '—' }}
+      </span>
+        </div>
+        <div class="divider"></div>
+
+        <div class="info-row">
+          <span class="label">Owner</span>
+          <span class="value">{{ workspace.ownerName }}</span>
+        </div>
+        <div class="divider"></div>
+
+        <div class="info-row">
+          <span class="label">Collaborators</span>
+          <span class="value">{{ collaborators.length }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Total files</span>
+          <span class="value">{{ workspace.totalFiles }}</span>
+        </div>
+        <div class="info-row">
+          <span class="label">Total Size (GB)</span>
+          <span class="value">{{ workspace.sizeInGB }}</span>
+        </div>
       </div>
     </div>
 
-    <!-- RIGHT SIDE -->
-    <div class="right card flex-grow-1">
+    <!-- Collaborators Card -->
+    <div class="card flex-fill">
       <div class="search-wrapper mb-3">
         <i class="pi pi-search search-icon"></i>
         <input type="text" pInputText [(ngModel)]="searchCollaborator" placeholder="Search collaborators" class="search-input" />
@@ -103,21 +119,18 @@
             <td>
               <div class="d-flex align-items-center gap-2">
                 <div class="avatar">{{ user.name[0] }}</div>
-                <span
-                  class="fw-semibold clickable"
-                  (click)="goToProfile(user.id)"
-                >
-                {{ user.name }}
-              </span>
+                <span class="fw-semibold clickable" (click)="goToProfile(user.id)">
+                  {{ user.name }}
+                </span>
               </div>
             </td>
             <td>
               <span class="badge"
                     [ngClass]="{
-                      'badge-owner': user.role === 'Owner',
-                      'badge-manager': user.role === 'Manager',
-                      'badge-guest': user.role === 'Guest'
-                    }">
+                  'badge-owner': user.role === 'Owner',
+                  'badge-manager': user.role === 'Manager',
+                  'badge-guest': user.role === 'Guest'
+                }">
                 {{ user.role }}
               </span>
             </td>

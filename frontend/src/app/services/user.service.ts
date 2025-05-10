@@ -14,6 +14,7 @@ export interface User {
   registrationDate: string;
   lastLoginDate: string;
   updatedAt: string;
+  profileImageUrl?: string;
 }
 
 export interface UserUpdateRequest {
@@ -55,6 +56,10 @@ export class UserService {
 
   get currentUser(): User | null {
     return this.userSubject.getValue();
+  }
+
+  getProfileImageUrl(userId: number): string {
+    return `${enviroment.fileUrl}/api/file/view/profile-images/${userId}/profile.jpg`;
   }
 
 

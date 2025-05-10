@@ -64,7 +64,7 @@ public class LoginHandler
     public async Task<ApiResult<LoginResponse>> Handle(LoginRequest request)
     {
         var credentials = await _credentialService.GetCredentialsByEmailAsync(request.Email);
-
+        
         if (credentials is null || !BCrypt.Net.BCrypt.Verify(request.Password, credentials.PasswordHash))
         {
             return new ApiResult<LoginResponse>(null, false, "Invalid credentials.");

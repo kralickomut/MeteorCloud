@@ -66,6 +66,7 @@ app.UseEndpoints(endpoints =>
     UploadFastLinkFileEndpoint.Register(endpoints);
     DeleteFastLinkFileEndpoint.Register(endpoints);
     MoveFileEndpoint.Register(endpoints);
+    UploadProfileImageEndpoint.Register(endpoints);
 });
 
 

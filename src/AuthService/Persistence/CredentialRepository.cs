@@ -30,6 +30,44 @@ public class CredentialRepository
 
         return await connection.QuerySingleOrDefaultAsync<Credential>(query, new { Email = email });
     }
+    
+    public async Task<Credential?> GetCredentialById(int id)
+    {
+        using var connection = await _context.CreateConnectionAsync();
+        const string query = @"
+            SELECT 
+                UserId,
+                Email,
+                PasswordHash,
+                IsVerified,
+                VerificationCode,
+                VerificationExpiry,
+                CreatedAt
+            FROM Credentials
+            WHERE UserId = @UserId;
+        ";
+
+        return await connection.QuerySingleOrDefaultAsync<Credential>(query, new { UserId = id });
+    }
+    
+    public async Task<Credential?> GetCredentialByResetPasswordToken(Guid token)
+    {
+        using var connection = await _context.CreateConnectionAsync();
+        const string query = @"
+            SELECT 
+                UserId,
+                Email,
+                PasswordHash,
+                IsVerified,
+                VerificationCode,
+                VerificationExpiry,
+                CreatedAt
+            FROM Credentials
+            WHERE ResetPasswordToken = @ResetPassWordToken;
+        ";
+
+        return await connection.QuerySingleOrDefaultAsync<Credential>(query, new { ResetPasswordToken = token });
+    }
 
     public async Task<Credential?> CreateCredential(Credential credential, CancellationToken cancellationToken)
     {
@@ -67,7 +105,8 @@ public class CredentialRepository
             SET PasswordHash = @PasswordHash,
                 IsVerified = @IsVerified,
                 VerificationCode = @VerificationCode,
-                VerificationExpiry = @VerificationExpiry
+                VerificationExpiry = @VerificationExpiry,
+                ResetPasswordToken = @ResetPasswordToken
             WHERE UserId = @UserId;
         ";
 

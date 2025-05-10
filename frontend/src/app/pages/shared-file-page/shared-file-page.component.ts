@@ -18,6 +18,11 @@ export class SharedFilePageComponent implements OnInit {
   isLoading = true;
   notFound = false;
 
+  formatOptions: Intl.DateTimeFormatOptions = {
+    dateStyle: 'short',
+    timeStyle: 'short'
+  };
+
   constructor(
     private route: ActivatedRoute,
     private linkService: LinkService,

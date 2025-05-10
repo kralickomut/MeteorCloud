@@ -3,6 +3,7 @@ namespace MeteorCloud.Communication;
 public static class MicroserviceEndpoints
 {
 
+    
 
     public class UserService
     {

@@ -82,9 +82,6 @@ public static class RegisterEndpoint
         app.MapPost("/api/auth/register",
             async (RegisterHandler handler, RegisterValidator validator, RegisterRequest request, CancellationToken cancellationToken) =>
             {
-                Console.WriteLine($"Trying to register: {JsonSerializer.Serialize(request)}");
-
-                
                 var validationResult = await validator.ValidateAsync(request, cancellationToken);
 
                 if (!validationResult.IsValid)

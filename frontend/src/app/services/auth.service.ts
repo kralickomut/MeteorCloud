@@ -66,6 +66,26 @@ export class AuthService {
       );
   }
 
+  changePassword(oldPassword: string, newPassword: string): Observable<ApiResult<boolean>> {
+    return this.http.post<ApiResult<boolean>>(`${this.authUrl}/auth/change-password`, {
+      oldPassword,
+      newPassword
+    });
+  }
+
+  requirePasswordReset(email: string): Observable<ApiResult<boolean>> {
+    return this.http.post<ApiResult<boolean>>(`${this.authUrl}/auth/require-password-reset`, {
+      email
+    });
+  }
+
+  resetPassword(token: string, newPassword: string): Observable<ApiResult<boolean>> {
+    return this.http.post<ApiResult<boolean>>(`${this.authUrl}/auth/reset-password`, {
+      token,
+      newPassword
+    });
+  }
+
   logout(): void {
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user_id');

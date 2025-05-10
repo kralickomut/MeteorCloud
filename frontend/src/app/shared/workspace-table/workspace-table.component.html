@@ -179,7 +179,7 @@
   </div>
 
   <!-- File Info Card (Right side) -->
-  <div class="file-info-card bg-white shadow-sm p-4" *ngIf="selectedFile">
+  <div class="file-info-card bg-white shadow-sm p-4 flex-column" *ngIf="selectedFile">
     <!-- Close Icon -->
     <i class="pi pi-times file-close-icon" (click)="closeFileDetails()"></i>
 
@@ -195,8 +195,6 @@
     <!-- Metadata -->
     <div class="file-info-meta">
       <div class="file-info-meta">
-        <div class="file-info-label">File ID</div>
-        <div class="file-info-value mb-3">{{ selectedFile.id }}</div>
 
         <div class="file-info-label">File name</div>
         <div class="file-info-value mb-3">{{ selectedFile.name }}</div>
@@ -205,19 +203,18 @@
         <div class="file-info-value mb-3">{{ selectedFile.contentType }}</div>
 
         <div class="file-info-label">Uploaded at</div>
-        <div class="file-info-value mb-3">{{ selectedFile.uploadedAt | date: 'dd-MM-yyyy HH:mm' }}</div>
+        <div class="file-info-value mb-3">{{ selectedFile.uploadedAt | toLocalDate: formatOptions }}</div>
 
-        <div class="file-info-label">Uploaded by (User ID)</div>
+        <div class="file-info-label">Uploaded by</div>
         <div class="file-info-value">{{ selectedFile.uploadedByName }}</div>
       </div>
     </div>
 
-    <div class="d-flex justify-content-end mt-4">
+    <div class="mt-auto d-flex justify-content-end gap-2">
       <button
         pButton
         label="Download"
         icon="pi pi-download"
-        style="margin-right: 10px;"
         (click)="downloadFile(selectedFile, selectedFilePath)"
       ></button>
 
@@ -228,7 +225,7 @@
         class="p-button-secondary"
         (click)="openFileDialog(selectedFile, selectedFilePath)"
       ></button>
-    </div>
+  </div>
   </div>
 
 

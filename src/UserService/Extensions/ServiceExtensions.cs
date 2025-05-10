@@ -65,6 +65,7 @@ public static class ServiceExtensions
             config.AddConsumer<WorkspaceDeletedConsumer>();
             config.AddConsumer<WorkspaceInvitationResponseConsumer>();
             config.AddConsumer<WorkspaceUserRemovedConsumer>();
+            config.AddConsumer<ProfileImageUploadedConsumer>();
 
             config.UsingRabbitMq((context, cfg) =>
             {
@@ -132,6 +133,16 @@ public static class ServiceExtensions
                     });
 
                     e.ConfigureConsumer<WorkspaceUserRemovedConsumer>(context);
+                });
+                
+                cfg.ReceiveEndpoint("user-service-profile-image-uploaded-queue", e =>
+                {
+                    e.Bind("profile-image-uploaded", x =>
+                    {
+                        x.ExchangeType = "fanout";
+                    });
+
+                    e.ConfigureConsumer<ProfileImageUploadedConsumer>(context);
                 });
             });
         });

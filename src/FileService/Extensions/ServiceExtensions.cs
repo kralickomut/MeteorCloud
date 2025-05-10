@@ -4,6 +4,7 @@ using FileService.Features;
 using FileService.Services;
 using MassTransit;
 using MeteorCloud.Communication;
+using MeteorCloud.Messaging.Events;
 using MeteorCloud.Messaging.Events.FastLink;
 using MeteorCloud.Messaging.Events.File;
 using Microsoft.OpenApi.Models;
@@ -34,6 +35,9 @@ public static class ServiceExtensions
 
         services.AddSingleton<MoveFileRequestValidator>();
         services.AddScoped<MoveFileHandler>();
+
+        services.AddSingleton<UploadProfileImageValidator>();
+        services.AddScoped<UploadProfileImageHandler>();
         
         services.AddScoped<DownloadFileHandler>();
         
@@ -51,6 +55,7 @@ public static class ServiceExtensions
         services.AddMassTransit(busConfigurator =>
         {
             busConfigurator.AddConsumer<WorkspaceDeletedConsumer>();
+            busConfigurator.AddConsumer<FastLinkExpireCleanupConsumer>();
             
             busConfigurator.UsingRabbitMq((context, rabbitCfg) =>
             {
@@ -66,6 +71,7 @@ public static class ServiceExtensions
                 rabbitCfg.Message<FastLinkFileUploadedEvent>(x => x.SetEntityName("fastlink-file-uploaded"));
                 rabbitCfg.Message<FastLinkFileDeletedEvent>(x => x.SetEntityName("fastlink-file-deleted"));
                 rabbitCfg.Message<FileMovedEvent>(x => x.SetEntityName("file-moved"));
+                rabbitCfg.Message<ProfileImageUploadedEvent>(x => x.SetEntityName("profile-image-uploaded"));
                 
                 rabbitCfg.ReceiveEndpoint("file-service-workspace-deleted-queue", e =>
                 {
@@ -75,6 +81,16 @@ public static class ServiceExtensions
                     });
                     
                     e.ConfigureConsumer<WorkspaceDeletedConsumer>(context);
+                });
+                
+                rabbitCfg.ReceiveEndpoint("file-service-fastlink-expired-link-cleanup", e =>
+                {
+                    e.Bind("fastlink-expired-link-cleanup", x =>
+                    {
+                        x.ExchangeType = "fanout";
+                    });
+                    
+                    e.ConfigureConsumer<FastLinkExpireCleanupConsumer>(context);
                 });
                 
                 rabbitCfg.ConfigureEndpoints(context);

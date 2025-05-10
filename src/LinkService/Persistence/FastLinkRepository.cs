@@ -13,7 +13,7 @@ public class FastLinkRepository
         _context = context;
     }
 
-    public async Task<FastLink?> GetByTokenAsync(string token)
+    public async Task<FastLink?> GetByTokenAsync(Guid token)
     {
         const string query = @"SELECT * FROM FastLinks WHERE Token = @Token LIMIT 1;";
         await using var connection = await _context.CreateConnectionAsync();
@@ -76,7 +76,7 @@ public class FastLinkRepository
         return token;
     }
 
-    public async Task<bool> UpdateExpirationAsync(string token, DateTime newExpiration)
+    public async Task<bool> UpdateExpirationAsync(Guid token, DateTime newExpiration)
     {
         const string query = @"UPDATE FastLinks SET ExpiresAt = @ExpiresAt WHERE Token = @Token;";
         await using var connection = await _context.CreateConnectionAsync();
@@ -84,7 +84,7 @@ public class FastLinkRepository
         return affected > 0;
     }
 
-    public async Task<bool> IncrementAccessCountAsync(string token)
+    public async Task<bool> IncrementAccessCountAsync(Guid token)
     {
         const string query = @"UPDATE FastLinks SET AccessCount = AccessCount + 1 WHERE Token = @Token;";
         await using var connection = await _context.CreateConnectionAsync();
@@ -92,4 +92,21 @@ public class FastLinkRepository
         return affected > 0;
     }
     
+    public async Task<List<(int UserId, Guid FileId)>> DeleteExpiredLinksAsync(DateTime now)
+    {
+        const string query = @"
+        DELETE FROM FastLinks 
+        WHERE ExpiresAt < @Now
+        RETURNING CreatedByUserId AS UserId, FileId;";
+
+        await using var connection = await _context.CreateConnectionAsync();
+        var expiredLinks = await connection.QueryAsync<(int UserId, Guid FileId)>(query, new { Now = now });
+        
+        foreach (var (userId, fileId) in expiredLinks)
+        {
+            Console.WriteLine($"✔️ Expired: {userId}/{fileId}");
+        }
+
+        return expiredLinks.ToList();
+    }
 }

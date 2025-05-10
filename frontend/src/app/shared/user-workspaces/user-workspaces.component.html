@@ -137,7 +137,7 @@
         <td>{{ w.ownerName }}</td>
         <td>{{ w.sizeInGB.toFixed(2) }}</td>
         <td>{{ w.totalFiles }}</td>
-        <td>{{ w.lastUploadOn ? (w.lastUploadOn | date: 'short') : '—' }}</td>
+        <td>{{ w.lastUploadOn | toLocalDate:formatOptions }}</td>
         <td>
         <span
           class="badge"

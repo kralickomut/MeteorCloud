@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: audit-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: audit-service
+  template:
+    metadata:
+      labels:
+        app: audit-service
+    spec:
+      containers:
+        - name: audit-service
+          image: audit-service:dev
+          ports:
+            - containerPort: 5300
+          env:
+            - name: ConnectionStrings__Default
+              value: "Host=postgres;Port=5432;Database=audit_service_db;Username=meteorcloud;Password=secretpassword"
+            - name: REDIS_HOST
+              value: redis
+            - name: REDIS_PORT
+              value: "6379"

@@ -41,6 +41,15 @@ public static class ServiceExtensions
         
         services.AddSingleton<ResendCodeValidator>();
         services.AddScoped<ResendCodeHandler>();
+        
+        services.AddSingleton<ChangePasswordValidator>();
+        services.AddScoped<ChangePasswordHandler>();
+        
+        services.AddSingleton<RequirePasswordResetValidator>();
+        services.AddScoped<RequirePasswordResetHandler>();
+        
+        services.AddSingleton<ResetPasswordValidator>();
+        services.AddScoped<ResetPasswordHandler>();
 
         services.AddSingleton<TokenService>();
         
@@ -74,6 +83,7 @@ public static class ServiceExtensions
                 
                 rabbitCfg.Message<UserRegisteredEvent>(x => x.SetEntityName("user-registered"));
                 rabbitCfg.Message<VerificationCodeResentEvent>(x => x.SetEntityName("verification-code-resent"));
+                rabbitCfg.Message<PasswordResetRequiredEvent>(x => x.SetEntityName("password-reset-required"));
                 
                 rabbitCfg.ConfigureEndpoints(context);
             });

@@ -43,7 +43,8 @@ public class GetUsersBulkHandler
             InTotalWorkspaces = u.InTotalWorkspaces,
             LastLogin = u.LastLogin,
             RegistrationDate = u.RegistrationDate,
-            UpdatedAt = u.UpdatedAt
+            UpdatedAt = u.UpdatedAt,
+            ProfilePictureUrl = u.ProfilePictureUrl
         });
         
         return new ApiResult<IEnumerable<UserModel>>(userModels);

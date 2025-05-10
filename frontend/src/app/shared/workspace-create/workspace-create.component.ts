@@ -52,13 +52,16 @@ export class WorkspaceCreateComponent {
     this.workspaceService.createWorkspace(payload).subscribe({
       next: (result) => {
         if (result.success && result.data) {
+          this.workspaceService.suppressNextRefreshToast = true; // 👈 Add this line
           this.workspaceService.emitWorkspaceCreated(result.data);
+
           this.messageService.add({
             severity: 'success',
             summary: 'Workspace Created',
             detail: `Workspace "${this.newWorkspaceName}" created successfully!`,
             life: 3000,
           });
+
           this.closeDialog();
         } else {
           this.messageService.add({

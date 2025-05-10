@@ -64,6 +64,7 @@ public class DatabaseInitializer
                     Email VARCHAR(50) UNIQUE NOT NULL,
                     Description TEXT DEFAULT '',
                     InTotalWorkspaces INT NOT NULL DEFAULT 0,
+                    ProfilePictureUrl VARCHAR(255) DEFAULT NULL,
                     RegistrationDate TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                     LastLogin TIMESTAMP DEFAULT NULL,
                     UpdatedAt TIMESTAMP

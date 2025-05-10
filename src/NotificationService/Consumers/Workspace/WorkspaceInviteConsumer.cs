@@ -39,16 +39,14 @@ public class WorkspaceInviteConsumer : IConsumer<WorkspaceInviteEvent>
         
         var url = MicroserviceEndpoints.UserService.GetUserByEmail(message.Email);
         var response = await _httpClient.GetAsync<object>(url);
-
+        
         if (!response.Success)
         {
             var subject = "You have been invited to join a workspace!";
             var body = $@"
             <h1>Welcome to MeteorCloud!</h1>
             <p>You have been invited to join a workspace.</p>
-            <p>Workspace ID: {message.WorkspaceId}</p>
-            <p>Invited by User ID: {message.InvitedByUserId}</p>
-            <p>To accept the invitation, please create an account and confirm it in notifications.</p>
+            <p>To accept the invitation and get more information, please create an account and confirm it in notifications.</p>
             ";
         
             await _emailService.SendEmailAsync(message.Email, subject, body);

@@ -1,0 +1,39 @@
+resources:
+  - postgres/deployment.yaml
+  - postgres/service.yaml
+
+  - redis/deployment.yaml
+  - redis/service.yaml
+
+  - rabbitmq/deployment.yaml
+  - rabbitmq/service.yaml
+
+  - mailhog/deployment.yaml
+  - mailhog/service.yaml
+
+  - azurite/deployment.yaml
+  - azurite/service.yaml
+
+  - user-service/deployment.yaml
+  - user-service/service.yaml
+
+  - auth-service/deployment.yaml
+  - auth-service/service.yaml
+
+  - notification-service/deployment.yaml
+  - notification-service/service.yaml
+
+  - workspace-service/deployment.yaml
+  - workspace-service/service.yaml
+
+  - link-service/deployment.yaml
+  - link-service/service.yaml
+
+  - metadata-service/deployment.yaml
+  - metadata-service/service.yaml
+
+  - audit-service/deployment.yaml
+  - audit-service/service.yaml
+
+  - file-service/deployment.yaml
+  - file-service/service.yaml

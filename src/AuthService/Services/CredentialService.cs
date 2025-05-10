@@ -27,12 +27,26 @@ public class CredentialService
         return credential;
     }
     
+    public async Task<Credential?> GetByUserId(int id)
+    {
+        var credential = await _credentialRepository.GetCredentialById(id);
+        
+        return credential;
+    }
+    
+    public async Task<Credential?> GetCredentialsByResetPasswordTokenAsync(Guid token)
+    {
+        var credential = await _credentialRepository.GetCredentialByResetPasswordToken(token);
+        
+        return credential;
+    }
+    
     public async Task<Credential?> RegisterUserAsync(string email, string name, string password, CancellationToken cancellationToken)
     {
         var credential = new Credential
         {
             Email = email,
-            PasswordHash = HashPasswordAsync(password),
+            PasswordHash = HashPassword(password),
             IsVerified = false,
             VerificationCode = GenerateVerificationCode(),
             VerificationExpiry = DateTime.UtcNow.AddMinutes(30),
@@ -81,10 +95,58 @@ public class CredentialService
         
         return true;
     }
+    
+    public async Task<bool> ChangePassword(int userId, string newPassword, CancellationToken cancellationToken)
+    {
+        var credential = await _credentialRepository.GetCredentialById(userId);
+        
+        if (credential == null)
+        {
+            return false;
+        }
 
-    private string HashPasswordAsync(string password)
+        credential.PasswordHash = HashPassword(newPassword);
+        credential.ResetPasswordToken = Guid.Empty;
+        await _credentialRepository.UpdateCredential(credential, cancellationToken);
+
+        return true;
+    }
+    
+    public async Task<Guid> SetResetPasswordToken(int userId)
+    {
+        var credential = await _credentialRepository.GetCredentialById(userId);
+        
+        if (credential == null)
+        {
+            return Guid.Empty;
+        }
+
+        var resetToken = Guid.NewGuid();
+        credential.ResetPasswordToken = resetToken;
+        
+        var result = await _credentialRepository.UpdateCredential(credential, new CancellationToken());
+        
+        if (!result)
+        {
+            return Guid.Empty;
+        }
+
+        return resetToken;
+    }
+    
+    public async Task UpdateCredential(Credential credential, CancellationToken cancellationToken = default)
+    {
+        await _credentialRepository.UpdateCredential(credential, cancellationToken);
+    }
+
+    private string HashPassword(string password)
     {
         return BCrypt.Net.BCrypt.HashPassword(password);
+    }
+    
+    public bool VerifyPassword(string password, string hashedPassword)
+    {
+        return BCrypt.Net.BCrypt.Verify(password, hashedPassword);
     }
     
     private string GenerateVerificationCode()

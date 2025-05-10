@@ -53,6 +53,7 @@ app.UseEndpoints(endpoints =>
 {
     GetUserLinksEndpoint.Register(endpoints);
     GetLinkByTokenEndpoint.Register(endpoints);
+    RefreshLinkEndpoint.Register(endpoints);
 });
 
 app.Run();

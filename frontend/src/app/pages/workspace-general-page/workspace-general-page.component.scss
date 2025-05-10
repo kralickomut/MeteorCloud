@@ -20,7 +20,9 @@ html, body {
 
   .content {
     display: flex;
+    flex-direction: row;
     gap: 2rem;
+    min-height: 60vh; // 👈 makes both cards taller
     align-items: stretch;
   }
 
@@ -37,12 +39,30 @@ html, body {
     flex: 1;
   }
 
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.2rem;
+    font-size: 1rem;
+    color: #374151;
+
+    strong {
+      font-weight: 600;
+      color: #1f2937;
+      min-width: 140px;
+    }
+  }
+
   .card {
+    flex: 1;
     background: white;
-    border-radius: 1rem;
-    padding: 1.5rem;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-    border: none;
+    border-radius: 1.25rem;
+    padding: 2rem;
+    box-shadow: 0 10px 32px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; // ensure spacing within
 
     .card-title {
       font-weight: 600;
@@ -84,6 +104,7 @@ html, body {
   .table-container {
     overflow-y: auto;
     max-height: 400px;
+    flex: 1;
 
     table {
       width: 100%;
@@ -199,3 +220,5 @@ html, body {
 ::ng-deep .p-menu.p-menu-overlay .p-menuitem-icon {
   color: #6b7280;
 }
+
+

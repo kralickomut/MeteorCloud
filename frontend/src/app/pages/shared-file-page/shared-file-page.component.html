@@ -1,32 +1,25 @@
-<div class="shared-file-page" *ngIf="!isLoading && !notFound">
-
-<div class="shared-file-page d-flex justify-content-center align-items-center min-vh-100">
+<!-- Show actual file if valid -->
+<div *ngIf="!isLoading && !notFound" class="shared-file-page d-flex justify-content-center align-items-center min-vh-100">
   <div class="shared-file-container shadow rounded-4 overflow-hidden">
-
-    <!-- Left Panel -->
+    <!-- Left -->
     <div class="shared-left d-flex flex-column justify-content-center align-items-center p-4">
       <img src="assets/img/hero.png" alt="Hero" class="shared-illustration mb-4" />
-
       <h4 class="text-white mb-2">
-        {{ notFound ? 'This link has expired or is invalid' : (linkData?.createdByUser || 'Someone') + ' shared a file with you!' }}
+        {{ linkData?.createdByUser || 'Someone' }} shared a file with you!
       </h4>
-
       <p class="text-white-50 text-center small">
-        {{ notFound ? 'Maybe the file has already vanished into space...' : 'Pick it up before it vanishes into space.' }}
+        Pick it up before it vanishes into space.
       </p>
     </div>
 
-    <!-- Right Panel -->
-    <div class="shared-right p-4 text-center d-flex flex-column justify-content-center align-items-center" *ngIf="!isLoading && !notFound">
+    <!-- Right -->
+    <div class="shared-right p-4 text-center d-flex flex-column justify-content-center align-items-center">
       <i class="pi pi-file" style="font-size: 3rem; color: #8b5cf6;"></i>
-
       <h5 class="mt-3 mb-2 fw-bold">{{ linkData?.fileName }}</h5>
-
       <p class="text-muted small">
         {{ readableSize }}<br />
-        Expires: {{ expiresAt }}
+        Expires: {{ linkData?.expiresAt | toLocalDate: formatOptions }}
       </p>
-
       <div class="d-flex justify-content-center gap-2 mt-3">
         <button (click)="downloadFile()" class="btn btn-danger d-flex align-items-center gap-1 px-3 py-2">
           <i class="pi pi-download"></i>
@@ -34,8 +27,18 @@
         </button>
       </div>
     </div>
-
   </div>
 </div>
 
+<!-- Show expired/invalid message -->
+<div *ngIf="!isLoading && notFound" class="shared-file-page d-flex justify-content-center align-items-center min-vh-100">
+  <div class="shared-file-container shadow rounded-4 overflow-hidden">
+    <div class="shared-left d-flex flex-column justify-content-center align-items-center p-4 w-100">
+      <img src="assets/img/hero.png" alt="Hero" class="shared-illustration mb-4" />
+      <h4 class="text-white mb-2">This link has expired or is invalid</h4>
+      <p class="text-white-50 text-center small">
+        Maybe the file has already vanished into space...
+      </p>
+    </div>
+  </div>
 </div>

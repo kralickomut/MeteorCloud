@@ -56,7 +56,7 @@ public class DatabaseInitializer
             const string createLinksTable = @"
                 CREATE TABLE IF NOT EXISTS FastLinks (
                     Id SERIAL PRIMARY KEY,
-                    Token VARCHAR(64) NOT NULL UNIQUE,
+                    Token UUID NOT NULL UNIQUE,
                     FileId UUID NOT NULL,
                     CreatedByUserId INT NOT NULL,
                     CreatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

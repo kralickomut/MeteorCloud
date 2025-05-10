@@ -26,6 +26,11 @@ export class WorkspaceTableComponent implements OnInit {
   internalDrag: boolean = false;
   hoveredDropTarget: string | null = null;
 
+  formatOptions: Intl.DateTimeFormatOptions = {
+    dateStyle: 'short',
+    timeStyle: 'short'
+  };
+
   viewDialogVisible = false;
   viewDialogUrl: SafeResourceUrl | null = null;
   viewDialogTitle = '';
