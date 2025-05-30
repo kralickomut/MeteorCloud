@@ -8,6 +8,10 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
     nginx.ingress.kubernetes.io/use-regex: "true"
 spec:
+  tls:
+    - hosts:
+        - localhost
+      secretName: meteorcloud-tls
   rules:
     - host: localhost
       http:

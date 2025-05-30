@@ -3,13 +3,12 @@ using MeteorCloud.Caching.Abstraction;
 using MeteorCloud.Caching.Services;
 using Microsoft.OpenApi.Models;
 using MassTransit;
-using MeteorCloud.Shared.Jwt;
-
+using MeteorCloud.Messaging.ConsumerExtensions;
+using MeteorCloud.Messaging.Events;
 using StackExchange.Redis;
 using UserService.Consumers;
 using UserService.Features;
 using UserService.Persistence;
-using Microsoft.Extensions.Configuration;
 
 namespace UserService.Extensions;
 
@@ -74,9 +73,12 @@ public static class ServiceExtensions
                     h.Username("guest");
                     h.Password("guest");
                 });
-
+                
+                cfg.Message<UserNameChangedEvent>(x => x.SetEntityName("user-name-changed"));
+                
                 cfg.ReceiveEndpoint("user-service-user-registered-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("user-registered", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -85,8 +87,10 @@ public static class ServiceExtensions
                     e.ConfigureConsumer<UserRegisteredConsumer>(context);
                 });
                 
+                
                 cfg.ReceiveEndpoint("user-service-user-logged-in-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("user-logged-in", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -97,6 +101,7 @@ public static class ServiceExtensions
                 
                 cfg.ReceiveEndpoint("user-service-workspace-created-queue", e =>
                 {
+                    e.ApplyStandardSettings();                    
                     e.Bind("workspace-created", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -106,7 +111,8 @@ public static class ServiceExtensions
                 });
                 
                 cfg.ReceiveEndpoint("user-service-workspace-deleted-queue", e =>
-                {
+                {                   
+                    e.ApplyStandardSettings();
                     e.Bind("workspace-deleted", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -117,6 +123,7 @@ public static class ServiceExtensions
                 
                 cfg.ReceiveEndpoint("user-service-workspace-invitation-accepted-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("workspace-invitation-response", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -127,6 +134,7 @@ public static class ServiceExtensions
                 
                 cfg.ReceiveEndpoint("user-service-workspace-user-removed-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("workspace-user-removed", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -137,6 +145,7 @@ public static class ServiceExtensions
                 
                 cfg.ReceiveEndpoint("user-service-profile-image-uploaded-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("profile-image-uploaded", x =>
                     {
                         x.ExchangeType = "fanout";

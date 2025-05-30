@@ -27,7 +27,7 @@ public static class AuthenticationExtensions
                     IssuerSigningKey = securityKey
                 };
 
-                // 👇 Allow JWT from query string for SignalR WebSocket connections
+                // Allow JWT from query string for SignalR WebSocket connections
                 options.Events = new JwtBearerEvents
                 {
                     OnMessageReceived = context =>
@@ -38,7 +38,7 @@ public static class AuthenticationExtensions
                         if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hub"))
                         {
                             context.Token = accessToken;
-                            Console.WriteLine($"🔐 JWT attached to SignalR connection on {path}");
+                            Console.WriteLine($"JWT attached to SignalR connection on {path}");
                         }
 
                         return Task.CompletedTask;

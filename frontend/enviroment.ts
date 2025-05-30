@@ -1,13 +1,13 @@
 export const enviroment = {
     production: false,
-    workspaceUrl: 'http://localhost',
-    authUrl: 'http://localhost',
-    userUrl: 'http://localhost',
-    notificationUrl: 'http://localhost',
-    metadataUrl: 'http://localhost',
-    fileUrl: 'http://localhost',
-    auditUrl: 'http://localhost',
-    linkUrl: 'http://localhost'
+    workspaceUrl: 'https://localhost',
+    authUrl: 'https://localhost',
+    userUrl: 'https://localhost',
+    notificationUrl: 'https://localhost',
+    metadataUrl: 'https://localhost',
+    fileUrl: 'https://localhost',
+    auditUrl: 'https://localhost',
+    linkUrl: 'https://localhost'
 }
 /*
 export const enviroment = {

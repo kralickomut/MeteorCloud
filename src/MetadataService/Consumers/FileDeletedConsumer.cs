@@ -26,7 +26,7 @@ public class FileDeletedConsumer : IConsumer<FileDeletedEvent>
         if (!Guid.TryParse(message.FileId, out var fileId))
         {
             _logger.LogError("Invalid file ID format: {FileId}", message.FileId);
-            throw new ArgumentException("Invalid file ID format", nameof(message.FileId));
+            return;
         }
         
         try

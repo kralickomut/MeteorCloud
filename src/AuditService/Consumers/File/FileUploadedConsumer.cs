@@ -25,7 +25,7 @@ public class FileUploadedConsumer : IConsumer<FileUploadedEvent>
     {
         var message = context.Message;
 
-        _logger.LogInformation("📦 Received FileUploadedEvent: {FileId} in workspace {WorkspaceId}", message.Id, message.WorkspaceId);
+        _logger.LogInformation("Received FileUploadedEvent: {FileId} in workspace {WorkspaceId}", message.Id, message.WorkspaceId);
         
         var audit = new AuditEvent
         {

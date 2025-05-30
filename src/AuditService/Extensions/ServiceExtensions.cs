@@ -5,6 +5,7 @@ using AuditService.Features.Workspace;
 using AuditService.Persistence;
 using MassTransit;
 using MeteorCloud.Communication;
+using MeteorCloud.Messaging.ConsumerExtensions;
 using Microsoft.OpenApi.Models;
 
 namespace AuditService.Extensions;
@@ -30,7 +31,7 @@ public static class ServiceExtensions
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Workspace Service API", Version = "v1" });
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Audit Service API", Version = "v1" });
         });
         
         services.AddHttpContextAccessor();
@@ -54,6 +55,7 @@ public static class ServiceExtensions
                 
                 rabbitCfg.ReceiveEndpoint("audit-service-file-uploaded-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("file-uploaded", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -64,6 +66,7 @@ public static class ServiceExtensions
                 
                 rabbitCfg.ReceiveEndpoint("audit-service-workspace-deleted-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("workspace-deleted", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -74,6 +77,7 @@ public static class ServiceExtensions
                 
                 rabbitCfg.ReceiveEndpoint("audit-service-file-deleted-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("file-deleted", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -81,10 +85,6 @@ public static class ServiceExtensions
                     
                     e.ConfigureConsumer<FileDeletedConsumer>(context);
                 });
-                
-                
-                rabbitCfg.ConfigureEndpoints(context);
-                
             });
         });
         

@@ -121,7 +121,7 @@ export class NotificationBarComponent implements OnInit {
       console.warn('No token found for this invitation.');
       return;
     }
-    this.workspaceService.suppressNextRefreshToast = true;
+    this.workspaceService.suppressNextRefreshToastCount = 1;
     this.workspaceService.respondToInvitation(notification.token, true).subscribe({
       next: (res) => {
         if (res.success) {

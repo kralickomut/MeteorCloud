@@ -2,6 +2,8 @@ using MassTransit;
 using MeteorCloud.Caching.Abstraction;
 using MeteorCloud.Caching.Services;
 using MeteorCloud.Communication;
+using MeteorCloud.Messaging.ConsumerExtensions;
+using MeteorCloud.Messaging.Events;
 using MeteorCloud.Messaging.Events.File;
 using MeteorCloud.Messaging.Events.Workspace;
 using Microsoft.AspNetCore.SignalR;
@@ -103,6 +105,7 @@ public static class ServiceExtensions
             busConfigurator.AddConsumer<UserRegisteredConsumer>();
             busConfigurator.AddConsumer<FileUploadedConsumer>();
             busConfigurator.AddConsumer<FileDeletedConsumer>();
+            busConfigurator.AddConsumer<UserNameChangedConsumer>();
             
             busConfigurator.UsingRabbitMq((context, rabbitCfg) =>
             {
@@ -122,6 +125,7 @@ public static class ServiceExtensions
                 
                 rabbitCfg.ReceiveEndpoint("workspace-service-user-registered-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("user-registered", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -132,6 +136,7 @@ public static class ServiceExtensions
                 
                 rabbitCfg.ReceiveEndpoint("workspace-service-file-uploaded-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("file-uploaded", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -142,6 +147,7 @@ public static class ServiceExtensions
                 
                 rabbitCfg.ReceiveEndpoint("workspace-service-file-deleted-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("file-deleted", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -150,9 +156,16 @@ public static class ServiceExtensions
                     e.ConfigureConsumer<FileDeletedConsumer>(context);
                 });
                 
-                
-                rabbitCfg.ConfigureEndpoints(context);
-                
+                rabbitCfg.ReceiveEndpoint("workspace-service-user-name-changed-queue", e =>
+                {
+                    e.ApplyStandardSettings();
+                    e.Bind("user-name-changed", x =>
+                    {
+                        x.ExchangeType = "fanout";
+                    });
+                    
+                    e.ConfigureConsumer<UserNameChangedConsumer>(context);
+                });
             });
         });
         

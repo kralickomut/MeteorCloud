@@ -1,3 +1,4 @@
+using System.Reflection;
 using AuthService.Extensions;
 using AuthService.Features.Auth;
 using MeteorCloud.Shared.Jwt;
@@ -15,7 +16,7 @@ builder.Services.AddCors(opt =>
     {
         builder.AllowAnyMethod()
             .AllowAnyHeader()
-            .WithOrigins("http://localhost:4200");
+            .WithOrigins("http://localhost:4200", "https://localhost:4200");
     });
 });
 
@@ -44,6 +45,12 @@ if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
     {
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "User Service API V1");
     });
+}
+
+var names = Assembly.GetExecutingAssembly().GetManifestResourceNames();
+foreach (var name in names)
+{
+    Console.WriteLine(name);
 }
 
 app.UseCors("CorsPolicy");

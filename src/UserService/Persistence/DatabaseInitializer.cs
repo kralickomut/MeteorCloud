@@ -71,8 +71,8 @@ public class DatabaseInitializer
                 );";
 
             await connection.ExecuteAsync(createTableQuery);
-
             _logger.LogInformation("Users table checked/created successfully.");
+            
         }
         catch (Exception ex)
         {

@@ -19,7 +19,7 @@ public class UploadProfileImageValidator : AbstractValidator<UploadProfileImageR
             .NotNull().WithMessage("Profile image is required");
 
         RuleFor(x => x.File.Length)
-            .LessThanOrEqualTo(5 * 1024 * 1024).WithMessage("Image must be under 5MB");
+            .LessThanOrEqualTo(50 * 1024 * 1024).WithMessage("Image must be under 50MB");
 
         RuleFor(x => x.UserId)
             .GreaterThan(0).WithMessage("UserId must be valid.");

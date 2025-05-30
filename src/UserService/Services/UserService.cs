@@ -31,7 +31,6 @@ public class UserService
         
         var user = await _userRepository.GetUserByIdAsync(id, cancellationToken);
         
-        // Store in Redis
         if (user != null)
         {
             await _cache.SetAsync(_serviceCacheKey, "user", id.ToString(), JsonConvert.SerializeObject(user), TimeSpan.FromMinutes(10));

@@ -27,6 +27,11 @@ public class FileMovedConsumer : IConsumer<FileMovedEvent>
         
         if (metadata != null)
         {
+            if (metadata.Path == message.TargetFolder)
+            {
+                return;
+            }
+            
             metadata.Path = message.TargetFolder;
             await _metadataManager.UpdateAsync(metadata);
             

@@ -73,11 +73,14 @@
   .user-avatar {
     padding-bottom: 1rem;
 
-    .user-img {
+    .user-img, .avatar {
       width: 48px;
       height: 48px;
-      object-fit: cover;
+      border-radius: 50%; // makes it circular
+      object-fit: cover;  // ensures it fills the box without distortion
+      object-position: center;
       cursor: pointer;
+      display: block;
     }
   }
 }

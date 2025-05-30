@@ -43,10 +43,22 @@ public class WorkspaceInviteConsumer : IConsumer<WorkspaceInviteEvent>
         if (!response.Success)
         {
             var subject = "You have been invited to join a workspace!";
+            string link = $"http://localhost:4200/register";
             var body = $@"
             <h1>Welcome to MeteorCloud!</h1>
             <p>You have been invited to join a workspace.</p>
             <p>To accept the invitation and get more information, please create an account and confirm it in notifications.</p>
+            <p>
+                <a href='{link}' style='
+                    display: inline-block;
+                    padding: 10px 20px;
+                    background-color: #6366f1;
+                    color: white;
+                    text-decoration: none;
+                    border-radius: 6px;
+                    font-weight: bold;
+                '>Register</a>
+            </p>
             ";
         
             await _emailService.SendEmailAsync(message.Email, subject, body);

@@ -15,7 +15,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Include="Jwt\Keys\private.pem" />
       <EmbeddedResource Include="Jwt\Keys\public.pem" />
     </ItemGroup>
 

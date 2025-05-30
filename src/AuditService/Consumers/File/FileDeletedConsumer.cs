@@ -21,7 +21,7 @@ public class FileDeletedConsumer : IConsumer<FileDeletedEvent>
     {
         var message = context.Message;
         
-        _logger.LogInformation("📦 Received FileDeletedEvent: {FileId} in workspace {WorkspaceId}", message.Id, message.WorkspaceId);
+        _logger.LogInformation("Received FileDeletedEvent: {FileId} in workspace {WorkspaceId}", message.Id, message.WorkspaceId);
         
         var audit = new AuditEvent
         {

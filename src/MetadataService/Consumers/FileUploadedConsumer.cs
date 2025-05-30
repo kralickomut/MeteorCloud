@@ -30,6 +30,14 @@ public class FileUploadedConsumer : IConsumer<FileUploadedEvent>
             throw new ArgumentException("Invalid file ID format", nameof(message.FileId));
         }
         
+        // Check if the file already exists in the database
+        var existingFile = await _fileMetadataManager.GetByIdAsync(fileId);
+        if (existingFile != null)
+        {
+            _logger.LogWarning("File metadata already exists for file: {FileId}", message.FileId);
+            return;
+        }
+        
         var fileMetadata = new FileMetadata
         {
             Id = fileId,

@@ -15,7 +15,7 @@ public class TokenService
     public TokenService(IConfiguration config)
     {
         _config = config;
-        _key = RsaKeyUtils.LoadEmbeddedPrivateKey("MeteorCloud.Shared.Jwt.Keys.private.pem");
+        _key = RsaKeyUtils.LoadEmbeddedPrivateKey("AuthService.Keys.private.pem");
     }
 
     public string GenerateToken(int userId, string email)

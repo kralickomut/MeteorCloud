@@ -60,7 +60,10 @@ import {RadioButtonModule} from "primeng/radiobutton";
 import {ProgressBarModule} from "primeng/progressbar";
 import { PublicLayoutComponent } from './layouts/public-layout/public-layout.component';
 import { SharedFilePageComponent } from './pages/shared-file-page/shared-file-page.component';
-import { SharedLayoutRouterComponent } from './pages/shared-layout-router/shared-layout-router.component';
+import {
+  MainLayoutWrapperComponent, PublicLayoutWrapperComponent,
+  SharedLayoutRouterComponent
+} from './pages/shared-layout-router/shared-layout-router.component';
 import {AutoCompleteModule} from "primeng/autocomplete";
 import { ChangePasswordComponent } from './shared/change-password/change-password.component';
 import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
@@ -106,6 +109,8 @@ import { RefreshLinkComponent } from './shared/refresh-link/refresh-link.compone
     ResetPasswordComponent,
     ToLocalDatePipe,
     RefreshLinkComponent,
+    MainLayoutWrapperComponent,
+    PublicLayoutWrapperComponent
   ],
   imports: [
     BrowserModule,

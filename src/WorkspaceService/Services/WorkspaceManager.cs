@@ -118,6 +118,11 @@ public class  WorkspaceManager
         return workspaces;
     }
 
+    public async Task<List<Workspace>> GetWorkspacesWhereUserIsOwnerAsync(int userId)
+    {
+        return await _workspaceRepository.GetWorkspacesWhereUserIsOwnerAsync(userId);
+    }
+    
     public async Task<Workspace?> CreateWorkspaceAsync(Workspace workspace, CancellationToken? cancellationToken = null)
     {
         var url = MicroserviceEndpoints.UserService.GetUserById(workspace.OwnerId);

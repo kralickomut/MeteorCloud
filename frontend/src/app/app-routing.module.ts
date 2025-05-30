@@ -18,13 +18,14 @@ import {PublicLayoutComponent} from "./layouts/public-layout/public-layout.compo
 import {SharedLayoutRouterComponent} from "./pages/shared-layout-router/shared-layout-router.component";
 import {ForgotPasswordComponent} from "./pages/forgot-password/forgot-password.component";
 import {ResetPasswordComponent} from "./pages/reset-password/reset-password.component";
+import {SharedFileResolver} from "./pages/shared-file-page/shared-file.resolver";
 
 const routes: Routes = [
   {
     path: 'shared/:token',
     component: SharedLayoutRouterComponent,
     children: [
-      { path: '', component: SharedFilePageComponent }
+      { path: '', component: SharedFilePageComponent, resolve: { linkData: SharedFileResolver } }
     ]
   },
 

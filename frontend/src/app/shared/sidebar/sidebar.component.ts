@@ -24,10 +24,7 @@ export class SidebarComponent implements OnInit {
   }
 
   get profileImageUrl(): string {
-    if (!this.user) {
-      return '/assets/img/default-profile.jpg';
-    }
-    return this.userService.getProfileImageUrl(this.user?.id) ?? '/assets/img/default-profile.jpg';
+    return this.userService.getProfileImageUrl(this.user?.id ?? 0);
   }
 
   onLogout() {

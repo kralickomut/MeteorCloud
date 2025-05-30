@@ -23,7 +23,7 @@ public class WorkspaceCreatedConsumer : IConsumer<WorkspaceCreatedEvent>
         if (user == null)
         {
             _logger.LogWarning("User not found: {UserId}", message.OwnerId);
-            throw new Exception("User not found, illegal action in consumer of created workspace.");
+            return;
         }
 
         user.InTotalWorkspaces++;

@@ -84,8 +84,6 @@ public static class ServiceExtensions
                 rabbitCfg.Message<UserRegisteredEvent>(x => x.SetEntityName("user-registered"));
                 rabbitCfg.Message<VerificationCodeResentEvent>(x => x.SetEntityName("verification-code-resent"));
                 rabbitCfg.Message<PasswordResetRequiredEvent>(x => x.SetEntityName("password-reset-required"));
-                
-                rabbitCfg.ConfigureEndpoints(context);
             });
         });
         

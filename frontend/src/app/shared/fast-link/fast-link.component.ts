@@ -51,13 +51,24 @@ export class FastLinkComponent {
 
   createFastLink() {
     const hours = Number(this.expirationHours);
-    const name = this.linkName; // store name before reset
+    const name = this.linkName;
 
     if (!this.selectedFile || !name || !hours || hours < 1 || hours > 24) {
       this.messageService.add({
         severity: 'error',
         summary: 'Validation failed',
         detail: 'All fields are required and expiration must be between 1 and 24 hours.'
+      });
+      return;
+    }
+
+    const maxFileSize = 500 * 1024 * 1024; // 500 MB
+
+    if (this.selectedFile.size > maxFileSize) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'File Too Large',
+        detail: `Maximum allowed size is 500MB. Selected file is ${(this.selectedFile.size / (1024 * 1024)).toFixed(2)}MB.`
       });
       return;
     }
@@ -95,4 +106,6 @@ export class FastLinkComponent {
     this.selectedFile = null;
     this.selectedFileName = '';
   }
+
+  protected readonly isNaN = isNaN;
 }

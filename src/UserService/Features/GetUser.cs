@@ -1,64 +1,74 @@
 using FluentValidation;
 using MeteorCloud.Shared.ApiResults;
-using UserService.Persistence;
-using UserService.Services;
+using MeteorCloud.Shared.SharedDto.Users;
 
-namespace UserService.Features
+namespace UserService.Features;
+
+public record GetUserRequest(int Id);
+
+public record GetUserResponse(UserModel User);
+
+public class GetUserValidator : AbstractValidator<GetUserRequest>
 {
-    public record GetUserRequest(int Id);
-    
-    public record GetUserResponse(User User);
-    
-    public class GetUserValidator : AbstractValidator<GetUserRequest>
+    public GetUserValidator()
     {
-        public GetUserValidator()
-        {
-            RuleFor(x => x.Id).GreaterThan(0);
-        }
+        RuleFor(x => x.Id).GreaterThan(0);
+    }
+}
+
+public class GetUserHandler
+{
+    private readonly Services.UserService _userService;
+
+    public GetUserHandler(Services.UserService userService)
+    {
+        _userService = userService;
     }
 
-    public class GetUserHandler
+    public async Task<ApiResult<GetUserResponse>> Handle(GetUserRequest request, CancellationToken cancellationToken)
     {
-        private readonly Services.UserService _userService;
+        cancellationToken.ThrowIfCancellationRequested();
 
-        public GetUserHandler(Services.UserService userService)
+        var user = await _userService.GetUserByIdAsync(request.Id, cancellationToken);
+        
+        if (user == null)
         {
-            _userService = userService;
+            return new ApiResult<GetUserResponse>(null, false, "User not found");
         }
 
-        public async Task<ApiResult<GetUserResponse>> Handle(GetUserRequest request, CancellationToken cancellationToken)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            
-            var user = await _userService.GetUserByIdAsync(request.Id, cancellationToken);
-            return user != null
-                ? new ApiResult<GetUserResponse>(new GetUserResponse(user))
-                : new ApiResult<GetUserResponse>(null, false, "User not found");
-        }
+        var userModel = user.ToModel();
+        return new ApiResult<GetUserResponse>(new GetUserResponse(userModel));
+
     }
+}
 
-    public static class GetUserEndpoint 
+public static class GetUserEndpoint
+{
+    public static void Register(IEndpointRouteBuilder app)
     {
-        public static void Register(IEndpointRouteBuilder app)
-        {
-            app.MapGet("/api/users/{id}",
-                async (int id, GetUserValidator validator, GetUserHandler handler, CancellationToken cancellationToken) =>
+        app.MapGet("/api/users/{id}",
+                async (int id, GetUserValidator validator, GetUserHandler handler,
+                    CancellationToken cancellationToken) =>
                 {
                     var request = new GetUserRequest(id);
                     var validationResult = await validator.ValidateAsync(request, cancellationToken);
                     if (!validationResult.IsValid)
                     {
-                        var errorMessages = validationResult.Errors.Select(x => x.ErrorMessage);
+                        var errorMessages = validationResult
+                            .Errors
+                            .Select(x => x.ErrorMessage);
+                        
                         return Results.BadRequest(new ApiResult<IEnumerable<string>>(errorMessages));
                     }
 
-                    var response = await handler.Handle(request, cancellationToken);
+                    var response = await handler
+                        .Handle(request, cancellationToken);
 
                     return response.Success
                         ? Results.Ok(response)
                         : Results.NotFound(response);
-                }).WithName("GetUser")
-                .RequireAuthorization();
-        }
+                })
+            .WithName("GetUser")
+            .RequireAuthorization();
     }
 }

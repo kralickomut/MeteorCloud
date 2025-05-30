@@ -42,7 +42,6 @@ public class DeleteFolderHandler
             return new ApiResult<bool>(false, false, "Failed to delete folder.");
         }
         
-        Console.WriteLine("Publishing FolderDeletedEvent !!!!!!!!!!!!!!!");
         await _publishEndpoint.Publish(new FolderDeletedEvent
         {
             Path = path

@@ -22,6 +22,13 @@ public class FastLinkFileUploadedConsumer : IConsumer<FastLinkFileUploadedEvent>
         var message = context.Message;
         
         _logger.LogInformation($"Received FastLinkFileUploadedEvent: {message.Id}");
+
+        var exists = await _fastLinkManager.GetByTokenAsync(message.Token) is null;
+        if (!exists)
+        {
+            _logger.LogWarning($"FastLink with token {message.Token} already exists. Skipping creation.");
+            return;
+        }
         
         try
         {
@@ -35,7 +42,7 @@ public class FastLinkFileUploadedConsumer : IConsumer<FastLinkFileUploadedEvent>
                 CreatedByUserId = message.UserId,
                 FileName = message.FileName,
                 FileSize = message.FileSize,
-                Token = Guid.NewGuid()  // Generate a unique token for the link
+                Token = message.Token 
             };
             
             var newLink = await _fastLinkManager.CreateLinkAsync(link);

@@ -22,6 +22,14 @@ public class UserRegisteredConsumer : IConsumer<UserRegisteredEvent>
     {
         var userRegisteredEvent = context.Message;
 
+        var existingUser = await _userService.GetUserByIdAsync(userRegisteredEvent.UserId);
+        
+        if (existingUser != null)
+        {
+            _logger.LogWarning("User already exists: {UserId}", userRegisteredEvent.UserId);
+            return;
+        }
+
         var user = new User
         {
             Id = userRegisteredEvent.UserId,

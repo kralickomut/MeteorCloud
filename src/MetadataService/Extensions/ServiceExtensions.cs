@@ -6,6 +6,7 @@ using MetadataService.Services;
 using MeteorCloud.Caching.Abstraction;
 using MeteorCloud.Caching.Services;
 using MeteorCloud.Communication;
+using MeteorCloud.Messaging.ConsumerExtensions;
 using MeteorCloud.Messaging.Events.File;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
@@ -53,7 +54,7 @@ public static class ServiceExtensions
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Workspace Service API", Version = "v1" });
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "Metadata Service API", Version = "v1" });
         });
         
         services.AddMassTransit(busConfigurator =>
@@ -74,6 +75,7 @@ public static class ServiceExtensions
                 
                 rabbitCfg.ReceiveEndpoint("metadata-service-file-uploaded-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("file-uploaded", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -84,6 +86,7 @@ public static class ServiceExtensions
                 
                 rabbitCfg.ReceiveEndpoint("metadata-service-file-deleted-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("file-deleted", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -94,6 +97,7 @@ public static class ServiceExtensions
                 
                 rabbitCfg.ReceiveEndpoint("metadata-service-workspace-deleted-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("workspace-deleted", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -104,6 +108,7 @@ public static class ServiceExtensions
                 
                 rabbitCfg.ReceiveEndpoint("metadata-service-folder-deleted-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("folder-deleted", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -114,6 +119,7 @@ public static class ServiceExtensions
                 
                 rabbitCfg.ReceiveEndpoint("metadata-service-file-moved-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("file-moved", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -121,9 +127,6 @@ public static class ServiceExtensions
                     
                     e.ConfigureConsumer<FileMovedConsumer>(context);
                 });
-                
-                rabbitCfg.ConfigureEndpoints(context);
-                
             });
         });
         

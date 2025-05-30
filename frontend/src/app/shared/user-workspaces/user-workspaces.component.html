@@ -102,7 +102,7 @@
       ></button>
 
       <div class="pagination-status">
-        {{ currentPage }} of {{ totalPages }}
+        {{ totalPages === 0 ? 0 : currentPage }} of {{ totalPages }}
       </div>
 
       <button pButton icon="pi pi-angle-left" class="p-button-text p-button-sm" (click)="prevPage()" [disabled]="currentPage === 1"></button>
@@ -139,16 +139,11 @@
         <td>{{ w.totalFiles }}</td>
         <td>{{ w.lastUploadOn | toLocalDate:formatOptions }}</td>
         <td>
-        <span
-          class="badge"
-          [ngClass]="{
-            'badge-success': w.status === 'Active',
-            'badge-danger': w.status === 'Inactive',
-            'badge-info': w.status === 'Pending'
-          }"
-        >
-          {{ w.status }}
-        </span>
+          <ng-container *ngIf="getDisplayStatus(w.lastUploadOn) as displayStatus">
+  <span class="badge" [ngClass]="displayStatus.class">
+    {{ displayStatus.label }}
+  </span>
+          </ng-container>
         </td>
         <td>
           <div class="file-actions" *ngIf="w.ownerId === currentUserId; else noPermission">

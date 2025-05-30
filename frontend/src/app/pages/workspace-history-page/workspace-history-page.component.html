@@ -91,7 +91,7 @@
             </span>
           </td>
           <td>{{ file.actionByName }}</td>
-          <td>{{ file.createdOn | date: 'short'}}</td>
+          <td>{{ file.createdOn | toLocalDate: formatOptions}}</td>
         </tr>
       </ng-container>
 
@@ -112,7 +112,7 @@
       {{ invite.status }}
     </span>
           </td>
-          <td>{{ invite.date | date:'short' }}</td>
+          <td>{{ invite.date | toLocalDate:formatOptions }}</td>
         </tr>
       </ng-container>
       </tbody>

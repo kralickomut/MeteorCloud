@@ -52,7 +52,7 @@ export class WorkspaceCreateComponent {
     this.workspaceService.createWorkspace(payload).subscribe({
       next: (result) => {
         if (result.success && result.data) {
-          this.workspaceService.suppressNextRefreshToast = true; // 👈 Add this line
+          this.workspaceService.suppressNextRefreshToastCount = 2;
           this.workspaceService.emitWorkspaceCreated(result.data);
 
           this.messageService.add({

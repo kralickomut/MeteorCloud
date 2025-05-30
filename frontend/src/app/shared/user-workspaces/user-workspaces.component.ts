@@ -44,9 +44,10 @@ export class UserWorkspacesComponent implements OnInit {
 
     this.workspaceService.workspaceCreated$.subscribe(() => {
       this.fetchWorkspaces();
+      this.totalWorkspaces += 1;
 
-      if (this.workspaceService.suppressNextRefreshToast) {
-        this.workspaceService.suppressNextRefreshToast = false;
+      if (this.workspaceService.suppressNextRefreshToastCount > 0) {
+        this.workspaceService.suppressNextRefreshToastCount--;
       } else {
         this.messageService.add({
           severity: 'info',
@@ -59,9 +60,10 @@ export class UserWorkspacesComponent implements OnInit {
 
     this.workspaceService.workspaceJoined$.subscribe(() => {
       this.fetchWorkspaces();
+      this.totalWorkspaces += 1;
 
-      if (this.workspaceService.suppressNextRefreshToast) {
-        this.workspaceService.suppressNextRefreshToast = false;
+      if (this.workspaceService.suppressNextRefreshToastCount > 0) {
+        this.workspaceService.suppressNextRefreshToastCount--;
       } else {
         this.messageService.add({
           severity: 'info',
@@ -91,8 +93,8 @@ export class UserWorkspacesComponent implements OnInit {
   refreshWorkspaces(): void {
     this.fetchWorkspaces();
 
-    if (this.workspaceService.suppressNextRefreshToast) {
-      this.workspaceService.suppressNextRefreshToast = false;
+    if (this.workspaceService.suppressNextRefreshToastCount > 0) {
+      this.workspaceService.suppressNextRefreshToastCount--;
       return;
     }
 
@@ -167,6 +169,7 @@ export class UserWorkspacesComponent implements OnInit {
           next: (res) => {
             if (res.success) {
               this.fetchWorkspaces();
+              this.totalWorkspaces -= 1;
               this.messageService.add({
                 severity: 'success',
                 summary: 'Deleted',
@@ -242,5 +245,28 @@ export class UserWorkspacesComponent implements OnInit {
     return (this.sizeRange[0] > 0 || this.sizeRange[1] < 5) ||
       !!this.sortOrder.dateCreated ||
       !!this.sortOrder.totalFiles;
+  }
+
+  getDisplayStatus(lastUploadOn: string | undefined): { label: string; class: string } {
+    if (!lastUploadOn) {
+      return { label: 'Never Uploaded', class: 'badge-info' };
+    }
+
+    const lastUpload = new Date(lastUploadOn);
+    const now = new Date();
+    const diffMs = now.getTime() - lastUpload.getTime();
+    const diffDays = diffMs / (1000 * 60 * 60 * 24);
+
+    if (diffDays < 1) {
+      return { label: 'Active Today', class: 'badge-success' };
+    } else if (diffDays < 3) {
+      return { label: 'Recently Active', class: 'badge-info' };
+    } else if (diffDays < 7) {
+      return { label: 'This Week', class: 'badge-warning' };
+    } else if (diffDays < 31) {
+      return { label: 'Dusty Folder', class: 'badge-secondary' };
+    } else {
+      return { label: 'Forgotten Realm', class: 'badge-danger' };
+    }
   }
 }

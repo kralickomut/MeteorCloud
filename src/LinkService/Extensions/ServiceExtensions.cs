@@ -6,6 +6,7 @@ using MassTransit;
 using MeteorCloud.Caching.Abstraction;
 using MeteorCloud.Caching.Services;
 using MeteorCloud.Communication;
+using MeteorCloud.Messaging.ConsumerExtensions;
 using MeteorCloud.Messaging.Events.FastLink;
 using Microsoft.OpenApi.Models;
 using StackExchange.Redis;
@@ -79,6 +80,7 @@ public static class ServiceExtensions
                 
                 rabbitCfg.ReceiveEndpoint("link-service-fastlink-file-uploaded", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("fastlink-file-uploaded", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -89,6 +91,7 @@ public static class ServiceExtensions
                 
                 rabbitCfg.ReceiveEndpoint("link-service-fastlink-file-deleted", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("fastlink-file-deleted", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -96,9 +99,6 @@ public static class ServiceExtensions
                     
                     e.ConfigureConsumer<FastLinkFileDeletedConsumer>(context);
                 });
-                
-                rabbitCfg.ConfigureEndpoints(context);
-                
             });
         });
         

@@ -113,6 +113,18 @@ public class WorkspaceRepository
         var result = await connection.QueryAsync<Workspace>(sql, parameters);
         return result.ToList();
     }
+
+    public async Task<List<Workspace>> GetWorkspacesWhereUserIsOwnerAsync(int userId) 
+    {
+        await using var connection = await _context.CreateConnectionAsync();
+
+        const string query = @"
+            SELECT * FROM Workspaces
+            WHERE OwnerId = @UserId;
+        ";
+
+        return (await connection.QueryAsync<Workspace>(query, new { UserId = userId })).ToList();
+    }
     
     public async Task<WorkspaceInvitation?> GetWorkspaceInvitationByTokenAsync(Guid token, CancellationToken cancellationToken = default)
     {
@@ -329,7 +341,8 @@ public class WorkspaceRepository
                 UpdatedOn = @UpdatedOn,
                 LastUploadOn = @LastUploadOn,
                 SizeInGB = @SizeInGB,
-                TotalFiles = @TotalFiles
+                TotalFiles = @TotalFiles,
+                OwnerName = @OwnerName
             WHERE Id = @Id;
         ";
 
@@ -608,10 +621,11 @@ public class WorkspaceRepository
     public async Task<List<Workspace>> SearchUserWorkspacesAsync(int userId, string query, int limit, CancellationToken ct)
     {
         const string sql = @"
-        SELECT *
-        FROM Workspaces
-        WHERE OwnerId = @UserId AND LOWER(Name) LIKE '%' || LOWER(@Query) || '%'
-        ORDER BY UpdatedOn DESC
+        SELECT w.*
+        FROM Workspaces w
+        INNER JOIN WorkspaceUsers wu ON w.Id = wu.WorkspaceId
+        WHERE wu.UserId = @UserId AND LOWER(w.Name) LIKE '%' || LOWER(@Query) || '%'
+        ORDER BY w.UpdatedOn DESC
         LIMIT @Limit;
     ";
 

@@ -61,10 +61,10 @@
           <div class="workspace-avatar d-flex align-items-center justify-content-center">
             {{ getInitials(workspace.name) }}
           </div>
-          <span class="workspace-size">{{ workspace.sizeInGB || '–' }}</span>
+          <span class="workspace-size">{{ workspace.sizeInGB + ' GB' || '–' }}</span>
         </div>
         <div class="workspace-name">{{ workspace.name }}</div>
-        <div class="workspace-files text-danger">{{ workspace.totalFiles }} files</div>
+        <div class="workspace-files text-danger">{{ workspace.totalFiles }} {{ workspace.totalFiles === 1 ? "file" : "files" }}</div>
         <div class="workspace-owner">{{ workspace.ownerName }}</div>
         <div class="workspace-time">{{ workspace.updatedOn | date:'dd/MM/yyyy HH:mm' }}</div>
       </div>

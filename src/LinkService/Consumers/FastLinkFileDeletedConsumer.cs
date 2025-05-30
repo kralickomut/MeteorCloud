@@ -29,7 +29,6 @@ public class FastLinkFileDeletedConsumer : IConsumer<FastLinkFileDeletedEvent>
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting file: {FileId}", message.FileId);
-            throw;
         }
     }
 }

@@ -60,7 +60,8 @@ public class UploadFastLinkFileHandler
             FileName = request.File.FileName,
             ExpiresAt = DateTime.UtcNow.AddHours(request.ExpiresInHours),
             FileSize = request.File.Length,
-            Name = request.LinkName
+            Name = request.LinkName,
+            Token = Guid.NewGuid()
         });
 
         if (string.IsNullOrEmpty(fileUrl))

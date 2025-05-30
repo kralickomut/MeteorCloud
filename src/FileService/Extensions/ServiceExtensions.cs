@@ -4,6 +4,7 @@ using FileService.Features;
 using FileService.Services;
 using MassTransit;
 using MeteorCloud.Communication;
+using MeteorCloud.Messaging.ConsumerExtensions;
 using MeteorCloud.Messaging.Events;
 using MeteorCloud.Messaging.Events.FastLink;
 using MeteorCloud.Messaging.Events.File;
@@ -75,6 +76,7 @@ public static class ServiceExtensions
                 
                 rabbitCfg.ReceiveEndpoint("file-service-workspace-deleted-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("workspace-deleted", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -85,6 +87,7 @@ public static class ServiceExtensions
                 
                 rabbitCfg.ReceiveEndpoint("file-service-fastlink-expired-link-cleanup", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("fastlink-expired-link-cleanup", x =>
                     {
                         x.ExchangeType = "fanout";
@@ -92,8 +95,6 @@ public static class ServiceExtensions
                     
                     e.ConfigureConsumer<FastLinkExpireCleanupConsumer>(context);
                 });
-                
-                rabbitCfg.ConfigureEndpoints(context);
             });
         });
         

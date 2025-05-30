@@ -18,6 +18,8 @@ export class SharedFilePageComponent implements OnInit {
   isLoading = true;
   notFound = false;
 
+  private alreadyFetched = false;
+
   formatOptions: Intl.DateTimeFormatOptions = {
     dateStyle: 'short',
     timeStyle: 'short'
@@ -29,25 +31,16 @@ export class SharedFilePageComponent implements OnInit {
     private fileService: FileService
   ) {}
 
-  ngOnInit(): void {
-    this.token = this.route.snapshot.paramMap.get('token') ?? '';
+  private linkLoaded = false;
 
-    this.linkService.getLinkByToken(this.token)
-      .pipe(take(1))
-      .subscribe({
-        next: (res) => {
-          if (res.success && res.data) {
-            this.linkData = res.data;
-          } else {
-            this.notFound = true;
-          }
-          this.isLoading = false;
-        },
-        error: () => {
-          this.notFound = true;
-          this.isLoading = false;
-        }
-      });
+  ngOnInit(): void {
+    this.linkData = this.route.snapshot.data['linkData'];
+
+    if (!this.linkData) {
+      this.notFound = true;
+    }
+
+    this.isLoading = false;
   }
 
   get readableSize(): string {

@@ -28,7 +28,7 @@ public class DatabaseInitializer
     {
         try
         {
-            _logger.LogInformation("🔄 Checking if database '{Database}' exists...", _databaseName);
+            _logger.LogInformation("Checking if database '{Database}' exists...", _databaseName);
 
             // Connect to PostgreSQL default database to check/create our database
             await using var adminConnection = new NpgsqlConnection(_adminConnectionString);
@@ -39,13 +39,13 @@ public class DatabaseInitializer
 
             if (databaseExists != 1)
             {
-                _logger.LogInformation("⚡ Database '{Database}' does not exist. Creating now...", _databaseName);
+                _logger.LogInformation("Database '{Database}' does not exist. Creating now...", _databaseName);
                 await adminConnection.ExecuteAsync($"CREATE DATABASE \"{_databaseName}\";");
-                _logger.LogInformation("✅ Database '{Database}' created successfully.", _databaseName);
+                _logger.LogInformation("Database '{Database}' created successfully.", _databaseName);
             }
             else
             {
-                _logger.LogInformation("✅ Database '{Database}' already exists.", _databaseName);
+                _logger.LogInformation("Database '{Database}' already exists.", _databaseName);
             }
 
             // Now connect to the actual microservice database and ensure tables exist
@@ -66,11 +66,11 @@ public class DatabaseInitializer
                 );";
 
             await connection.ExecuteAsync(createTableQuery);
-            _logger.LogInformation("✅ Tables initialized successfully.");
+            _logger.LogInformation("Tables initialized successfully.");
         }
         catch (Exception ex)
         {
-            _logger.LogError("❌ Error initializing database: {Message}", ex.Message);
+            _logger.LogError("Error initializing database: {Message}", ex.Message);
         }
     }
 }

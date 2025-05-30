@@ -25,7 +25,7 @@ public class WorkspaceUserRemovedConsumer : IConsumer<WorkspaceUserRemovedEvent>
         if (user == null)
         {
             _logger.LogWarning("User with ID {UserId} not found.", message.UserId);
-            throw new Exception("USER NOT FOUND");
+            return;
         }
 
         user.InTotalWorkspaces--;

@@ -25,6 +25,8 @@ export class WorkspaceTableComponent implements OnInit {
   plainTextContent: string | null = null;
   internalDrag: boolean = false;
   hoveredDropTarget: string | null = null;
+  totalFilesToUpload: number = 0;
+  uploadedFileCount: number = 0;
 
   formatOptions: Intl.DateTimeFormatOptions = {
     dateStyle: 'short',
@@ -170,7 +172,15 @@ export class WorkspaceTableComponent implements OnInit {
 
   onFileSelected(event: any): void {
     const originalFile: File = event.target.files[0];
-    if (!originalFile) return;
+    if (!originalFile) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Invalid Selection',
+        detail: 'No valid file was selected. Apps or folders cannot be uploaded.',
+        life: 4000
+      });
+      return;
+    }
 
     if (!this.checkFileSize(originalFile)) return;
 
@@ -329,7 +339,55 @@ export class WorkspaceTableComponent implements OnInit {
       uploadQueue.push(sanitized);
     }
 
-    uploadQueue.forEach(file => this.uploadFile(file, fullPath));
+    this.totalFilesToUpload = uploadQueue.length;
+    this.uploadedFileCount = 0;
+    this.uploading = true;
+    this.uploadProgress = 0;
+
+    uploadQueue.forEach(file => this.uploadFileAsPartOfBatch(file, fullPath));
+  }
+
+  uploadFileAsPartOfBatch(file: File, fullPath: string): void {
+    this.fileService.uploadFile(file, Number(this.workspaceId), fullPath).subscribe({
+      next: (event) => {
+        if (event.type === 4) {
+          this.uploadedFileCount++;
+          this.uploadProgress = Math.round((100 * this.uploadedFileCount) / this.totalFilesToUpload);
+
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Uploaded',
+            detail: `${file.name} uploaded successfully!`
+          });
+
+          // When all done
+          if (this.uploadedFileCount === this.totalFilesToUpload) {
+            setTimeout(() => {
+              this.uploading = false;
+              this.uploadProgress = 0;
+              this.fetchWorkspaceTree();
+            }, 500);
+          }
+        }
+      },
+      error: (err) => {
+        console.error('❌ Upload failed', err);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Upload Failed',
+          detail: `Failed to upload ${file.name}`
+        });
+
+        // Still count failed uploads to avoid stuck progress
+        this.uploadedFileCount++;
+        this.uploadProgress = Math.round((100 * this.uploadedFileCount) / this.totalFilesToUpload);
+
+        if (this.uploadedFileCount === this.totalFilesToUpload) {
+          this.uploading = false;
+          this.uploadProgress = 0;
+        }
+      }
+    });
   }
 
 

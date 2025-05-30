@@ -116,9 +116,6 @@ public static class UploadFileEndpoint
                 var file = request.Form.Files.First();
                 var workspaceIdStr = request.Form["workspaceId"].ToString();
                 var folderPath = request.Form["folderPath"].ToString();
-
-                Console.WriteLine($"UserId: {userId}");
-                Console.WriteLine($"WorkspaceId: {workspaceIdStr}");
                 
                 if (!int.TryParse(workspaceIdStr, out var workspaceId))
                 {
@@ -141,7 +138,6 @@ public static class UploadFileEndpoint
                 }
 
                 return await handler.Handle(uploadRequest, cancellationToken);
-            }).RequireAuthorization()
-            ;
+            }).RequireAuthorization();
     }
 }

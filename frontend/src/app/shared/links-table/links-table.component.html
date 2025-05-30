@@ -24,7 +24,7 @@
         (click)="refreshLinks()"
       ></button>
       <div class="pagination-status">
-        {{ currentPage }} of {{ totalPages }}
+        {{ totalPages === 0 ? 0 : currentPage }} of {{ totalPages }}
       </div>
 
       <button pButton icon="pi pi-angle-left" class="p-button-text p-button-sm" (click)="prevPage()" [disabled]="currentPage === 1"></button>

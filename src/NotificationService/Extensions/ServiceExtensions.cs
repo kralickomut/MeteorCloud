@@ -8,6 +8,7 @@ using EmailService.Consumers.Workspace;
 using EmailService.Features;
 using EmailService.Hubs;
 using MeteorCloud.Communication;
+using MeteorCloud.Messaging.ConsumerExtensions;
 using MeteorCloud.Messaging.Events.Workspace;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.OpenApi.Models;
@@ -67,42 +68,49 @@ public static class ServiceExtensions
 
                 cfg.ReceiveEndpoint("email-service-user-registered-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("user-registered", x => x.ExchangeType = "fanout");
                     e.ConfigureConsumer<UserRegisteredConsumer>(context);
                 });
                 
                 cfg.ReceiveEndpoint("email-service-verification-code-resent-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("verification-code-resent", x => x.ExchangeType = "fanout");
                     e.ConfigureConsumer<VerificationCodeResentConsumer>(context);
                 });
                 
                 cfg.ReceiveEndpoint("email-service-workspace-invite-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("workspace-invite", x => x.ExchangeType = "fanout");
                     e.ConfigureConsumer<WorkspaceInviteConsumer>(context);
                 });
                 
                 cfg.ReceiveEndpoint("email-service-workspace-invitation-match-on-register-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("workspace-invitation-match-on-register", x => x.ExchangeType = "fanout");
                     e.ConfigureConsumer<WorkspaceInvitationMatchOnRegisterConsumer>(context);
                 });
                 
                 cfg.ReceiveEndpoint("email-service-workspace-deleted-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("workspace-deleted", x => x.ExchangeType = "fanout");
                     e.ConfigureConsumer<WorkspaceDeletedConsumer>(context);
                 });
                 
                 cfg.ReceiveEndpoint("email-service-workspace-invitation-response-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("workspace-invitation-response", x => x.ExchangeType = "fanout");
                     e.ConfigureConsumer<WorkspaceInvitationResponseConsumer>(context);
                 });
                 
                 cfg.ReceiveEndpoint("email-service-password-reset-required-queue", e =>
                 {
+                    e.ApplyStandardSettings();
                     e.Bind("password-reset-required", x => x.ExchangeType = "fanout");
                     e.ConfigureConsumer<PasswordResetRequiredConsumer>(context);
                 });

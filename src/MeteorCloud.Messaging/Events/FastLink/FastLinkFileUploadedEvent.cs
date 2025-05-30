@@ -8,4 +8,6 @@ public class FastLinkFileUploadedEvent : BaseEvent
     public string Name { get; set; } = null!;
     public DateTime ExpiresAt { get; set; }
     public long FileSize { get; set; }
+    
+    public Guid Token { get; set; }
 }

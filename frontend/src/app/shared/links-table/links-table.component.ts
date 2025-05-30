@@ -13,7 +13,7 @@ import {FileService} from "../../services/file.service";
 })
 export class LinksTableComponent implements OnInit {
   searchText = '';
-  currentPage = 1;
+  currentPage = 0;
   itemsPerPage = 10;
   userId: number | null = null;
   baseUrl = window.location.origin;
@@ -50,19 +50,43 @@ export class LinksTableComponent implements OnInit {
     this.linkService.fastLinkCreated$.subscribe(() => {
       if (this.userId) {
         this.loadLinks(this.userId);
+        this.currentPage = this.currentPage === 0 ? 1 : this.currentPage
       }
     });
   }
 
   loadLinks(userId: number): void {
-    this.linkService.getUserLinks(userId, this.currentPage, this.itemsPerPage).subscribe({
+    const page = this.currentPage <= 0 ? 1 : this.currentPage;
+
+    this.linkService.getUserLinks(userId, page, this.itemsPerPage).subscribe({
       next: (res: ApiResult<PagedResult<FastLink>>) => {
+        const newTotal = res.data?.totalCount ?? 0;
+
+        // Handle total and current page correction
+        this.totalCount = newTotal;
         this.links = res.data?.items ?? [];
-        this.totalCount = res.data?.totalCount ?? 0;
+
+        // If we have any data, ensure page is at least 1
+        if (this.totalCount > 0 && this.currentPage < 1) {
+          this.currentPage = 1;
+        }
+
+        // If we have no data, set to 0
+        if (this.totalCount === 0) {
+          this.currentPage = 0;
+        }
+
+        // If we are on a page that is now too high, go back and retry
+        if (this.totalCount > 0 && (this.currentPage - 1) * this.itemsPerPage >= this.totalCount) {
+          this.currentPage--;
+          this.loadLinks(userId); // retry with fixed page
+        }
       },
       error: () => {
         this.links = [];
         this.totalCount = 0;
+        this.currentPage = 0;
+
         this.messageService.add({
           severity: 'error',
           summary: 'Error',

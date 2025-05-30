@@ -1,4 +1,6 @@
 using FluentValidation;
+using MassTransit;
+using MeteorCloud.Messaging.Events;
 using MeteorCloud.Shared.ApiResults;
 
 namespace UserService.Features;
@@ -26,10 +28,12 @@ public class UpdateUserValidator : AbstractValidator<UpdateUserRequest>
 public class UpdateUserHandler
 {
     private readonly Services.UserService _userService;
+    private readonly IPublishEndpoint _publishEndpoint;
     
-    public UpdateUserHandler(Services.UserService userService)
+    public UpdateUserHandler(Services.UserService userService, IPublishEndpoint publishEndpoint)
     {
         _userService = userService;
+        _publishEndpoint = publishEndpoint;
     }
     
     public async Task<ApiResult<UpdateUserResponse>> Handle(int userId, UpdateUserRequest request, CancellationToken cancellationToken)
@@ -39,7 +43,20 @@ public class UpdateUserHandler
         {
             return new ApiResult<UpdateUserResponse>(null, false, "User not found.");
         }
-        
+
+        if (user.Name == request.Name && user.Description == request.Description)
+        {
+            return new ApiResult<UpdateUserResponse>(null, true, "Changes saved");
+        }
+
+        if (user.Name != request.Name)
+        {
+            await _publishEndpoint.Publish(new UserNameChangedEvent()
+            {
+                UserId = userId,
+                NewName = request.Name
+            });
+        }
         
         user.Name = request.Name;
         user.Description = request.Description;

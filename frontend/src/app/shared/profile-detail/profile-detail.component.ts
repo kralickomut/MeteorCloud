@@ -100,11 +100,14 @@ export class ProfileDetailComponent implements OnInit {
 
     if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
+    const fileExtension = file.name.split('.').pop()?.toLowerCase();
+    const isJpg = file.type === 'image/jpeg' && fileExtension === 'jpg';
+
+    if (!isJpg) {
       this.messageService.add({
         severity: 'error',
         summary: 'Invalid file',
-        detail: 'Please upload an image file.'
+        detail: 'Please upload a .jpg image file.'
       });
       return;
     }
@@ -120,9 +123,12 @@ export class ProfileDetailComponent implements OnInit {
             summary: 'Profile Image Updated',
             detail: 'Your profile image was updated successfully.'
           });
-
-          // Refresh page
-          window.location.reload();
+          if (this.user) {
+            const updatedUser = { ...this.user, profileImageUrl: res.data };
+            this.user = updatedUser;
+            this.userService.setActualLoggedUser(updatedUser);
+          }
+          window.location.reload(); // Reload to reflect changes
         } else {
           this.messageService.add({
             severity: 'error',

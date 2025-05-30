@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.RegularExpressions;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using FileService.Models;
@@ -305,10 +306,17 @@ private string ResolveFilenameConflict(IEnumerable<string> existingNames, string
     return candidate;
 }
     
-    private string SanitizeFileName(string name)
-    {
-        return string.Concat(name.Normalize(NormalizationForm.FormD)
-                .Where(c => char.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark))
-            .Replace(" ", "_");
-    }
+private string SanitizeFileName(string name)
+{
+    var normalized = name.Normalize(NormalizationForm.FormD);
+
+    var sanitized = new string(normalized
+        .Where(c => char.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark)
+        .ToArray());
+
+    // Remove or replace unsafe characters (keep only ASCII letters, digits, dash, underscore, dot)
+    sanitized = Regex.Replace(sanitized, @"[^a-zA-Z0-9_\-\.]", "_");
+
+    return sanitized;
+}
 }

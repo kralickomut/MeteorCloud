@@ -42,4 +42,8 @@
       <_ContentIncludedByDefault Remove="SharedConfig\jwtsettings.json" />
     </ItemGroup>
 
+    <ItemGroup>
+      <EmbeddedResource Include="Keys\private.pem" />
+    </ItemGroup>
+
 </Project>

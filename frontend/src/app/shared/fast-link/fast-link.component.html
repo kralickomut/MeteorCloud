@@ -34,6 +34,9 @@
       min="1"
       max="24"
     />
+    <small class="p-error" *ngIf="expirationHours && (+expirationHours < 1 || +expirationHours > 24)">
+      Expiration must be between 1 and 24 hours.
+    </small>
 
     <!-- File Upload -->
     <div class="form-upload mb-3">
@@ -62,7 +65,15 @@
       icon="pi pi-check"
       class="p-button-primary"
       (click)="createFastLink()"
-      [disabled]="!linkName || !expirationHours || !selectedFile || uploading"
+      [disabled]="
+    !linkName ||
+    !expirationHours ||
+    isNaN(+expirationHours) ||
+    +expirationHours < 1 ||
+    +expirationHours > 24 ||
+    !selectedFile ||
+    uploading
+  "
     ></button>
   </ng-template>
   <p-progressBar *ngIf="uploading" mode="indeterminate" styleClass="mb-2"></p-progressBar>

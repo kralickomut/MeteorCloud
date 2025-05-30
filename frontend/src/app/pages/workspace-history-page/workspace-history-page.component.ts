@@ -37,6 +37,11 @@ export class WorkspaceHistoryPageComponent implements OnInit {
     private messageService: MessageService
   ) {}
 
+  formatOptions: Intl.DateTimeFormatOptions = {
+    dateStyle: 'short',
+    timeStyle: 'short'
+  };
+
   ngOnInit(): void {
     this.workspaceId = Number(this.route.snapshot.paramMap.get('id'));
 
